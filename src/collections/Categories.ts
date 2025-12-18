@@ -8,16 +8,25 @@ export const Categories: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'title',
-    group: 'Content',
+    group: 'Ecommerce',
   },
   fields: [
     {
       name: 'title',
       type: 'text',
       required: true,
+      localized: true,
+    },
+    {
+      name: 'parent',
+      type: 'relationship',
+      relationTo: 'categories',
+      required: false,
+      label: 'Parent Category',
     },
     slugField({
-      position: undefined,
+      // position: undefined,
+      localized: false,
     }),
   ],
 }

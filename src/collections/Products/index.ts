@@ -1,16 +1,7 @@
-import { CallToAction } from '@/blocks/CallToAction/config'
-import { Content } from '@/blocks/Content/config'
-import { MediaBlock } from '@/blocks/MediaBlock/config'
 import { slugField } from 'payload'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
-import {
-  MetaDescriptionField,
-  MetaImageField,
-  MetaTitleField,
-  OverviewField,
-  PreviewField,
-} from '@payloadcms/plugin-seo/fields'
+
 import {
   FixedToolbarFeature,
   HeadingFeature,
@@ -49,12 +40,30 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     variants: true,
     enableVariants: true,
     gallery: true,
-    priceInUSD: true,
-    inventory: true,
-    meta: true,
+    // priceInUSD: true,
+    // inventory: true,
+    // meta: true,
   },
   fields: [
-    { name: 'title', type: 'text', required: true },
+    { name: 'title', type: 'text', localized: false, required: true },
+    { name: 'subtitle', type: 'text', localized: true, required: true },
+    { name: 'article', type: 'text', localized: false, required: true, admin: { position: 'sidebar' } },
+    { name: 'brand', type: 'relationship', relationTo: 'brands', required: true, admin: { position: 'sidebar' } },
+    { name: 'price', type: 'number', required: true, admin: { position: 'sidebar' } },
+    {
+      name: 'wholesale', type: 'number', admin: { position: 'sidebar' }, access: {
+        //   read: ({ req: { user } }) => user,
+      },
+    },
+    { name: 'promotionalPrice', type: 'number', admin: { position: 'sidebar' } },
+    {
+      name: 'shortDescription',
+      type: 'textarea',
+      localized: true,
+      admin: {
+        rows: 10,
+      },
+    },
     {
       type: 'tabs',
       tabs: [
@@ -132,17 +141,17 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               ],
             },
 
-            {
-              name: 'layout',
-              type: 'blocks',
-              blocks: [CallToAction, Content, MediaBlock],
-            },
+            // {
+            //   name: 'layout',
+            //   type: 'blocks',
+            //   blocks: [CallToAction, Content, MediaBlock],
+            // },
           ],
           label: 'Content',
         },
         {
           fields: [
-            ...defaultCollection.fields,
+            // ...defaultCollection.fields,
             {
               name: 'relatedProducts',
               type: 'relationship',
@@ -168,33 +177,33 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
           ],
           label: 'Product Details',
         },
-        {
-          name: 'meta',
-          label: 'SEO',
-          fields: [
-            OverviewField({
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-              imagePath: 'meta.image',
-            }),
-            MetaTitleField({
-              hasGenerateFn: true,
-            }),
-            MetaImageField({
-              relationTo: 'media',
-            }),
-
-            MetaDescriptionField({}),
-            PreviewField({
-              // if the `generateUrl` function is configured
-              hasGenerateFn: true,
-
-              // field paths to match the target field for data
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-            }),
-          ],
-        },
+        // {
+        //   name: 'meta',
+        //   label: 'SEO',
+        //   fields: [
+        //     OverviewField({
+        //       titlePath: 'meta.title',
+        //       descriptionPath: 'meta.description',
+        //       imagePath: 'meta.image',
+        //     }),
+        //     MetaTitleField({
+        //       hasGenerateFn: true,
+        //     }),
+        //     MetaImageField({
+        //       relationTo: 'media',
+        //     }),
+        //
+        //     MetaDescriptionField({}),
+        //     PreviewField({
+        //       // if the `generateUrl` function is configured
+        //       hasGenerateFn: true,
+        //
+        //       // field paths to match the target field for data
+        //       titlePath: 'meta.title',
+        //       descriptionPath: 'meta.description',
+        //     }),
+        //   ],
+        // },
       ],
     },
     {

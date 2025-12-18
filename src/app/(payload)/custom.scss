@@ -8,3 +8,21 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+:root {
+  --font-size-base: 16px;
+  --font-size-xs: 14px;
+  --font-size-sm: 15px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+}
+body {
+  font-size: var(--font-size-base);
+}
+.thumbnail {
+  min-width: 150px !important;
+  height: 150px !important;
+}
+.file__filename {
+  display: none;
+}

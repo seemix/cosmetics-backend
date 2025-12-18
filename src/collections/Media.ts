@@ -1,12 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
-import {
-  FixedToolbarFeature,
-  InlineToolbarFeature,
-  lexicalEditor,
-} from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { generateBlurHash } from '@/hooks/generateBlurHash'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -19,6 +15,7 @@ export const Media: CollectionConfig = {
   access: {
     read: () => true,
   },
+
   fields: [
     {
       name: 'alt',
@@ -27,15 +24,38 @@ export const Media: CollectionConfig = {
     },
     {
       name: 'caption',
-      type: 'richText',
-      editor: lexicalEditor({
-        features: ({ rootFeatures }) => {
-          return [...rootFeatures, FixedToolbarFeature(), InlineToolbarFeature()]
-        },
-      }),
+      type: 'text',
+    },
+    {
+      name: 'blurHash',
+      type: 'text',
+      admin: {
+        hidden: true,
+        disableListColumn: true,
+      },
     },
   ],
   upload: {
     staticDir: path.resolve(dirname, '../../public/media'),
+    mimeTypes: ['image/*'],
+    adminThumbnail: 'thumbnail',
+    imageSizes: [
+      {
+        height: 96,
+        width: 96,
+        position: 'centre',
+        name: 'thumbnail',
+      },
+      {
+        height: 400,
+        width: 400,
+        position: 'centre',
+        name: 'medium',
+      },
+    ],
+  },
+
+  hooks: {
+    beforeValidate: [generateBlurHash],
   },
 }
