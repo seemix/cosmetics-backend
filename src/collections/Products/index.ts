@@ -10,6 +10,9 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 import { DefaultDocumentIDType, Where } from 'payload'
+import { getProductsByCategory } from '@/endpoints/getProductsByCategory'
+import { getProductsByBrand } from '@/endpoints/getProductsByBrand'
+import { populateRelatedProducts } from '@/hooks/relatedProducts'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -40,9 +43,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     variants: true,
     enableVariants: true,
     gallery: true,
-    // priceInUSD: true,
-    // inventory: true,
-    // meta: true,
+
   },
   fields: [
     { name: 'title', type: 'text', localized: false, required: true },
@@ -218,4 +219,8 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     },
     slugField(),
   ],
+  endpoints: [getProductsByCategory, getProductsByBrand],
+  hooks: {
+    afterRead: [populateRelatedProducts]
+  }
 })
