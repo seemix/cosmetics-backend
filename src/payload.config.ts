@@ -1,5 +1,7 @@
 // storage-adapter-import-placeholder
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
+//import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import { resendAdapter } from '@payloadcms/email-resend'
 
 import {
   BoldFeature,
@@ -65,7 +67,7 @@ export default buildConfig({
           enabledCollections: ['pages'],
           fields: ({ defaultFields }) => {
             const defaultFieldsWithoutUrl = defaultFields.filter((field) => {
-              return !('name' in field && field.name === 'url');
+              return !('name' in field && field.name === 'url')
 
             })
 
@@ -88,7 +90,11 @@ export default buildConfig({
       ]
     },
   }),
-  //email: nodemailerAdapter(),
+  email: resendAdapter({
+    defaultFromAddress: 'noreply@olgaartnails.dk',
+    defaultFromName: 'Next Level Shop',
+    apiKey: process.env.RESEND_API_KEY as string,
+  }),
   endpoints: [getMenu],
   globals: [Header, Footer, Settings],
   plugins: [

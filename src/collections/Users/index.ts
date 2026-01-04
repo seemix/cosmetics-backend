@@ -16,6 +16,7 @@ export const Users: CollectionConfig = {
     delete: adminOnly,
     read: adminOrSelf,
     update: adminOrSelf,
+
   },
   admin: {
     group: 'Users',
@@ -24,11 +25,44 @@ export const Users: CollectionConfig = {
   },
   auth: {
     tokenExpiration: 1209600,
+     verify: true
+    // verify: {
+    //   generateEmailHTML: ({ token }) => {
+    //     const url = `http://localhost:3000/verify?token=${token}`
+    //     console.log('VERIFY LINK:', url)
+    //     return `<p>${url}</p>`
+    //   },
+    // },
+    // verify: {
+    //   generateEmailHTML: ({ req, token, user }) => {
+    //     // Construct your verification URL
+    //     const url = `http://localhost:3000/verify/{token}`;
+    //     return `<h1>Hello ${user.email},</h1><p>Please verify your account by clicking here: <a href="${url}">Verify</a></p>`;
+    //   },
+    //   // ... other auth settings
+    // },
+    // verify: {
+    //   generateEmailHTML: ({ token, user }) => {
+    //     const url = `http://localhost:3000/api/verify?token=${token}`
+    //
+    //     return `
+    //   <h1>Hello ${user.email}</h1>
+    //   <p>Please verify your account:</p>
+    //   <a href="${url}">Verify email</a>
+    // `
+    //   },
+    // },
   },
   fields: [
     {
       name: 'name',
       type: 'text',
+    },
+    {
+      name: 'email',
+      type: 'email',
+      unique: true,
+      required: true
     },
     {
       name: 'roles',
