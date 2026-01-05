@@ -187,6 +187,11 @@ export interface UserAuthOperations {
 export interface User {
   id: string;
   name?: string | null;
+  surname: string;
+  phone: string;
+  locale?: ('ru' | 'ro') | null;
+  address?: string | null;
+  barbershop?: string | null;
   roles?: ('admin' | 'customer')[] | null;
   orders?: {
     docs?: (string | Order)[];
@@ -1194,6 +1199,11 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  surname?: T;
+  phone?: T;
+  locale?: T;
+  address?: T;
+  barbershop?: T;
   roles?: T;
   orders?: T;
   cart?: T;
