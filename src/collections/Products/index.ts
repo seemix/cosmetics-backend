@@ -13,6 +13,8 @@ import { DefaultDocumentIDType, Where } from 'payload'
 import { getProductsByCategory } from '@/endpoints/getProductsByCategory'
 import { getProductsByBrand } from '@/endpoints/getProductsByBrand'
 import { populateRelatedProducts } from '@/hooks/relatedProducts'
+import { hideStockFields } from '@/services/hideStockProductFields'
+
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -43,20 +45,15 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     variants: true,
     enableVariants: true,
     gallery: true,
-
   },
   fields: [
     { name: 'title', type: 'text', localized: false, required: true },
     { name: 'subtitle', type: 'text', localized: true, required: true },
     { name: 'article', type: 'text', localized: false, required: true, admin: { position: 'sidebar' } },
     { name: 'brand', type: 'relationship', relationTo: 'brands', required: true, admin: { position: 'sidebar' } },
-    { name: 'price', type: 'number', required: true, admin: { position: 'sidebar' } },
-    {
-      name: 'wholesale', type: 'number', admin: { position: 'sidebar' }, access: {
-        //   read: ({ req: { user } }) => user,
-      },
-    },
-    { name: 'promotionalPrice', type: 'number', admin: { position: 'sidebar' } },
+    { name: 'retailPrice', type: 'number', required: true, defaultValue: 0, admin: { position: 'sidebar' } },
+    { name: 'wholesalePrice', type: 'number', admin: { position: 'sidebar' } },
+    // { name: 'promotionalPrice', type: 'number', admin: { position: 'sidebar' } },
     {
       name: 'shortDescription',
       type: 'textarea',
@@ -65,6 +62,8 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         rows: 10,
       },
     },
+
+    ...hideStockFields(defaultCollection.fields),
     {
       type: 'tabs',
       tabs: [
@@ -141,18 +140,11 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                 },
               ],
             },
-
-            // {
-            //   name: 'layout',
-            //   type: 'blocks',
-            //   blocks: [CallToAction, Content, MediaBlock],
-            // },
           ],
           label: 'Content',
         },
         {
           fields: [
-            // ...defaultCollection.fields,
             {
               name: 'relatedProducts',
               type: 'relationship',
@@ -221,6 +213,6 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ],
   endpoints: [getProductsByCategory, getProductsByBrand],
   hooks: {
-    afterRead: [populateRelatedProducts]
-  }
+    afterRead: [populateRelatedProducts],
+  },
 })

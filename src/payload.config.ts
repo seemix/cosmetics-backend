@@ -23,7 +23,6 @@ import { Media } from '@/collections/Media'
 import { Pages } from '@/collections/Pages'
 import { Brands } from '@/collections/Brands'
 import { Users } from '@/collections/Users'
-import { Settings } from '@/collections/Settings'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
 import { plugins } from './plugins'
@@ -34,12 +33,22 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  cors: [
+    'http://localhost:3001',
+    'http://localhost:3000',
+  ],
+
+  csrf: [
+    'http://localhost:3001',
+    'http://localhost:3000',
+  ],
   sharp,
   localization: {
     locales: [{ label: 'Русский', code: 'ru' }, { label: 'Română', code: 'ro' }],
     defaultLocale: 'ru',
     fallback: true,
   },
+
   admin: {
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
@@ -96,7 +105,7 @@ export default buildConfig({
     apiKey: process.env.RESEND_API_KEY as string,
   }),
   endpoints: [getMenu],
-  globals: [Header, Footer, Settings],
+  globals: [Header, Footer],
   plugins: [
     ...plugins,
     // storage-adapter-placeholder

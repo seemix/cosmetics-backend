@@ -15,6 +15,7 @@ import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import { adminOnly } from '@/access/adminOnly'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
+import { CartsCollection } from '@/collections/Carts'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
@@ -38,13 +39,13 @@ export const plugins: Plugin[] = [
     formSubmissionOverrides: {
       admin: {
         group: 'Content',
-        hidden: true
+        hidden: true,
       },
     },
     formOverrides: {
       admin: {
         group: 'Content',
-        hidden: true
+        hidden: true,
       },
       fields: ({ defaultFields }) => {
         return defaultFields.map((field) => {
@@ -78,6 +79,15 @@ export const plugins: Plugin[] = [
     customers: {
       slug: 'users',
     },
+    currencies: {
+      defaultCurrency: 'MDL',
+      supportedCurrencies: [{
+        label: 'MDL',
+        decimals: 0,
+        code: 'MDL',
+        symbol: 'L',
+      }],
+    },
     payments: {
       paymentMethods: [
         stripeAdapter({
@@ -89,6 +99,9 @@ export const plugins: Plugin[] = [
     },
     products: {
       productsCollectionOverride: ProductsCollection,
+    },
+    carts: {
+      cartsCollectionOverride: CartsCollection,
     },
   }),
 ]

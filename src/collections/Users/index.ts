@@ -5,11 +5,8 @@ import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { publicAccess } from '@/access/publicAccess'
 import { adminOrSelf } from '@/access/adminOrSelf'
 import { checkRole } from '@/access/utilities'
-import { render } from '@react-email/render'
-import { VerifyEmail } from '@/email-templates/VerifyEmail'
 
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
-import React from 'react'
 import { emailHeader } from '@/email-templates/email-header'
 import { verifyEmail } from '@/email-templates/verify-email'
 import { emailFooter } from '@/email-templates/email-footer'
@@ -31,31 +28,13 @@ export const Users: CollectionConfig = {
   },
   auth: {
     tokenExpiration: 1209600,
-   // verify: true,
+    useSessions: false,
     verify: {
       generateEmailHTML: ({ token, user }) => {
-        const url = `${process.env.FRONTEND_URL}/verify/${token}`
+        const url = `${process.env.FRONTEND_URL}/verify-email/${token}`
         return `${emailHeader}${verifyEmail(user.locale, user.name, url)}${emailFooter}`
-        // return `
-        //   <!doctype html>
-        //   <html>
-        //     <body>
-        //       <h1 style="font-family: 'Helvetica Neue', helvetica, arial, sans-serif; font-size: 25px;">
-        //       Here is my custom email template!
-        //       </h1>
-        //       <p style="font-size: 14px; font-family: 'Helvetica Neue', helvetica, arial, sans-serif">
-        //       Hello, ${user.email}!
-        //       </p>
-        //       <p>Click below to activate your account</p>
-        //       <p>
-        //         <a href="${url}">${url}</a>
-        //       </p>
-        //     </body>
-        //   </html>
-        // `
       },
     },
-
   },
   fields: [
     {
@@ -67,6 +46,12 @@ export const Users: CollectionConfig = {
       type: 'email',
       unique: true,
       required: true,
+    },
+    {
+      name: 'wholesale',
+      type: 'checkbox',
+      label: 'WholeSale',
+      defaultValue: false,
     },
     {
       name: 'surname',

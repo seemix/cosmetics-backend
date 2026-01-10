@@ -101,6 +101,9 @@ export interface Config {
     variantTypes: {
       options: 'variantOptions';
     };
+    products: {
+      variants: 'variants';
+    };
   };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
@@ -130,12 +133,10 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
-    settings: Setting;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
-    settings: SettingsSelect<false> | SettingsSelect<true>;
   };
   locale: 'ru' | 'ro';
   user: User & {
@@ -187,6 +188,7 @@ export interface UserAuthOperations {
 export interface User {
   id: string;
   name?: string | null;
+  wholesale?: boolean | null;
   surname: string;
   phone: string;
   locale?: ('ru' | 'ro') | null;
@@ -219,13 +221,6 @@ export interface User {
   _verificationToken?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
   password?: string | null;
 }
 /**
@@ -260,7 +255,7 @@ export interface Order {
   transactions?: (string | Transaction)[] | null;
   status?: OrderStatus;
   amount?: number | null;
-  currency?: 'USD' | null;
+  currency?: 'MDL' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -274,10 +269,19 @@ export interface Product {
   subtitle: string;
   article: string;
   brand: string | Brand;
-  price: number;
-  wholesale?: number | null;
-  promotionalPrice?: number | null;
+  retailPrice: number;
+  wholesalePrice?: number | null;
   shortDescription?: string | null;
+  inventory?: number | null;
+  enableVariants?: boolean | null;
+  variantTypes?: (string | VariantType)[] | null;
+  variants?: {
+    docs?: (string | Variant)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  priceInMDLEnabled?: boolean | null;
+  priceInMDL?: number | null;
   description?: {
     root: {
       type: string;
@@ -385,23 +389,6 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "variantOptions".
- */
-export interface VariantOption {
-  id: string;
-  _variantOptions_options_order?: string | null;
-  variantType: string | VariantType;
-  label: string;
-  /**
-   * should be defaulted or dynamic based on label
-   */
-  value: string;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "variantTypes".
  */
 export interface VariantType {
@@ -419,19 +406,20 @@ export interface VariantType {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
+ * via the `definition` "variantOptions".
  */
-export interface Category {
+export interface VariantOption {
   id: string;
-  title: string;
-  parent?: (string | null) | Category;
+  _variantOptions_options_order?: string | null;
+  variantType: string | VariantType;
+  label: string;
   /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   * should be defaulted or dynamic based on label
    */
-  generateSlug?: boolean | null;
-  slug: string;
+  value: string;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -446,12 +434,28 @@ export interface Variant {
   product: string | Product;
   options: (string | VariantOption)[];
   inventory?: number | null;
-  priceInUSDEnabled?: boolean | null;
-  priceInUSD?: number | null;
+  priceInMDLEnabled?: boolean | null;
+  priceInMDL?: number | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: string;
+  title: string;
+  parent?: (string | null) | Category;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -491,7 +495,7 @@ export interface Transaction {
   order?: (string | null) | Order;
   cart?: (string | null) | Cart;
   amount?: number | null;
-  currency?: 'USD' | null;
+  currency?: 'MDL' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -506,6 +510,8 @@ export interface Cart {
         product?: (string | null) | Product;
         variant?: (string | null) | Variant;
         quantity: number;
+        price?: number | null;
+        subtotal?: number | null;
         id?: string | null;
       }[]
     | null;
@@ -513,7 +519,7 @@ export interface Cart {
   purchasedAt?: string | null;
   status?: ('active' | 'purchased' | 'abandoned') | null;
   subtotal?: number | null;
-  currency?: 'USD' | null;
+  currency?: 'MDL' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1199,6 +1205,7 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  wholesale?: T;
   surname?: T;
   phone?: T;
   locale?: T;
@@ -1219,13 +1226,6 @@ export interface UsersSelect<T extends boolean = true> {
   _verificationToken?: T;
   loginAttempts?: T;
   lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1647,8 +1647,8 @@ export interface VariantsSelect<T extends boolean = true> {
   product?: T;
   options?: T;
   inventory?: T;
-  priceInUSDEnabled?: T;
-  priceInUSD?: T;
+  priceInMDLEnabled?: T;
+  priceInMDL?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -1688,10 +1688,15 @@ export interface ProductsSelect<T extends boolean = true> {
   subtitle?: T;
   article?: T;
   brand?: T;
-  price?: T;
-  wholesale?: T;
-  promotionalPrice?: T;
+  retailPrice?: T;
+  wholesalePrice?: T;
   shortDescription?: T;
+  inventory?: T;
+  enableVariants?: T;
+  variantTypes?: T;
+  variants?: T;
+  priceInMDLEnabled?: T;
+  priceInMDL?: T;
   description?: T;
   gallery?:
     | T
@@ -1720,6 +1725,8 @@ export interface CartsSelect<T extends boolean = true> {
         product?: T;
         variant?: T;
         quantity?: T;
+        price?: T;
+        subtotal?: T;
         id?: T;
       };
   customer?: T;
@@ -1902,16 +1909,6 @@ export interface Footer {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "settings".
- */
-export interface Setting {
-  id: string;
-  currency: 'USD' | 'EUR' | 'PLN' | 'UAH' | 'GBP';
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
@@ -1952,16 +1949,6 @@ export interface FooterSelect<T extends boolean = true> {
             };
         id?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "settings_select".
- */
-export interface SettingsSelect<T extends boolean = true> {
-  currency?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

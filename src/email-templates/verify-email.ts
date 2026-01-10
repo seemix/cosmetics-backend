@@ -21,5 +21,4 @@ export const verifyEmail = (locale: 'ru' | 'ro', name: string, url: string) => {
                👉 <a href="${url}">${url}</a>
               </td>
             </tr>
-`
-}
+`}
