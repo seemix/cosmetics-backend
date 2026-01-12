@@ -1,5 +1,6 @@
 import { priceHook } from '@/collections/Carts/hooks/priceHook'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
+import { getCartByUser } from '@/endpoints/getCartByUser'
 
 export const CartsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -29,4 +30,5 @@ export const CartsCollection: CollectionOverride = ({ defaultCollection }) => ({
       priceHook,
     ],
   },
+  endpoints: [getCartByUser]
 })

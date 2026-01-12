@@ -27,6 +27,7 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
   },
   auth: {
+    depth: 3,
     tokenExpiration: 1209600,
     useSessions: false,
     verify: {
