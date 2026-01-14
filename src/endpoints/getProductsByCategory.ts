@@ -5,7 +5,6 @@ export const getProductsByCategory = {
   path: '/products-category/:slug',
   method: 'get' as const,
   handler: async (req: PayloadRequest): Promise<Response> => {
-   // const slug = req.routeParams?.slug
     const docs = await getProductsByRelation(
       req,
       req.routeParams?.slug as string | undefined,

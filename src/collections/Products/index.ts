@@ -55,13 +55,13 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     { name: 'brand', type: 'relationship', relationTo: 'brands', required: true, admin: { position: 'sidebar' } },
     { name: 'retailPrice', type: 'number', required: true, defaultValue: 0, admin: { position: 'sidebar' } },
     {
-      name: 'wholesalePrice', type: 'number', admin: { position: 'sidebar' }, access: {
+      name: 'wholesalePrice', type: 'number', admin: { position: 'sidebar' },
+      access: {
         read: ({ req }) => {
           return req.user?.wholesale === true
         },
-      },
+     },
     },
-    // { name: 'promotionalPrice', type: 'number', admin: { position: 'sidebar' } },
     {
       name: 'shortDescription',
       type: 'textarea',

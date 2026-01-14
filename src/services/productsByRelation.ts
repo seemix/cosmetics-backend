@@ -17,6 +17,8 @@ export async function getProductsByRelation(
 ) {
   if (!slug) return []
 
+  const isWholesaleUser = req.user?.wholesale === true
+
   const filter: Filter =
     config.relationField === 'brand'
       ? { categories: false }
@@ -74,6 +76,7 @@ export async function getProductsByRelation(
     extension.brand = safeBrand
   }
 
+
   return {
     ...extension,
     products: productsRes.docs.map((product) => {
@@ -82,6 +85,11 @@ export async function getProductsByRelation(
         gallery: Array.isArray(product.gallery)
           ? product.gallery.slice(0, 1)
           : [],
+      }
+
+      // ⛔️ якщо не wholesale — прибираємо поле
+      if (!isWholesaleUser) {
+        delete (base as any).wholesalePrice
       }
 
       if (config.relationField === 'categories') {
@@ -93,6 +101,7 @@ export async function getProductsByRelation(
         const { brand, ...rest } = base
         return rest
       }
+
       return base
     }),
   }
