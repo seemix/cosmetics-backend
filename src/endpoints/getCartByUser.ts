@@ -1,44 +1,6 @@
 import { Endpoint } from 'payload'
 
-function normalizeCart(cart: any, productsMap: Map<string, any>, locale = 'ru') {
-  return {
-    id: cart.id,
-    subtotal: cart.subtotal,
-    currency: cart.currency,
-    status: cart.status,
-
-    items: cart.items.map((item: any) => {
-      const productId =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product?.id
-
-      const product = productsMap.get(productId)
-
-      const thumbnail =
-        product?.gallery?.[0]?.image?.sizes?.thumbnail?.url ??
-        product?.gallery?.[0]?.image?.thumbnailURL ??
-        null
-
-      const subtitle =
-        typeof product?.subtitle === 'string'
-          ? product.subtitle
-          : product?.subtitle?.[locale] ??
-          product?.subtitle?.en ??
-          ''
-
-      return {
-        id: productId,
-        title: product?.title ?? '',
-        subtitle,
-        slug: product?.slug ?? '',
-        price: item.price,
-        quantity: item.quantity,
-        thumbnail,
-      }
-    }),
-  }
-}
+import { normalizeCart} from '@/collections/Carts/services/normalizedCart'
 
 export const getCartByUser: Endpoint = {
   path: '/me',
@@ -57,7 +19,7 @@ export const getCartByUser: Endpoint = {
       where: {
         customer: { equals: user.id },
       },
-      depth: 1, // важливо
+      depth: 1,
       limit: 1,
     })
 
@@ -67,6 +29,8 @@ export const getCartByUser: Endpoint = {
     }
 
     // 2️⃣ Збираємо product IDs
+
+    // @ts-ignore
     const productIds = cart.items
       .map((item: any) =>
         typeof item.product === 'string'

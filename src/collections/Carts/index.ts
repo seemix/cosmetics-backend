@@ -1,11 +1,19 @@
 import { priceHook } from '@/collections/Carts/hooks/priceHook'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 import { getCartByUser } from '@/endpoints/getCartByUser'
+import { updateCartItem } from '@/collections/Carts/endpoints/updateCartItem'
+import { addCartItem } from '@/collections/Carts/endpoints/addCartItem'
+import { Field } from 'payload'
+import { removeCartItem } from '@/collections/Carts/endpoints/removeCartItem'
 
 export const CartsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
-  fields: defaultCollection.fields.map((field) => {
-    if (field.name === 'items' && field.type === 'array') {
+  fields: defaultCollection.fields.map((field: Field) => {
+    if (
+      field.type === 'array' &&
+      'name' in field &&
+      field.name === 'items'
+    ) {
       return {
         ...field,
         fields: [
@@ -30,5 +38,5 @@ export const CartsCollection: CollectionOverride = ({ defaultCollection }) => ({
       priceHook,
     ],
   },
-  endpoints: [getCartByUser]
+  endpoints: [getCartByUser, addCartItem, updateCartItem, removeCartItem],
 })
