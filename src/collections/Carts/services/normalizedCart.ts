@@ -2,8 +2,8 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale =
   return {
     id: cart.id,
     subtotal: cart.subtotal,
-    currency: cart.currency,
-    status: cart.status,
+   // currency: cart.currency,
+   // status: cart.status,
 
     items: cart.items.map((item: any) => {
       const productId =

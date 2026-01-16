@@ -5,6 +5,8 @@ import { updateCartItem } from '@/collections/Carts/endpoints/updateCartItem'
 import { addCartItem } from '@/collections/Carts/endpoints/addCartItem'
 import { Field } from 'payload'
 import { removeCartItem } from '@/collections/Carts/endpoints/removeCartItem'
+import { clearCart } from '@/collections/Carts/endpoints/clearCart'
+import { getGuestCart } from '@/collections/Carts/endpoints/getGuestCart'
 
 export const CartsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -38,5 +40,5 @@ export const CartsCollection: CollectionOverride = ({ defaultCollection }) => ({
       priceHook,
     ],
   },
-  endpoints: [getCartByUser, addCartItem, updateCartItem, removeCartItem],
+  endpoints: [getCartByUser, addCartItem, updateCartItem, removeCartItem, clearCart, getGuestCart],
 })

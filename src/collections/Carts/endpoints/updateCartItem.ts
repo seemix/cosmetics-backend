@@ -11,19 +11,24 @@ export const updateCartItem: Endpoint = {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { cartId, productId, quantity } = await (req as any).json()
+    const { productId, quantity } = await (req as any).json()
 
-    if (!cartId || !productId || typeof quantity !== 'number') {
+    if (!productId || typeof quantity !== 'number') {
       return Response.json({ error: 'Invalid body' }, { status: 400 })
     }
 
-    const cart = await payload.findByID({
+    const res = await payload.find({
       collection: 'carts',
-      id: cartId,
-      depth: 0,
+      where: {
+        customer: { equals: user.id },
+      },
+      limit: 1,
     })
 
-    if (!cart || cart.customer !== user.id) {
+   const cart = res.docs[0];
+
+    // @ts-ignore
+    if (!cart || cart.customer?.id !== user.id) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -44,7 +49,7 @@ export const updateCartItem: Endpoint = {
 
     const updatedCart = await payload.update({
       collection: 'carts',
-      id: cartId,
+      id: cart.id,
       data: { items },
       req,
     })

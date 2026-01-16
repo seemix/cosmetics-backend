@@ -8,14 +8,14 @@ export const addCartItem: Endpoint = {
 
   handler: async (req) => {
     const { payload, user } = req
-    const { cartId, productId, quantity } = await (req as any).json()
+    const { productId, quantity } = await (req as any).json()
+    console.log(productId)
 
     if (!user) {
       return Response.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    // 🛡 Базова валідація
-    if (!cartId || !productId || typeof quantity !== 'number' || quantity <= 0) {
+    if (!productId || typeof quantity !== 'number' || quantity <= 0) {
       return Response.json(
         { message: 'Invalid request body' },
         { status: 400 },
@@ -72,7 +72,7 @@ export const addCartItem: Endpoint = {
     // 3️⃣ Оновлюємо кошик (priceHook перераховує subtotal)
     const updatedCart = await payload.update({
       collection: 'carts',
-      id: cartId,
+      id: cart.id,
       data: {
         items: updatedItems,
       },

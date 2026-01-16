@@ -13,7 +13,6 @@ export const removeCartItem: Endpoint = {
   handler: async (req) => {
     const { payload, user } = req
     const  body = await (req as any).json()
-    console.log(body)
     if (!user) {
       return Response.json({ message: 'Unauthorized' }, { status: 401 })
     }
