@@ -11,6 +11,7 @@ export const populateRelatedProducts: CollectionAfterReadHook = async ({
   )
 
   if (!ids.length) return doc
+  const user = req.user
 
   const related = await req.payload.find({
     collection: 'products',
@@ -29,10 +30,10 @@ export const populateRelatedProducts: CollectionAfterReadHook = async ({
     slug: p.slug,
     article: p.article,
     retailPrice: p.retailPrice,
-    wholesalePrice: p.wholesalePrice,
-    //gallery: p.gallery?.[0]?.image ?? null,
-     gallery: p.gallery,
+    gallery: p.gallery,
     subtitle: p.subtitle,
+    // Поле додасться до об'єкта лише якщо умова істинна
+    ...(user?.wholesale && { wholesalePrice: p.wholesalePrice })
   }))
 
   return doc
