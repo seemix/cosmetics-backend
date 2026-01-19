@@ -18,7 +18,6 @@ export const removeCartItem: Endpoint = {
     }
 
     const { cartId, productId } = body as RemoveItemBody
-
     // 🛡 Базова валідація
     if (!cartId || !productId) {
       return Response.json(

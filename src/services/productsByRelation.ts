@@ -16,6 +16,8 @@ export async function getProductsByRelation(
   config: RelationConfig,
 ) {
   if (!slug) return []
+  const page = Number(req.query?.page ?? 1)
+  const limit = Number(req.query?.limit ?? 10)
 
   const isWholesaleUser = req.user?.wholesale === true
 
@@ -37,7 +39,8 @@ export async function getProductsByRelation(
     collection: 'products',
     locale: req.locale,
     draft: false,
-    limit: 10,
+    page,
+    limit,
     depth: 2,
     select: {
       shortDescription: false,
@@ -79,6 +82,7 @@ export async function getProductsByRelation(
 
   return {
     ...extension,
+
     products: productsRes.docs.map((product) => {
       const base = {
         ...product,
@@ -87,7 +91,6 @@ export async function getProductsByRelation(
           : [],
       }
 
-      // ⛔️ якщо не wholesale — прибираємо поле
       if (!isWholesaleUser) {
         delete (base as any).wholesalePrice
       }
@@ -104,5 +107,16 @@ export async function getProductsByRelation(
 
       return base
     }),
+
+    pagination: {
+      page: productsRes.page,
+      limit: productsRes.limit,
+      totalPages: productsRes.totalPages,
+      totalDocs: productsRes.totalDocs,
+      hasNextPage: productsRes.hasNextPage,
+      hasPrevPage: productsRes.hasPrevPage,
+      nextPage: productsRes.nextPage,
+      prevPage: productsRes.prevPage,
+    },
   }
 }
