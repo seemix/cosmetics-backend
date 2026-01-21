@@ -6,7 +6,7 @@ import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCa
 
 type MergeCartBody = {
   items: {
-    product: string;
+    product: { id: string };
     quantity: number;
   }[];
 };
@@ -29,6 +29,7 @@ export const mergeCart: Endpoint = {
     }
 
     let cart = await getOrCreateCart(payload, user.id)
+
 
     for (const item of items) {
       cart = addOrUpdateCartItem(cart, item)

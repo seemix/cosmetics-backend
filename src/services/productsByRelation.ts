@@ -10,14 +10,52 @@ type Filter = {
   brand?: false
 }
 
+type ProductsByRelationResult = {
+  products: any[]
+  pagination: {
+    page: number
+    limit: number
+    totalPages: number
+    totalDocs: number
+    hasNextPage: boolean
+    hasPrevPage: boolean
+    nextPage: number | null
+    prevPage: number | null
+  }
+  brand?: unknown
+  categories?: unknown[]
+}
+
+function emptyResult(
+  page: number,
+  limit: number,
+): ProductsByRelationResult {
+  return {
+    products: [],
+    pagination: {
+      page,
+      limit,
+      totalPages: 0,
+      totalDocs: 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+      nextPage: null,
+      prevPage: null,
+    },
+  }
+}
+
 export async function getProductsByRelation(
   req: PayloadRequest,
   slug: string | undefined,
   config: RelationConfig,
-) {
-  if (!slug) return []
+): Promise<ProductsByRelationResult> {
   const page = Number(req.query?.page ?? 1)
   const limit = Number(req.query?.limit ?? 10)
+
+  if (!slug) {
+    return emptyResult(page, limit)
+  }
 
   const isWholesaleUser = req.user?.wholesale === true
 
@@ -32,8 +70,10 @@ export async function getProductsByRelation(
     limit: 1,
   })
 
-  const relationId = relationRes.docs[0]?.id
-  if (!relationId) return []
+  const relation = relationRes.docs[0]
+  if (!relation) {
+    return emptyResult(page, limit)
+  }
 
   const productsRes = await req.payload.find({
     collection: 'products',
@@ -51,12 +91,12 @@ export async function getProductsByRelation(
       ...filter,
     },
     where: {
-      [config.relationField]: { equals: relationId },
+      [config.relationField]: { equals: relation.id },
     },
   })
 
   if (!productsRes.docs.length) {
-    return { products: [] }
+    return emptyResult(page, limit)
   }
 
   const firstProduct = productsRes.docs[0]
@@ -79,12 +119,11 @@ export async function getProductsByRelation(
     extension.brand = safeBrand
   }
 
-
   return {
     ...extension,
 
     products: productsRes.docs.map((product) => {
-      const base = {
+      const base: any = {
         ...product,
         gallery: Array.isArray(product.gallery)
           ? product.gallery.slice(0, 1)
@@ -92,25 +131,23 @@ export async function getProductsByRelation(
       }
 
       if (!isWholesaleUser) {
-        delete (base as any).wholesalePrice
+        delete base.wholesalePrice
       }
 
       if (config.relationField === 'categories') {
-        const { categories, ...rest } = base
-        return rest
+        delete base.categories
       }
 
       if (config.relationField === 'brand') {
-        const { brand, ...rest } = base
-        return rest
+        delete base.brand
       }
 
       return base
     }),
 
     pagination: {
-      page: productsRes.page,
-      limit: productsRes.limit,
+      page: productsRes.page | 1,
+      limit: productsRes.limit | 10,
       totalPages: productsRes.totalPages,
       totalDocs: productsRes.totalDocs,
       hasNextPage: productsRes.hasNextPage,

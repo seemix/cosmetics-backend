@@ -1,5 +1,5 @@
 type CartItemInput = {
-  product: string;
+  product: { id: string };
   quantity: number;
 };
 
@@ -11,11 +11,12 @@ export function addOrUpdateCartItem(
   item: CartItemInput,
 ): Cart {
   const { product, quantity } = item;
-
   const existingIndex = cart.items.findIndex(
     (i) =>
-      i.product === product,
+      i.product.id === product.id,
   );
+
+  console.log(existingIndex)
 
   // 🆕 Якщо товару ще немає
   if (existingIndex === -1) {
@@ -34,7 +35,7 @@ export function addOrUpdateCartItem(
   // 🔁 Якщо товар вже є — оновлюємо кількість
   const updatedItems = cart.items.map((i, index) =>
     index === existingIndex
-      ? { ...i, quantity }
+      ? { ...i, quantity: i.quantity + quantity }
       : i,
   );
 
