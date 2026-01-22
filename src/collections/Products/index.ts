@@ -10,12 +10,14 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 import { DefaultDocumentIDType, Where } from 'payload'
-import { getProductsByCategory } from '@/endpoints/getProductsByCategory'
-import { getProductsByBrand } from '@/endpoints/getProductsByBrand'
 import { populateRelatedProducts } from '@/hooks/relatedProducts'
 import { hideStockFields } from '@/services/hideStockProductFields'
+import { getProductsByCategory } from '@/collections/Products/endpoints/getProductsByCategory'
+import { getProductsByBrand } from '@/collections/Products/endpoints/getProductsByBrand'
+import { searchProducts } from '@/collections/Products/endpoints/searchProducts'
 
 
+// @ts-ignore
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
   admin: {
@@ -165,7 +167,6 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                   }
                 }
 
-                // ID comes back as undefined during seeding so we need to handle that case
                 return {
                   id: {
                     exists: true,
@@ -219,7 +220,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     },
     slugField(),
   ],
-  endpoints: [getProductsByCategory, getProductsByBrand],
+  endpoints: [getProductsByCategory, getProductsByBrand, searchProducts],
   hooks: {
     afterRead: [populateRelatedProducts],
   },

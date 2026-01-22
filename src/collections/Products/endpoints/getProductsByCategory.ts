@@ -1,4 +1,5 @@
 import { PayloadRequest } from 'payload'
+
 import { getProductsByRelation } from '@/services/productsByRelation'
 
 export const getProductsByCategory = {

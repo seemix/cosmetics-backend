@@ -9,7 +9,6 @@ export const addCartItem: Endpoint = {
   handler: async (req) => {
     const { payload, user } = req
     const { productId, quantity } = await (req as any).json()
-    console.log(productId)
 
     if (!user) {
       return Response.json({ message: 'Unauthorized' }, { status: 401 })

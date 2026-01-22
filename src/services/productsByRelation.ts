@@ -1,4 +1,5 @@
 import { PayloadRequest } from 'payload'
+import { ProductsByRelationResult } from '@/collections/Products/endpoints/types'
 
 type RelationConfig = {
   relationCollection: 'brands' | 'categories'
@@ -10,21 +11,21 @@ type Filter = {
   brand?: false
 }
 
-type ProductsByRelationResult = {
-  products: any[]
-  pagination: {
-    page: number
-    limit: number
-    totalPages: number
-    totalDocs: number
-    hasNextPage: boolean
-    hasPrevPage: boolean
-    nextPage: number | null
-    prevPage: number | null
-  }
-  brand?: unknown
-  categories?: unknown[]
-}
+// type ProductsByRelationResult = {
+//   products: any[]
+//   pagination: {
+//     page: number
+//     limit: number
+//     totalPages: number
+//     totalDocs: number
+//     hasNextPage: boolean
+//     hasPrevPage: boolean
+//     nextPage: number | null
+//     prevPage: number | null
+//   }
+//   brand?: unknown
+//   categories?: unknown[]
+// }
 
 function emptyResult(
   page: number,
