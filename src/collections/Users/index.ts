@@ -10,6 +10,7 @@ import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 import { emailHeader } from '@/email-templates/email-header'
 import { verifyEmail } from '@/email-templates/verify-email'
 import { emailFooter } from '@/email-templates/email-footer'
+import { forgotPassword } from '@/email-templates/forgot-password'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -34,6 +35,18 @@ export const Users: CollectionConfig = {
       generateEmailHTML: ({ token, user }) => {
         const url = `${process.env.FRONTEND_URL}/verify-email/${token}`
         return `${emailHeader}${verifyEmail(user.locale, user.name, url)}${emailFooter}`
+      },
+    },
+    forgotPassword: {
+      generateEmailHTML: (args) => {
+        const token = args?.token
+        const user = args?.user
+
+        if (!token || !user) {
+          return ''
+        }
+        const url = `${process.env.FRONTEND_URL}/reset-password/${token}`
+        return `${emailHeader}${forgotPassword(user.locale, user.name, url)}${emailFooter}`
       },
     },
   },
