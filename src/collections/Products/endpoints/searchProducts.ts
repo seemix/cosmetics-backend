@@ -1,10 +1,12 @@
 // src/endpoints/searchProducts.ts
+import { sortGenerator } from '@/services/sort-page.service'
 import { PayloadRequest } from 'payload'
 
 type SearchProductsQuery = {
   q?: string
   page?: string
   limit?: string
+  sort?: string
 }
 // type ProductSearchItem = {
 //   id: string
@@ -33,6 +35,7 @@ export const searchProducts = {
       q = '',
       page = '1',
       limit = '10',
+      sort
     } = req.query as SearchProductsQuery
 
     if (!q || q.length < 2) {
@@ -45,6 +48,7 @@ export const searchProducts = {
     const result = await req.payload.find({
       collection: 'products',
       locale: req.locale,
+      sort: sortGenerator(sort as string),
       draft: false,
       page: Number(page),
       limit: Number(limit),
@@ -89,6 +93,7 @@ export const searchProducts = {
         limit: result.limit,
         totalPages: result.totalPages,
         totalDocs: result.totalDocs,
+        hasPrevPage: result.hasPrevPage,
         hasNextPage: result.hasNextPage,
       },
     }

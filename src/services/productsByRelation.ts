@@ -1,5 +1,6 @@
 import { PayloadRequest } from 'payload'
 import { ProductsByRelationResult } from '@/collections/Products/endpoints/types'
+import { pageGenerator, sortGenerator } from './sort-page.service'
 
 type RelationConfig = {
   relationCollection: 'brands' | 'categories'
@@ -11,21 +12,6 @@ type Filter = {
   brand?: false
 }
 
-// type ProductsByRelationResult = {
-//   products: any[]
-//   pagination: {
-//     page: number
-//     limit: number
-//     totalPages: number
-//     totalDocs: number
-//     hasNextPage: boolean
-//     hasPrevPage: boolean
-//     nextPage: number | null
-//     prevPage: number | null
-//   }
-//   brand?: unknown
-//   categories?: unknown[]
-// }
 
 function emptyResult(
   page: number,
@@ -79,8 +65,9 @@ export async function getProductsByRelation(
   const productsRes = await req.payload.find({
     collection: 'products',
     locale: req.locale,
+    sort: sortGenerator(req.query.sort as string),
+    page: pageGenerator(req.query.page as string),
     draft: false,
-    page,
     limit,
     depth: 2,
     select: {
@@ -105,7 +92,8 @@ export async function getProductsByRelation(
 
   // 🟦 Categories extension
   if (config.relationField === 'categories') {
-    const category = firstProduct.categories?.[0]
+    // @ts-ignore
+    const category = firstProduct?.categories?.[0]
 
     if (category) {
       extension.categories = category.parent
@@ -115,11 +103,14 @@ export async function getProductsByRelation(
   }
 
   // 🟨 Brand extension
+  // @ts-ignore
   if (config.relationField === 'brand' && firstProduct.brand) {
+    // @ts-ignore
     const { description, generateSlug, ...safeBrand } = firstProduct.brand
     extension.brand = safeBrand
   }
 
+  // @ts-ignore
   return {
     ...extension,
 
@@ -147,14 +138,14 @@ export async function getProductsByRelation(
     }),
 
     pagination: {
-      page: productsRes.page | 1,
+      page: productsRes?.page | 1,
       limit: productsRes.limit | 10,
       totalPages: productsRes.totalPages,
       totalDocs: productsRes.totalDocs,
       hasNextPage: productsRes.hasNextPage,
       hasPrevPage: productsRes.hasPrevPage,
-      nextPage: productsRes.nextPage,
-      prevPage: productsRes.prevPage,
+      nextPage: productsRes?.nextPage as number | null,
+      prevPage: productsRes?.prevPage as number | null,
     },
   }
 }

@@ -270,6 +270,8 @@ export interface Product {
   article: string;
   brand: string | Brand;
   retailPrice: number;
+  action?: boolean | null;
+  bestSeller?: boolean | null;
   wholesalePrice?: number | null;
   shortDescription?: string | null;
   inventory?: number | null;
@@ -1689,6 +1691,8 @@ export interface ProductsSelect<T extends boolean = true> {
   article?: T;
   brand?: T;
   retailPrice?: T;
+  action?: T;
+  bestSeller?: T;
   wholesalePrice?: T;
   shortDescription?: T;
   inventory?: T;

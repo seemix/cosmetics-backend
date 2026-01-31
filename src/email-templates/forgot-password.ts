@@ -18,8 +18,7 @@ export const forgotPassword = (locale: 'ru' | 'ro', name: string, url: string) =
                 <h3>${messages.dear[locale]} ${name}!</h3>
                 <p>${messages.resetPassword[locale]}</p></br>
                 👉 <a href="${url}">${url}</a>
-                <p>${messages.ignore[locale]} </p>
-               
+                <p>${messages.ignore[locale]}</p>               
               </td>
             </tr>
 `}

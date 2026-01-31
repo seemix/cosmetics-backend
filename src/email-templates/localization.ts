@@ -1,9 +1,5 @@
 export const messages = {
-  subject: {
-    ru: 'Подтверждение адреса электронной почты',
-    ro: 'Confirmă adresa de email',
-  },
-  dear: {
+    dear: {
     ru: 'Ув.',
     ro: 'Dragă',
   },

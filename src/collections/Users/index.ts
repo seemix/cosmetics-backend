@@ -11,6 +11,7 @@ import { emailHeader } from '@/email-templates/email-header'
 import { verifyEmail } from '@/email-templates/verify-email'
 import { emailFooter } from '@/email-templates/email-footer'
 import { forgotPassword } from '@/email-templates/forgot-password'
+import { emailSubject } from '@/email-templates/email-subject'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -32,12 +33,14 @@ export const Users: CollectionConfig = {
     tokenExpiration: 1209600,
     useSessions: false,
     verify: {
+      generateEmailSubject: ({ req }) => emailSubject('verifyEmail', req.locale as 'ru' | 'ro'),
       generateEmailHTML: ({ token, user }) => {
         const url = `${process.env.FRONTEND_URL}/verify-email/${token}`
         return `${emailHeader}${verifyEmail(user.locale, user.name, url)}${emailFooter}`
       },
     },
     forgotPassword: {
+      generateEmailSubject: (args) => emailSubject('forgotPassword', args?.req?.locale as 'ru' | 'ro'),
       generateEmailHTML: (args) => {
         const token = args?.token
         const user = args?.user
