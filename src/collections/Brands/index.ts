@@ -17,7 +17,6 @@ export const Brands: CollectionConfig = {
       localized: false,
     },
     slugField({
-      // position: undefined,
       localized: false,
     }),
     {

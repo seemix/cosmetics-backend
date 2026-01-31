@@ -8,21 +8,6 @@ type SearchProductsQuery = {
   limit?: string
   sort?: string
 }
-// type ProductSearchItem = {
-//   id: string
-//   title: string
-//   subtitle?: string
-//   slug: string
-//   thumbnail?: string;
-// }
-
-export type PaginationMeta = {
-  page: number
-  limit: number
-  totalPages: number
-  totalDocs: number
-  hasNextPage: boolean
-}
 
 export const searchProducts = {
   path: '/products-search',
@@ -35,14 +20,21 @@ export const searchProducts = {
       q = '',
       page = '1',
       limit = '10',
-      sort
+      sort,
     } = req.query as SearchProductsQuery
 
     if (!q || q.length < 2) {
       return Response.json({ products: [], pagination: null })
-
     }
+    const brands = await req.payload.find({
+      collection: 'brands',
+      where: {
+        title: { like: q },
+      },
+      limit: 100,
+    })
 
+    const brandIds = brands.docs.map(b => b.id)
     const isWholesaleUser = req.user?.wholesale === true
 
     const result = await req.payload.find({
@@ -52,7 +44,7 @@ export const searchProducts = {
       draft: false,
       page: Number(page),
       limit: Number(limit),
-      depth: 1,
+      depth: 2,
 
       select: {
         description: false,
@@ -73,6 +65,9 @@ export const searchProducts = {
           { title: { like: q } },
           { subtitle: { like: q } },
           { article: { like: q } },
+          ...(brandIds.length
+            ? [{ brand: { in: brandIds } }]
+            : []),
         ],
       },
     })
@@ -86,6 +81,8 @@ export const searchProducts = {
         gallery: doc.gallery,
         article: doc.article,
         retailPrice: doc.retailPrice,
+        action: doc.action,
+        bestSeller: doc.bestSeller,
         ...(isWholesaleUser && { wholesalePrice: doc.wholesalePrice }),
       })),
       pagination: {
