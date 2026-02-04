@@ -23,8 +23,6 @@ import { Media } from '@/collections/Media'
 import { Pages } from '@/collections/Pages'
 import { Brands } from '@/collections/Brands'
 import { Users } from '@/collections/Users'
-import { Footer } from '@/globals/Footer'
-import { Header } from '@/globals/Header'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
 import sharp from 'sharp'
@@ -112,7 +110,7 @@ export default buildConfig({
     apiKey: process.env.RESEND_API_KEY as string,
   }),
   endpoints: [getMenu],
-  globals: [Header, Footer],
+  //globals: [Header, Footer],
   plugins: [
     ...plugins,
     // storage-adapter-placeholder
