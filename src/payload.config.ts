@@ -26,6 +26,7 @@ import { Users } from '@/collections/Users'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
 import sharp from 'sharp'
+import { Posts } from './collections/Posts'
 
 
 
@@ -65,7 +66,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Categories, Brands, Media],
+  collections: [Users, Pages, Posts, Categories, Brands, Media],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),

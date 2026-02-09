@@ -87,11 +87,11 @@ export const Users: CollectionConfig = {
       defaultValue: 'ru',
     },
     {
-      name: 'address',
+      name: 'city',
       type: 'text',
     },
     {
-      name: 'barbershop',
+      name: 'street',
       type: 'text',
     },
     {

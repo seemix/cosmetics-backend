@@ -5,7 +5,6 @@ import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 
-import { stripeAdapter } from '@payloadcms/plugin-ecommerce/payments/stripe'
 
 import { Page, Product } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -16,6 +15,7 @@ import { adminOnly } from '@/access/adminOnly'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { CartsCollection } from '@/collections/Carts'
+import { OrdersCollection } from '@/collections/Orders'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
@@ -88,20 +88,24 @@ export const plugins: Plugin[] = [
         symbol: 'L',
       }],
     },
-    payments: {
-      paymentMethods: [
-        stripeAdapter({
-          secretKey: process.env.STRIPE_SECRET_KEY!,
-          publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-          webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET!,
-        }),
-      ],
-    },
+    // payments: {
+    //   paymentMethods: [
+    //     stripeAdapter({
+    //       secretKey: process.env.STRIPE_SECRET_KEY!,
+    //       publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
+    //       webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET!,
+    //     }),
+    //   ],
+    // },
     products: {
       productsCollectionOverride: ProductsCollection,
     },
     carts: {
       cartsCollectionOverride: CartsCollection,
     },
+    orders: {
+      ordersCollectionOverride: OrdersCollection,
+    },
+    transactions: false
   }),
 ]
