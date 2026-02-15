@@ -25,7 +25,7 @@
     "@payloadcms/admin-bar": "3.65.0",
     "@payloadcms/db-mongodb": "3.65.0",
     "@payloadcms/email-nodemailer": "3.65.0",
-    "@payloadcms/email-resend": "^3.65.0",
+    "@payloadcms/email-resend": "3.65.0",
     "@payloadcms/live-preview-react": "3.65.0",
     "@payloadcms/next": "3.65.0",
     "@payloadcms/plugin-ecommerce": "3.65.0",

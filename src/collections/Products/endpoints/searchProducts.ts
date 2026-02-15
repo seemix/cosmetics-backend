@@ -1,6 +1,5 @@
-// src/endpoints/searchProducts.ts
 import { sortGenerator } from '@/services/sort-page.service'
-import { PayloadRequest } from 'payload'
+import { Endpoint, PayloadRequest } from 'payload'
 
 type SearchProductsQuery = {
   q?: string
@@ -9,7 +8,7 @@ type SearchProductsQuery = {
   sort?: string
 }
 
-export const searchProducts = {
+export const searchProducts: Endpoint = {
   path: '/products-search',
   method: 'get' as const,
 

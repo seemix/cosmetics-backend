@@ -15,6 +15,7 @@ import { hideStockFields } from '@/services/hideStockProductFields'
 import { getProductsByCategory } from '@/collections/Products/endpoints/getProductsByCategory'
 import { getProductsByBrand } from '@/collections/Products/endpoints/getProductsByBrand'
 import { searchProducts } from '@/collections/Products/endpoints/searchProducts'
+import { getBestSellers } from '@/collections/Products/endpoints/getBestSellers'
 
 
 // @ts-ignore
@@ -222,7 +223,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     },
     slugField(),
   ],
-  endpoints: [getProductsByCategory, getProductsByBrand, searchProducts],
+  endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers],
   hooks: {
     afterRead: [populateRelatedProducts],
   },

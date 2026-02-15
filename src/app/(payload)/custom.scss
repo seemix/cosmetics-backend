@@ -34,3 +34,16 @@ body {
   width: 40px;
   height: 40px;
 }
+button:active {
+  transform: translateY(2px) scale(0.99);
+  transition: all .15s ease-in;
+}
+.btn {
+  cursor: pointer;
+  //border: 1px solid black;
+}
+.btn--style-primary {
+  background-color: white;
+  color: black;
+  border-radius: 0;
+}

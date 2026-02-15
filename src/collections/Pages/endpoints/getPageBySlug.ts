@@ -3,6 +3,7 @@ import { PayloadRequest } from 'payload'
 export const getPageBySlug = {
   path: '/:slug',
   method: 'get' as const,
+
   handler: async (req: PayloadRequest): Promise<Response> => {
     const slug = req.routeParams?.slug as string | undefined
     if (!slug) return Response.json('Not found', { status: 404 })
