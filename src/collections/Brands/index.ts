@@ -1,5 +1,6 @@
 import { CollectionConfig, slugField } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { getBrandInfo } from '@/collections/Brands/endpoints/getBrandInfo'
 
 export const Brands: CollectionConfig = {
   slug: 'brands',
@@ -33,8 +34,8 @@ export const Brands: CollectionConfig = {
       name: 'description',
       type: 'richText',
       editor: lexicalEditor(),
-      localized: true
+      localized: true,
     },
-
   ],
+  endpoints: [getBrandInfo],
 }
