@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     users: User;
     pages: Page;
+    posts: Post;
     categories: Category;
     brands: Brand;
     media: Media;
@@ -103,6 +104,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -218,6 +220,7 @@ export interface User {
  */
 export interface Order {
   id: string;
+  orderNumber?: string | null;
   customer?: (string | null) | User;
   items?:
     | {
@@ -232,9 +235,11 @@ export interface Order {
   shippingAddress: {
     name: string;
     phone: string;
+    email: string;
     city: string;
     address: string;
   };
+  comment?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -555,6 +560,38 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: string;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  slide: string | Media;
+  excerpt: string;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
@@ -758,11 +795,6 @@ export interface Transaction {
         id?: string | null;
       }[]
     | null;
-  paymentMethod?: 'stripe' | null;
-  stripe?: {
-    customerID?: string | null;
-    paymentIntentID?: string | null;
-  };
   billingAddress?: {
     title?: string | null;
     firstName?: string | null;
@@ -817,6 +849,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pages';
         value: string | Page;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: string | Post;
       } | null)
     | ({
         relationTo: 'categories';
@@ -948,6 +984,20 @@ export interface PagesSelect<T extends boolean = true> {
   title?: T;
   generateSlug?: T;
   slug?: T;
+  content?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  slide?: T;
+  excerpt?: T;
   content?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1297,6 +1347,7 @@ export interface CartsSelect<T extends boolean = true> {
  * via the `definition` "orders_select".
  */
 export interface OrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
   customer?: T;
   items?:
     | T
@@ -1313,9 +1364,11 @@ export interface OrdersSelect<T extends boolean = true> {
     | {
         name?: T;
         phone?: T;
+        email?: T;
         city?: T;
         address?: T;
       };
+  comment?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1331,13 +1384,6 @@ export interface TransactionsSelect<T extends boolean = true> {
         variant?: T;
         quantity?: T;
         id?: T;
-      };
-  paymentMethod?: T;
-  stripe?:
-    | T
-    | {
-        customerID?: T;
-        paymentIntentID?: T;
       };
   billingAddress?:
     | T

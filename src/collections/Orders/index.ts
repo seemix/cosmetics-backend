@@ -1,7 +1,8 @@
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 import { createOrder } from '@/collections/Orders/endpoints/createOrder'
+import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 
-export const OrdersCollection: CollectionOverride = ({ defaultCollection })=> ({
+export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
   slug: 'orders',
   admin: {
@@ -9,6 +10,14 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection })=> ({
     group: 'Ecommerce',
   },
   fields: [
+    {
+      name: 'orderNumber',
+      type: 'text',
+      unique: true,
+      admin: {
+        readOnly: true,
+      },
+    },
     {
       name: 'customer',
       type: 'relationship',
@@ -53,10 +62,15 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection })=> ({
       fields: [
         { name: 'name', type: 'text', required: true },
         { name: 'phone', type: 'text', required: true },
+        { name: 'email', type: 'email', required: true },
         { name: 'city', type: 'text', required: true },
         { name: 'address', type: 'text', required: true },
       ],
     },
+    { name: 'comment', type: 'text' },
   ],
-  endpoints: [createOrder]
-});
+  endpoints: [createOrder],
+  hooks: {
+    beforeChange: [setOrderNumber],
+  },
+})
