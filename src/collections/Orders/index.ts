@@ -1,6 +1,9 @@
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
+
 import { createOrder } from '@/collections/Orders/endpoints/createOrder'
 import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
+import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
+import { sendNewOrderEmail } from '@/collections/Orders/hooks/sendNewOrderEmail'
 
 export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -69,8 +72,9 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     },
     { name: 'comment', type: 'text' },
   ],
-  endpoints: [createOrder],
+  endpoints: [createOrder, getMyOrders],
   hooks: {
     beforeChange: [setOrderNumber],
+    afterChange: [sendNewOrderEmail],
   },
 })

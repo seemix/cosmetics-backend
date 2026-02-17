@@ -1,5 +1,5 @@
 export const messages = {
-    dear: {
+  dear: {
     ru: 'Ув.',
     ro: 'Dragă',
   },
@@ -23,4 +23,45 @@ export const messages = {
     ru: 'Если вы не инициировали сброс пароля, проигнорируйте это сообщение.',
     ro: 'Dacă nu ați inițiat o resetare a parolei, vă rugăm să ignorați acest mesaj.',
   },
+  thankForYourOrder: {
+    ru: 'Спасибо за ваш заказ. Мы уже начали его подготовку.',
+    ro: 'Vă mulțumim pentru comandă. Am început deja pregătirea acesteia.',
+  },
+  product: {
+    ru: 'Товар',
+    ro: 'Produs',
+  },
+  qty: {
+    ru: 'К-во',
+    ro: 'Cant.',
+  },
+  price: {
+    ru: 'Цена',
+    ro: 'Preț',
+  },
+  total: {
+    ru: 'Сумма',
+    ro: 'Sumă',
+  },
+  totalPrice: {
+    ru: 'Общая сумма',
+    ro: 'Valoare totală',
+  },
+  shippingInfo: {
+    ru: 'Информация о доставке',
+    ro: 'Informații despre livrare',
+  },
+  address: {
+    ru: 'Адрес',
+    ro: 'Adresa',
+  },
+  phone: {
+    ru: 'Телефон',
+    ro: 'Telefon',
+  },
+  comment: {
+    ru: 'Комментарий',
+    ro: 'Comentariu',
+  },
+
 }

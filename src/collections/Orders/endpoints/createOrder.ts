@@ -55,13 +55,14 @@ export const createOrder: Endpoint = {
           shippingAddress,
           comment
         },
+        locale: req.locale as 'ru' || 'ro',
       })
 
       const order = await req.payload.findByID({
         collection: 'orders',
         id: createdOrder.id,
         depth: 1,
-        locale: req.locale || 'ru',
+        locale: req.locale,
       });
 
       const responseOrder = {
