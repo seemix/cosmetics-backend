@@ -16,6 +16,7 @@ import { getMyFavorites } from '@/collections/Users/endpoints/getMyFavorites'
 import { addFavoritesItem } from '@/collections/Users/endpoints/addFavoritesItem'
 import { removeFavoritesItem } from '@/collections/Users/endpoints/removeFavoritesItem'
 import { getFavorites } from './endpoints/getFavorites'
+import { updateUserInfo } from '@/collections/Users/endpoints/updateUserInfo'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -160,5 +161,5 @@ export const Users: CollectionConfig = {
       hasMany: true,
     },
   ],
-  endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem]
+  endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem, updateUserInfo]
 }
