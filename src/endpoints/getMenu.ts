@@ -1,9 +1,10 @@
-import { PayloadRequest } from 'payload'
+import { Endpoint, PayloadRequest } from 'payload'
 import { categoriesTree } from '@/services/categoriesTree'
 
-export const getMenu = {
+export const getMenu: Endpoint = {
   path: '/menu',
-  method: 'get' as 'get',
+  method: 'get',
+
   handler: async (req: PayloadRequest): Promise<Response> => {
 
       const categories = await req.payload.find({
@@ -11,8 +12,6 @@ export const getMenu = {
         locale: req.locale,
         select: {
           generateSlug: false,
-          updatedAt: false,
-          createdAt: false
         },
         depth: 0,
         limit: 0,
@@ -23,9 +22,6 @@ export const getMenu = {
         select: {
           logo: false,
           description: false,
-          generateSlug: false,
-          updatedAt: false,
-          createdAt: false
         },
         depth: 0,
         limit: 0,

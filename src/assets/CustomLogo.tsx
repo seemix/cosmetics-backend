@@ -1,12 +1,12 @@
 import React from 'react';
-// import './logo.scss';
 import logo from './logo1.webp';
+import Image from 'next/image';
 
 
 export default function CustomLogo() {
   return (
     <div className="logo">
-      <img
+      <Image
         src={logo.src}
         alt="TRBL Design Logo"
         width={200}

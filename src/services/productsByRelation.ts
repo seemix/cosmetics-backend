@@ -138,8 +138,8 @@ export async function getProductsByRelation(
     }),
 
     pagination: {
-      page: productsRes?.page | 1,
-      limit: productsRes.limit | 10,
+      page: productsRes?.page || 1,
+      limit: productsRes.limit || 10,
       totalPages: productsRes.totalPages,
       totalDocs: productsRes.totalDocs,
       hasNextPage: productsRes.hasNextPage,
