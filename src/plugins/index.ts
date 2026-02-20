@@ -106,6 +106,6 @@ export const plugins: Plugin[] = [
     orders: {
       ordersCollectionOverride: OrdersCollection,
     },
-    transactions: false
+    //transactions: false
   }),
 ]

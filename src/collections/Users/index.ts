@@ -12,6 +12,10 @@ import { verifyEmail } from '@/email-templates/verify-email'
 import { emailFooter } from '@/email-templates/email-footer'
 import { forgotPassword } from '@/email-templates/forgot-password'
 import { emailSubject } from '@/email-templates/email-subject'
+import { getMyFavorites } from '@/collections/Users/endpoints/getMyFavorites'
+import { addFavoritesItem } from '@/collections/Users/endpoints/addFavoritesItem'
+import { removeFavoritesItem } from '@/collections/Users/endpoints/removeFavoritesItem'
+import { getFavorites } from './endpoints/getFavorites'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -147,6 +151,14 @@ export const Users: CollectionConfig = {
         allowCreate: false,
         defaultColumns: ['id'],
       },
+
+    },
+    {
+      name: 'favorites',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true,
     },
   ],
+  endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem]
 }

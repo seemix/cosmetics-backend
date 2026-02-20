@@ -201,6 +201,7 @@ export interface User {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  favorites?: (string | Product)[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -256,6 +257,7 @@ export interface Product {
   retailPrice: number;
   action?: boolean | null;
   bestSeller?: boolean | null;
+  unavailable?: boolean | null;
   wholesalePrice?: number | null;
   shortDescription?: string | null;
   inventory?: number | null;
@@ -964,6 +966,7 @@ export interface UsersSelect<T extends boolean = true> {
   orders?: T;
   cart?: T;
   addresses?: T;
+  favorites?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1294,6 +1297,7 @@ export interface ProductsSelect<T extends boolean = true> {
   retailPrice?: T;
   action?: T;
   bestSeller?: T;
+  unavailable?: T;
   wholesalePrice?: T;
   shortDescription?: T;
   inventory?: T;
