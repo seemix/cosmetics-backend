@@ -11,7 +11,7 @@ export const getFavorites: Endpoint = {
       id: req.user.id,
       depth: 0,
     })
-    if (favorites?.length === 0) return Response.json([])
+    if (favorites?.length === 0 || !favorites) return Response.json({ docs: [] })
 
     const isWholesaleUser = req.user?.wholesale === true
     const products = await req.payload.find({
