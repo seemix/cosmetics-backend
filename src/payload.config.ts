@@ -53,8 +53,8 @@ export default buildConfig({
   },
   admin: {
     meta: {
-      titleSuffix: 'Next Level Shop',
-      title: '| Admin Dashboard |',
+      titleSuffix: 'Admin Dashboard',
+      title: 'Next Level Shop |',
       icons: [
         {
           rel: 'icon',
