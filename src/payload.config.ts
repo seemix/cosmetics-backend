@@ -35,13 +35,13 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   cors: [
-    'http://localhost:3001',
-    'http://localhost:3000',
+    process.env.FRONTEND_URL || 'https://nextlevelshop.md',
+    process.env.BACKEND_URL || 'https://admin.nextlevelshop.md',
   ],
 
   csrf: [
-    'http://localhost:3001',
-    'http://localhost:3000',
+    process.env.FRONTEND_URL || 'https://nextlevelshop.md',
+    process.env.BACKEND_URL || 'https://admin.nextlevelshop.md',
   ],
   sharp,
   localization: {
