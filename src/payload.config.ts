@@ -48,6 +48,9 @@ export default buildConfig({
     defaultLocale: 'ru',
     fallback: true,
   },
+  routes: {
+    admin: '/'
+  },
   admin: {
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
