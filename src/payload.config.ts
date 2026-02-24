@@ -29,7 +29,6 @@ import sharp from 'sharp'
 import { Posts } from './collections/Posts'
 
 
-
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -49,14 +48,16 @@ export default buildConfig({
     defaultLocale: 'ru',
     fallback: true,
   },
-
+  routes: {
+    admin: '/',
+  },
   admin: {
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below and the import `BeforeLogin` statement on line 15.
       graphics: {
         Logo: '@/assets/CustomLogo.tsx',
-        Icon: '@/assets/CustomLogo.tsx'
+        Icon: '@/assets/CustomLogo.tsx',
       },
       beforeLogin: ['@/components/BeforeLogin#BeforeLogin'],
 
