@@ -106,7 +106,7 @@ export default buildConfig({
     },
   }),
   email: resendAdapter({
-    defaultFromAddress: 'noreply@olgaartnails.dk',
+    defaultFromAddress: 'noreply@nextlevelshop.md',
     defaultFromName: 'Next Level Shop',
     apiKey: process.env.RESEND_API_KEY as string,
   }),
