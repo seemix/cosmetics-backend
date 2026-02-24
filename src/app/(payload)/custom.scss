@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap&subset=cyrillic');
 
 .visually-hidden {
   position: absolute;
@@ -11,6 +11,8 @@
   border: 0;
 }
 :root {
+  --font-body: 'Montserrat', sans-serif;
+  --font-header: 'Montserrat', sans-serif;
   --font-size-base: 16px;
   --font-size-xs: 14px;
   --font-size-sm: 15px;
