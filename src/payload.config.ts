@@ -52,6 +52,17 @@ export default buildConfig({
     admin: '/'
   },
   admin: {
+    meta: {
+      titleSuffix: 'Next Level Shop',
+      title: '| Admin Dashboard |',
+      icons: [
+        {
+          rel: 'icon',
+          type: 'image/png',
+          url: '/favicon.png',
+        }
+      ]
+    },
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below and the import `BeforeLogin` statement on line 15.
