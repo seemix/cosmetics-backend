@@ -34,6 +34,7 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
   },
   auth: {
+    cookies: { domain: '.nextlevelshop.md', secure: true, sameSite: 'None' },
     depth: 3,
     tokenExpiration: 1209600,
     useSessions: false,
@@ -161,5 +162,5 @@ export const Users: CollectionConfig = {
       hasMany: true,
     },
   ],
-  endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem, updateUserInfo]
+  endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem, updateUserInfo],
 }
