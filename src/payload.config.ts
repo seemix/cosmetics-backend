@@ -49,8 +49,13 @@ export default buildConfig({
     fallback: true,
   },
   routes: {
-    admin: '/'
+    admin: '/',
   },
+  cookiePrefix: 'payload',
+  auth: {
+    jwtOrder: ['cookie', 'Bearer'],
+  },
+
   admin: {
     meta: {
       titleSuffix: 'Admin Dashboard',
@@ -60,8 +65,8 @@ export default buildConfig({
           rel: 'icon',
           type: 'image/png',
           url: '/favicon.png',
-        }
-      ]
+        },
+      ],
     },
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
