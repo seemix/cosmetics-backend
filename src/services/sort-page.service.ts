@@ -3,10 +3,10 @@ export const sortGenerator = (sortParam: string) => {
 
   switch (sortParam) {
     case 'price-asc':
-      sort = 'retailPrice'
+      sort = 'wholesalePrice'
       break
     case 'price-desc':
-      sort = '-retailPrice'
+      sort = '-wholesalePrice'
       break
     default:
       sort = undefined
