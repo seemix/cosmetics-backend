@@ -46,6 +46,7 @@
     "clsx": "^2.1.0",
     "cross-env": "^7.0.3",
     "date-fns": "^4.1.0",
+    "deepl-node": "^1.24.0",
     "dotenv": "^16.4.7",
     "embla-carousel-auto-scroll": "^8.1.5",
     "embla-carousel-react": "^8.5.2",

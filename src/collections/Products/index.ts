@@ -21,6 +21,10 @@ import { getBestSellers } from '@/collections/Products/endpoints/getBestSellers'
 // @ts-ignore
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
+  versions: {
+    drafts: true,
+    maxPerDoc: 2
+  },
   admin: {
     ...defaultCollection?.admin,
     defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
