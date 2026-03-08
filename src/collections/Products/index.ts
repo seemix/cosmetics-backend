@@ -16,6 +16,7 @@ import { getProductsByCategory } from '@/collections/Products/endpoints/getProdu
 import { getProductsByBrand } from '@/collections/Products/endpoints/getProductsByBrand'
 import { searchProducts } from '@/collections/Products/endpoints/searchProducts'
 import { getBestSellers } from '@/collections/Products/endpoints/getBestSellers'
+import { autoTranslate } from '@/collections/Products/hooks/autoTranslate'
 
 
 // @ts-ignore
@@ -232,5 +233,6 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers],
   hooks: {
     afterRead: [populateRelatedProducts],
+    afterChange: [autoTranslate]
   },
 })
