@@ -23,10 +23,10 @@ import { Media } from '@/collections/Media'
 import { Pages } from '@/collections/Pages'
 import { Brands } from '@/collections/Brands'
 import { Users } from '@/collections/Users'
+import { Posts } from './collections/Posts'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
 import sharp from 'sharp'
-import { Posts } from './collections/Posts'
 
 
 const filename = fileURLToPath(import.meta.url)
