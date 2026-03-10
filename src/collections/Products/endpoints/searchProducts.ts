@@ -10,7 +10,7 @@ type SearchProductsQuery = {
 
 export const searchProducts: Endpoint = {
   path: '/products-search',
-  method: 'get' as const,
+  method: 'get',
 
   handler: async (
     req: PayloadRequest,
@@ -18,7 +18,7 @@ export const searchProducts: Endpoint = {
     const {
       q = '',
       page = '1',
-      limit = '10',
+      limit = '12',
       sort,
     } = req.query as SearchProductsQuery
 

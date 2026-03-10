@@ -33,6 +33,7 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+
   cors: [
     process.env.FRONTEND_URL || 'https://nextlevelshop.md',
     process.env.BACKEND_URL || 'https://admin.nextlevelshop.md',
@@ -50,7 +51,7 @@ export default buildConfig({
   routes: {
     admin: '/',
   },
-  cookiePrefix: 'payload',
+  cookiePrefix: 'customer',
   auth: {
     jwtOrder: ['cookie', 'Bearer'],
   },
