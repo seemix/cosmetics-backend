@@ -37,7 +37,6 @@ export default buildConfig({
     process.env.FRONTEND_URL || 'https://nextlevelshop.md',
     process.env.BACKEND_URL || 'https://admin.nextlevelshop.md',
   ],
-
   csrf: [
     process.env.FRONTEND_URL || 'https://nextlevelshop.md',
     process.env.BACKEND_URL || 'https://admin.nextlevelshop.md',
