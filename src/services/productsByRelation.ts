@@ -38,7 +38,7 @@ export async function getProductsByRelation(
   config: RelationConfig,
 ): Promise<ProductsByRelationResult> {
   const page = Number(req.query?.page ?? 1)
-  const limit = Number(req.query?.limit ?? 10)
+  const limit = Number(req.query?.limit ?? 12)
 
   if (!slug) {
     return emptyResult(page, limit)
@@ -139,7 +139,7 @@ export async function getProductsByRelation(
 
     pagination: {
       page: productsRes?.page || 1,
-      limit: productsRes.limit || 10,
+      limit: productsRes.limit || 12,
       totalPages: productsRes.totalPages,
       totalDocs: productsRes.totalDocs,
       hasNextPage: productsRes.hasNextPage,
