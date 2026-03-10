@@ -24,7 +24,10 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ...defaultCollection,
   versions: {
     drafts: true,
-    maxPerDoc: 2
+    maxPerDoc: 2,
+  },
+  pagination: {
+    defaultLimit: 12,
   },
   admin: {
     ...defaultCollection?.admin,
@@ -233,6 +236,6 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers],
   hooks: {
     afterRead: [populateRelatedProducts],
-    afterChange: [autoTranslate]
+    afterChange: [autoTranslate],
   },
 })
