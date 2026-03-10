@@ -10,7 +10,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   ...defaultCollection,
   slug: 'orders',
   admin: {
-    useAsTitle: 'id',
+    useAsTitle: 'createdAt',
     group: 'Ecommerce',
   },
   fields: [

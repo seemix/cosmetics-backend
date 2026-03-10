@@ -16,7 +16,7 @@ export function buildTelegramMessage(order: CustomOrder, locale: 'all' | TypedLo
 
   const tableHeader =
     `#  Артикул      Товар                         К-во  Цена\n` +
-    `------------------------------------------------------------`
+    `----------------------------------------------------------`
 
   const table = [tableHeader, ...rows].join('\n')
 
@@ -24,7 +24,7 @@ export function buildTelegramMessage(order: CustomOrder, locale: 'all' | TypedLo
 <b>🛒 Новый заказ №${orderNumber}</b>
 
 <b>👤 Клиент</b>
-Имя: ${shippingAddress.name} ${shippingAddress.surname} (${locale})
+Имя: ${shippingAddress.name} (${locale})
 Телефон: +373${shippingAddress.phone}
 Email: ${shippingAddress.email}
 
