@@ -51,7 +51,7 @@ export default buildConfig({
   routes: {
     admin: '/',
   },
-  cookiePrefix: 'customer',
+  cookiePrefix: 'payload',
   auth: {
     jwtOrder: ['cookie', 'Bearer'],
   },
