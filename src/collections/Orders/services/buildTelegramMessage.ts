@@ -15,8 +15,7 @@ export function buildTelegramMessage(
       const price = item.price ?? 0
 
       return `${i + 1}️⃣ <b>${title}</b>
-Арт: ${article}
-${qty} × ${price}`
+  Арт: ${article} | ${qty} × ${price}`
     })
     .join('\n\n')
 
