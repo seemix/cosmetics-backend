@@ -5,36 +5,36 @@ export function buildTelegramMessage(order: CustomOrder, locale: 'all' | TypedLo
   const { orderNumber, items, total, shippingAddress, comment } = order
 
   const rows = items?.map((item: any, i: number) => {
-    const index = String(i + 1).padEnd(3)
-    const article = String(item.article ?? '-').padEnd(7)
-    const title = String(item.title ?? '-').padEnd(37)
-    const qty = String(item.quantity).padEnd(5)
-    const price = String(item.price).padEnd(6)
+    const index = String(i + 1).padEnd(2)
+    const title = String(item.title ?? '-').slice(0, 20).padEnd(20)
+    const qty = String(item.quantity).padEnd(3)
+    const price = String(item.price).padEnd(4)
 
-    return `${index}${article}${title}${qty}${price}`
+    return `${index} ${title} ${qty} ${price}`
   })
 
   const tableHeader =
-    `#  Арт.    Товар                              К-во  Цена\n` +
-    `----------------------------------------------------------`
+    `#  Товар                Кв  Цена\n` +
+    `-------------------------------`
 
-  const table = [tableHeader, ...rows].join('\n')
+  const table = [tableHeader, ...(rows ?? [])].join('\n')
 
   return `
 <b>🛒 Новый заказ №${orderNumber}</b>
 
 👤 ${shippingAddress.name} (${locale})
-📞  +373${shippingAddress.phone}
+📞 +373${shippingAddress.phone}
 📧 ${shippingAddress.email}
 
 <b>📍 Доставка:</b> ${shippingAddress.city}, ${shippingAddress.address}
 
-${comment && comment?.length > 0 ? `<b>💬 Комментарий:</b>${comment}` : ''}
+${comment?.trim() ? `<b>💬 Комментарий:</b> ${comment}` : ''}
+
 <b>📦 Товары 👇</b>
 <code>
 ${table}
 </code>
 
-<b>💰 Сумма: ${total} MDL</b> 
+<b>💰 Сумма: ${total} MDL</b>
 `
 }
