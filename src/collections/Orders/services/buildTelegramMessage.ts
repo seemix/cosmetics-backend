@@ -6,8 +6,8 @@ export function buildTelegramMessage(order: CustomOrder, locale: 'all' | TypedLo
 
   const rows = items?.map((item: any, i: number) => {
     const index = String(i + 1).padEnd(3)
-    const article = String(item.article ?? '-').padEnd(12)
-    const title = String(item.title ?? '-').padEnd(32)
+    const article = String(item.article ?? '-').padEnd(7)
+    const title = String(item.title ?? '-').padEnd(37)
     const qty = String(item.quantity).padEnd(5)
     const price = String(item.price).padEnd(6)
 
@@ -15,7 +15,7 @@ export function buildTelegramMessage(order: CustomOrder, locale: 'all' | TypedLo
   })
 
   const tableHeader =
-    `#  Артикул      Товар                         К-во  Цена\n` +
+    `#  Арт.    Товар                              К-во  Цена\n` +
     `----------------------------------------------------------`
 
   const table = [tableHeader, ...rows].join('\n')
