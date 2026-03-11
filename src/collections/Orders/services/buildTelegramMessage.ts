@@ -29,7 +29,7 @@ export function buildTelegramMessage(order: CustomOrder, locale: 'all' | TypedLo
 
 <b>📍 Доставка:</b> ${shippingAddress.city}, ${shippingAddress.address}
 
-${comment && comment?.length > 0 ? '<b>💬 Комментарий:</b>${comment}' : ''}
+${comment && comment?.length > 0 ? `<b>💬 Комментарий:</b>${comment}` : ''}
 <b>📦 Товары 👇</b>
 <code>
 ${table}
