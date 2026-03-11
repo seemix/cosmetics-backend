@@ -7,20 +7,18 @@ export function buildTelegramMessage(
 ) {
   const { orderNumber, items, total, shippingAddress, comment } = order
 
-  const rows = items?.map((item: any, i: number) => {
-    const index = String(i + 1).padEnd(2)
-    const title = String(item.title ?? '-').slice(0, 24).padEnd(24)
-    const qty = String(item.quantity ?? 0).padStart(3)
-    const price = String(item.price ?? 0).padStart(4)
+  const products = items
+    ?.map((item: any, i: number) => {
+      const title = item.title ?? '-'
+      const article = item.article ?? '-'
+      const qty = item.quantity ?? 0
+      const price = item.price ?? 0
 
-    return `${index} ${title} ${qty} ${price}`
-  })
-
-  const tableHeader =
-    `#  Товар                    Кв  Цена\n` +
-    `------------------------------------`
-
-  const table = [tableHeader, ...(rows ?? [])].join('\n')
+      return `${i + 1}️⃣ <b>${title}</b>
+Арт: ${article}
+${qty} × ${price}`
+    })
+    .join('\n\n')
 
   return `
 <b>🛒 Новый заказ №${orderNumber}</b>
@@ -29,14 +27,15 @@ export function buildTelegramMessage(
 📞 +373${shippingAddress.phone}
 📧 ${shippingAddress.email}
 
-<b>📍 Доставка:</b> ${shippingAddress.city}, ${shippingAddress.address}
-${comment?.trim() ? `<b>💬 Комментарий:</b> ${comment}` : ''}
+📍 <b>Доставка:</b>
+${shippingAddress.city}, ${shippingAddress.address}
 
-<b>📦 Товары 👇</b>
-<code>
-${table}
-</code>
+${comment?.trim() ? `💬 <b>Комментарий:</b>\n${comment}\n` : ''}
 
-<b>💰 Сумма: ${total} MDL</b>
+📦 <b>Товары</b>
+
+${products}
+
+💰 <b>Сумма: ${total} MDL</b>
 `
 }
