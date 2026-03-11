@@ -41,6 +41,7 @@ export const getNormalizedOrders = async (ordersDocs: any, req: PayloadRequest) 
             id: productId,
             title: fullProduct?.title || productData.title || '',
             subtitle: fullProduct?.subtitle || '',
+            article: fullProduct?.article || '',
             slug: fullProduct?.slug || productData.slug || '',
             price: item.price, // Snapshot ціни
             quantity: item.quantity,

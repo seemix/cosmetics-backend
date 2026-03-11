@@ -3,8 +3,7 @@ import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 import { createOrder } from '@/collections/Orders/endpoints/createOrder'
 import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
-import { sendNewOrderEmail } from '@/collections/Orders/hooks/sendNewOrderEmail'
-import { sendTelegramNotification } from '@/collections/Orders/hooks/sendTelegramNotification'
+import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
 
 export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -76,6 +75,6 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   endpoints: [createOrder, getMyOrders],
   hooks: {
     beforeChange: [setOrderNumber],
-    afterChange: [sendNewOrderEmail, sendTelegramNotification],
+    afterChange: [sendNewOrderNotification],
   },
 })

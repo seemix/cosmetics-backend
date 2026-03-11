@@ -23,7 +23,7 @@ export const emailHeader = `
             <!-- Header -->
             <tr>
             <td width="90" style="background-color:#ededed; padding-left:15px;">
-             <img src="https://iili.io/fNrddQt.png" alt="logo" width="90" height="89"/>
+             <img src="https://admin.nextlevelshop.md/api/media/file/LOGO.png" alt="logo" width="90" height="89"/>
             </td>
               <td
                 style="

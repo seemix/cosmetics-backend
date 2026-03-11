@@ -6,8 +6,8 @@ export function buildTelegramMessage(order: CustomOrder, locale: 'all' | TypedLo
 
   const rows = items?.map((item: any, i: number) => {
     const index = String(i + 1).padEnd(3)
-    const article = String(item.product.article ?? '-').padEnd(12)
-    const title = String(item.product.title ?? '-').padEnd(30)
+    const article = String(item.article ?? '-').padEnd(12)
+    const title = String(item.title ?? '-').padEnd(32)
     const qty = String(item.quantity).padEnd(5)
     const price = String(item.price).padEnd(6)
 
@@ -23,23 +23,18 @@ export function buildTelegramMessage(order: CustomOrder, locale: 'all' | TypedLo
   return `
 <b>🛒 Новый заказ №${orderNumber}</b>
 
-<b>👤 Клиент</b>
-Имя: ${shippingAddress.name} (${locale})
-Телефон: +373${shippingAddress.phone}
-Email: ${shippingAddress.email}
+👤 ${shippingAddress.name} (${locale})
+📞  +373${shippingAddress.phone}
+📧 ${shippingAddress.email}
 
-<b>📍 Доставка</b>
-Город: ${shippingAddress.city}
-Адрес: ${shippingAddress.address}
+<b>📍 Доставка:</b> ${shippingAddress.city}, ${shippingAddress.address}
 
-<b>💬 Комментарий</b>
-${comment || '-'}
-
-<b>📦 Товары</b>
+${comment && comment?.length > 0 ? '<b>💬 Комментарий:</b>${comment}' : ''}
+<b>📦 Товары 👇</b>
 <code>
 ${table}
 </code>
 
-<b>💰 Сумма:</b> ${total} MDL
+<b>💰 Сумма:${total} MDL</b> 
 `
 }

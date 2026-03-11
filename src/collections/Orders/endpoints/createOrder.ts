@@ -73,6 +73,7 @@ export const createOrder: Endpoint = {
 
           return {
             title: product?.title,
+            article: product?.article,
             subtitle: product?.subtitle,
             quantity: item.quantity,
             price: item.price,
