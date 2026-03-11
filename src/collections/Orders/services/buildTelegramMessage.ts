@@ -35,6 +35,6 @@ ${comment && comment?.length > 0 ? '<b>💬 Комментарий:</b>${comment
 ${table}
 </code>
 
-<b>💰 Сумма:${total} MDL</b> 
+<b>💰 Сумма: ${total} MDL</b> 
 `
 }

@@ -18,7 +18,7 @@ export const setOrderNumber: CollectionBeforeChangeHook = async ({ req, data, op
     }
   }
 
-  data.orderNumber = String(nextNumber).padStart(4, '1001');
+  data.orderNumber = String(nextNumber).padStart(4, '1026');
 
   return data;
 };
