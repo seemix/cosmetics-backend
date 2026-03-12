@@ -16,6 +16,7 @@ export const getFavorites: Endpoint = {
     const isWholesaleUser = req.user?.wholesale === true
     const products = await req.payload.find({
       collection: 'products',
+      locale: req.locale,
       where: {
         id: {
           in: favorites,

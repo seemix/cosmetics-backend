@@ -1,7 +1,6 @@
 import { messages } from './localization'
 
 export const generateOrderEmailHtml = (order: any, locale: 'ru' | 'ro') => {
-  // Формуємо рядки товарів
   const itemRows = order.items
     .map(
       (item: any) => `

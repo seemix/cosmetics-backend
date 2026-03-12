@@ -14,7 +14,7 @@ export const emailHeader = `
 
           <!-- Main container (800px) -->
           <table
-            width="95%"
+            width="97%"
             cellpadding="0"
             cellspacing="0"
             style="background-color:#fff; font-family:Arial, Helvetica, sans-serif;"
