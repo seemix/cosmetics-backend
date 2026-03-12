@@ -1,6 +1,6 @@
 import { Endpoint, PayloadRequest } from 'payload'
 
-import { getProductsByRelation } from '@/services/productsByRelation'
+import { getProductsByRelation } from '@/collections/Products/services/productsByRelation.service'
 
 export const getProductsByBrand: Endpoint = {
   path: '/products-brand/:slug',

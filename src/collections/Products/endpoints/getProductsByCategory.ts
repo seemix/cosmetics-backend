@@ -1,6 +1,6 @@
 import { PayloadRequest } from 'payload'
 
-import { getProductsByRelation } from '@/services/productsByRelation'
+import { getProductsByRelation } from '@/collections/Products/services/productsByRelation.service'
 
 export const getProductsByCategory = {
   path: '/products-category/:slug',

@@ -20,9 +20,11 @@ export const sendNewOrderNotification: CollectionAfterChangeHook = async ({
         shippingAddress: doc.shippingAddress,
         comment: doc.comment
       }
+
+      const subject = `NextLevel Shop ${req.locale === 'ru' ? `Новый заказ` : 'Nouă ordine'} #${doc.orderNumber}`
       await req.payload.sendEmail({
         to: doc.shippingAddress.email,
-        subject: `NextLevel Shop new order #${doc.orderNumber}`,
+        subject,
         html: `${emailHeader}${generateOrderEmailHtml(newDoc, req.locale as 'ru' || 'ro')}${emailFooter}`,
       })
       const botToken = process.env.TELEGRAM_BOT_TOKEN

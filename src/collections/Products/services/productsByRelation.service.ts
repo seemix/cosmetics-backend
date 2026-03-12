@@ -1,6 +1,6 @@
 import { PayloadRequest } from 'payload'
 import { ProductsByRelationResult } from '@/collections/Products/endpoints/types'
-import { pageGenerator, sortGenerator } from './sort-page.service'
+import { pageGenerator, sortGenerator } from '@/services/sortPage.service'
 
 type RelationConfig = {
   relationCollection: 'brands' | 'categories'

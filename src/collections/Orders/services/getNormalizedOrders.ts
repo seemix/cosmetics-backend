@@ -1,8 +1,6 @@
 import { PayloadRequest } from 'payload'
 
 export const getNormalizedOrders = async (ordersDocs: any, req: PayloadRequest) => {
-  // Використовуємо просте кешування в межах одного виклику,
-  // щоб не запитувати той самий продукт двічі
   const productCache = new Map()
 
   return await Promise.all(

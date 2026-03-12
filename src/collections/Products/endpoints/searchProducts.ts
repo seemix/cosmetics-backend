@@ -1,4 +1,4 @@
-import { sortGenerator } from '@/services/sort-page.service'
+import { sortGenerator } from '@/services/sortPage.service'
 import { Endpoint, PayloadRequest } from 'payload'
 
 type SearchProductsQuery = {

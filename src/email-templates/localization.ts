@@ -63,5 +63,8 @@ export const messages = {
     ru: 'Комментарий',
     ro: 'Comentariu',
   },
-
+  newOrder: {
+    ru: 'Новый заказ',
+    ro: ''
+  }
 }
