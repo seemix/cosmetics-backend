@@ -28,10 +28,17 @@ export const Posts: CollectionConfig = {
       localized: false,
     },
     {
+      name: 'square-slide',
+      type: 'upload',
+      relationTo: 'media',
+      required: true,
+      localized: false,
+    },
+    {
       name: 'excerpt',
       type: 'textarea',
       localized: true,
-      required: true,
+      required: false,
       admin: {
         rows: 5,
       },

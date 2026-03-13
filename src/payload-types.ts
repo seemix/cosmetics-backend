@@ -573,7 +573,8 @@ export interface Post {
   generateSlug?: boolean | null;
   slug: string;
   slide: string | Media;
-  excerpt: string;
+  'square-slide': string | Media;
+  excerpt?: string | null;
   content?: {
     root: {
       type: string;
@@ -1000,6 +1001,7 @@ export interface PostsSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   slide?: T;
+  'square-slide'?: T;
   excerpt?: T;
   content?: T;
   updatedAt?: T;
