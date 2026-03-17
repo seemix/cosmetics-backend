@@ -35,6 +35,13 @@ export const Posts: CollectionConfig = {
       localized: false,
     },
     {
+      name: 'customLink',
+      type: 'text',
+      localized: false,
+      required: false,
+      admin: { position: 'sidebar' },
+    },
+    {
       name: 'excerpt',
       type: 'textarea',
       localized: true,

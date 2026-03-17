@@ -574,6 +574,7 @@ export interface Post {
   slug: string;
   slide: string | Media;
   'square-slide': string | Media;
+  customLink?: string | null;
   excerpt?: string | null;
   content?: {
     root: {
@@ -1002,6 +1003,7 @@ export interface PostsSelect<T extends boolean = true> {
   slug?: T;
   slide?: T;
   'square-slide'?: T;
+  customLink?: T;
   excerpt?: T;
   content?: T;
   updatedAt?: T;
