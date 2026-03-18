@@ -43,17 +43,31 @@ export const Media: CollectionConfig = {
       {
         height: 96,
         width: 96,
+        formatOptions: {
+          format: 'webp',
+          options: {
+            quality: 85,
+          },
+        },
         position: 'centre',
         name: 'thumbnail',
       },
       {
         height: 400,
         width: 400,
+        formatOptions: {
+          format: 'webp',
+          options: {
+            quality: 95,
+          },
+        },
+
         position: 'centre',
         name: 'medium',
       },
     ],
   },
+
 
   hooks: {
     beforeValidate: [generateBlurHash],
