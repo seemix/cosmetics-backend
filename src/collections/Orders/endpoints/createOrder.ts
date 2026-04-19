@@ -6,7 +6,8 @@ export const createOrder: Endpoint = {
 
   handler: async (req: PayloadRequest) => {
     try {
-      const { items, shippingAddress, comment } = await req?.json?.()
+      const { items, shippingAddress, comment, paymentType } = await req?.json?.()
+      console.log(paymentType)
       if (!items?.length) {
         return Response.json({ message: 'Items are required' }, { status: 400 })
       }
@@ -51,6 +52,7 @@ export const createOrder: Endpoint = {
           customer: req.user?.id,
           items: orderItems,
           total,
+          paymentType,
           status: 'pending',
           shippingAddress,
           comment

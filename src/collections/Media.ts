@@ -68,7 +68,6 @@ export const Media: CollectionConfig = {
     ],
   },
 
-
   hooks: {
     beforeValidate: [generateBlurHash],
   },

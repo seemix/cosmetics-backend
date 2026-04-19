@@ -222,6 +222,7 @@ export interface User {
 export interface Order {
   id: string;
   orderNumber?: string | null;
+  telegramMessageId?: string | null;
   customer?: (string | null) | User;
   items?:
     | {
@@ -233,6 +234,7 @@ export interface Order {
     | null;
   total: number;
   status?: ('pending' | 'paid' | 'shipped' | 'cancelled') | null;
+  paymentType?: ('cash' | 'transfer') | null;
   shippingAddress: {
     name: string;
     phone: string;
@@ -260,6 +262,7 @@ export interface Product {
   unavailable?: boolean | null;
   wholesalePrice?: number | null;
   shortDescription?: string | null;
+  titleWithArticle?: string | null;
   inventory?: number | null;
   enableVariants?: boolean | null;
   variantTypes?: (string | VariantType)[] | null;
@@ -1304,6 +1307,7 @@ export interface ProductsSelect<T extends boolean = true> {
   unavailable?: T;
   wholesalePrice?: T;
   shortDescription?: T;
+  titleWithArticle?: T;
   inventory?: T;
   enableVariants?: T;
   variantTypes?: T;
@@ -1356,6 +1360,7 @@ export interface CartsSelect<T extends boolean = true> {
  */
 export interface OrdersSelect<T extends boolean = true> {
   orderNumber?: T;
+  telegramMessageId?: T;
   customer?: T;
   items?:
     | T
@@ -1367,6 +1372,7 @@ export interface OrdersSelect<T extends boolean = true> {
       };
   total?: T;
   status?: T;
+  paymentType?: T;
   shippingAddress?:
     | T
     | {

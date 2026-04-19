@@ -21,6 +21,7 @@ export type CustomOrder = {
   orderNumber: string
   items: OrderItem[]
   total: number
+  paymentType: 'cash' | 'transfer'
   status: 'pending' | 'paid' | 'shipped' | 'cancelled'
   shippingAddress: ShippingAddress
   comment?: string

@@ -30,8 +30,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     defaultLimit: 12,
   },
   admin: {
-    ...defaultCollection?.admin,
+    //...defaultCollection?.admin,
     defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
+    listSearchableFields: ['title', 'article'],
+    meta: {
+      description: 'Search by title or article',
+    },
     livePreview: {
       url: ({ data, req }) =>
         generatePreviewPath({
@@ -46,7 +50,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         collection: 'products',
         req,
       }),
-    useAsTitle: 'title',
+    useAsTitle: 'titleWithArticle',
   },
   defaultPopulate: {
     ...defaultCollection?.defaultPopulate,
@@ -58,11 +62,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     wholesalePrice: true,
     enableVariants: true,
     gallery: true,
+    article: true
   },
   fields: [
     { name: 'title', type: 'text', localized: false, required: true },
     { name: 'subtitle', type: 'text', localized: true, required: true },
-    { name: 'article', type: 'text', localized: false, required: true, admin: { position: 'sidebar' } },
+    { name: 'article', type: 'text', localized: false, required: true, admin: { position: 'sidebar' }, index: true },
     { name: 'brand', type: 'relationship', relationTo: 'brands', required: true, admin: { position: 'sidebar' } },
     { name: 'retailPrice', type: 'number', required: true, defaultValue: 0, admin: { position: 'sidebar' } },
     { name: 'action', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
@@ -83,6 +88,24 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       localized: true,
       admin: {
         rows: 10,
+      },
+    },
+    {
+      name: 'titleWithArticle',
+      type: 'text',
+      index: true, // Це важливо для швидкого пошуку
+      admin: {
+        hidden: true, // Менеджер не бачить його у формі
+      },
+      hooks: {
+        beforeChange: [
+          ({ data }) => {
+            // Зберігаємо рядок у базу при кожному збереженні товару
+            const title = data?.title || '';
+            const article = data?.article || '';
+            return `${title} [${article}]`.trim();
+          },
+        ],
       },
     },
 

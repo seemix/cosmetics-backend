@@ -19,45 +19,90 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       unique: true,
       admin: {
         readOnly: true,
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'orderLogic',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/collections/Orders/components/OrderManager#OrderManager',
+        },
+      },
+    },
+    {
+      name: 'telegramMessageId',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
       },
     },
     {
       name: 'customer',
       type: 'relationship',
       relationTo: 'users',
+      admin: {
+        position: 'sidebar',
+      },
     },
     {
       name: 'items',
       type: 'array',
+
       fields: [
         {
           name: 'product',
           type: 'relationship',
           relationTo: 'products',
           required: true,
+          admin: {
+            sortOptions: 'title',
+            allowCreate: false,
+          },
         },
         {
-          name: 'quantity',
-          type: 'number',
-          required: true,
-        },
-        {
-          name: 'price',
-          type: 'number',
-          required: true,
+          type: 'row',
+          fields: [
+            {
+              name: 'quantity',
+              type: 'number',
+              required: true,
+              admin: {
+                width: '50%',
+              },
+            },
+            {
+              name: 'price',
+              type: 'number',
+              required: true,
+              admin: {
+                width: '50%',
+              },
+            },
+          ],
         },
       ],
     },
+
     {
       name: 'total',
       type: 'number',
       required: true,
+      admin: { position: 'sidebar' },
     },
     {
       name: 'status',
       type: 'select',
       options: ['pending', 'paid', 'shipped', 'cancelled'],
       defaultValue: 'pending',
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'paymentType',
+      type: 'select',
+      options: ['cash', 'transfer'],
     },
     {
       name: 'shippingAddress',

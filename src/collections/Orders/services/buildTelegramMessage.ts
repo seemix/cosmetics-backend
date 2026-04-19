@@ -3,9 +3,9 @@ import { TypedLocale } from 'payload'
 
 export function buildTelegramMessage(
   order: CustomOrder,
-  locale: 'all' | TypedLocale | undefined
+  locale: 'all' | TypedLocale | undefined,
 ) {
-  const { orderNumber, items, total, shippingAddress, comment } = order
+  const { orderNumber, items, total, shippingAddress, paymentType, comment } = order
 
   const products = items
     ?.map((item: any, i: number) => {
@@ -25,6 +25,7 @@ export function buildTelegramMessage(
 👤 ${shippingAddress.name} (${locale})
 📞 +373${shippingAddress.phone}
 📧 ${shippingAddress.email}
+💰 ${paymentType === 'cash' ? 'Наличными' : 'По перечислению'}
 
 📍 <b>Доставка:</b>
 ${shippingAddress.city}, ${shippingAddress.address}
