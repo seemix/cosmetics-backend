@@ -1,4 +1,4 @@
-import { slugField } from 'payload'
+import { DefaultDocumentIDType, slugField, Where } from 'payload'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 
@@ -9,7 +9,6 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
-import { DefaultDocumentIDType, Where } from 'payload'
 import { populateRelatedProducts } from '@/hooks/relatedProducts'
 import { hideStockFields } from '@/services/hideStockProductFields'
 import { getProductsByCategory } from '@/collections/Products/endpoints/getProductsByCategory'
@@ -93,16 +92,15 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     {
       name: 'titleWithArticle',
       type: 'text',
-      index: true, // Це важливо для швидкого пошуку
+      index: true,
       admin: {
-        hidden: true, // Менеджер не бачить його у формі
+        hidden: true,
       },
       hooks: {
         beforeChange: [
-          ({ data }) => {
-            // Зберігаємо рядок у базу при кожному збереженні товару
-            const title = data?.title || '';
-            const article = data?.article || '';
+          ({ data, originalDoc, value }) => {
+            const title = data?.title || originalDoc?.title || '';
+            const article = data?.article || originalDoc?.article || '';
             return `${title} [${article}]`.trim();
           },
         ],
