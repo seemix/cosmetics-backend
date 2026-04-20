@@ -256,7 +256,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ],
   endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers],
   hooks: {
-    afterRead: [populateRelatedProducts],
-    afterChange: [autoTranslate],
+   // afterRead: [populateRelatedProducts],
+  //  afterChange: [autoTranslate],
   },
 })
