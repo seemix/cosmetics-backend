@@ -29,7 +29,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     defaultLimit: 12,
   },
   admin: {
-    //...defaultCollection?.admin,
+    ...defaultCollection?.admin,
     defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
     listSearchableFields: ['title', 'article'],
     meta: {
