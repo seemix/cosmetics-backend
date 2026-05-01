@@ -39,7 +39,10 @@ export const Users: CollectionConfig = {
     tokenExpiration: 1209600,
     useSessions: false,
     verify: {
-      generateEmailSubject: ({ req }) => emailSubject('verifyEmail', req.locale as 'ru' | 'ro'),
+      generateEmailSubject: ({ user }) => {
+        const locale = (user?.locale as 'ru' | 'ro') || 'ru';
+        return emailSubject('verifyEmail', locale);
+      },
       generateEmailHTML: ({ token, user }) => {
         const url = `${process.env.FRONTEND_URL}/verify-email/${token}`
         return `${emailHeader}${verifyEmail(user.locale, user.name, url)}${emailFooter}`

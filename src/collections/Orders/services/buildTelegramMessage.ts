@@ -27,7 +27,7 @@ export function buildTelegramMessage(
 📧 ${shippingAddress.email}
 💰 ${paymentType === 'cash' ? 'Наличными' : 'По перечислению'}
 
-📍 <b>Доставка:</b>
+🚚 <b>Доставка:</b>
 ${shippingAddress.city}, ${shippingAddress.address}
 
 ${comment?.trim() ? `💬 <b>Комментарий:</b>\n${comment}\n` : ''}
