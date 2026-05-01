@@ -44,12 +44,13 @@ export const Users: CollectionConfig = {
         return emailSubject('verifyEmail', locale);
       },
       generateEmailHTML: ({ token, user }) => {
-        const url = `${process.env.FRONTEND_URL}/verify-email/${token}`
+        const locale = (user?.locale as 'ru' | 'ro') || 'ru';
+        const url = `${process.env.FRONTEND_URL}/${locale}/verify-email/${token}`
         return `${emailHeader}${verifyEmail(user.locale, user.name, url)}${emailFooter}`
       },
     },
     forgotPassword: {
-      generateEmailSubject: (args) => emailSubject('forgotPassword', args?.req?.locale as 'ru' | 'ro'),
+      generateEmailSubject: (args) => emailSubject('forgotPassword', args?.user?.locale as 'ru' | 'ro'),
       generateEmailHTML: (args) => {
         const token = args?.token
         const user = args?.user
@@ -57,7 +58,8 @@ export const Users: CollectionConfig = {
         if (!token || !user) {
           return ''
         }
-        const url = `${process.env.FRONTEND_URL}/reset-password/${token}`
+        const locale = args?.user?.locale || 'ru';
+        const url = `${process.env.FRONTEND_URL}/${locale}/reset-password/${token}`
         return `${emailHeader}${forgotPassword(user.locale, user.name, url)}${emailFooter}`
       },
     },
