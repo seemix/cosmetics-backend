@@ -1,9 +1,8 @@
 import { CustomOrder } from '@/collections/Orders/types/custom-order'
-import { TypedLocale } from 'payload'
 
 export function buildTelegramMessage(
   order: CustomOrder,
-  locale: 'all' | TypedLocale | undefined,
+  locale: 'ru' | 'ro',
 ) {
   const { orderNumber, items, total, shippingAddress, paymentType, comment } = order
 
