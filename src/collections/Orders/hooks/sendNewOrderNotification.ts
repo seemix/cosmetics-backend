@@ -39,7 +39,7 @@ export const sendNewOrderNotification: CollectionAfterChangeHook = async ({
       return
     }
 
-    const message = buildTelegramMessage(newDoc, req.locale as 'ru' || 'ro')
+    const message = buildTelegramMessage(newDoc, req?.user?.locale as 'ru' || 'ro' || 'ru')
 
     if (operation === 'create') {
       const res = await axios.post(`${telegramApi}/sendMessage`, {
