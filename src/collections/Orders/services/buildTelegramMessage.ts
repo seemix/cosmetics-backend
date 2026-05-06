@@ -2,7 +2,6 @@ import { CustomOrder } from '@/collections/Orders/types/custom-order'
 
 export function buildTelegramMessage(
   order: CustomOrder,
-  locale: 'ru' | 'ro',
 ) {
   const { orderNumber, items, total, shippingAddress, paymentType, comment } = order
 
@@ -21,7 +20,7 @@ export function buildTelegramMessage(
   return `
 <b>🛒 Новый заказ №${orderNumber}</b>
 
-👤 ${shippingAddress.name} (${locale})
+👤 ${shippingAddress.name}
 📞 +373${shippingAddress.phone}
 📧 ${shippingAddress.email}
 💰 ${paymentType === 'cash' ? 'Наличными' : 'По перечислению'}
