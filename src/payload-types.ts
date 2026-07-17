@@ -235,6 +235,7 @@ export interface Order {
   total: number;
   status?: ('pending' | 'paid' | 'shipped' | 'cancelled') | null;
   paymentType?: ('cash' | 'transfer') | null;
+  SRL?: string | null;
   shippingAddress: {
     name: string;
     phone: string;
@@ -1373,6 +1374,7 @@ export interface OrdersSelect<T extends boolean = true> {
   total?: T;
   status?: T;
   paymentType?: T;
+  SRL?: T;
   shippingAddress?:
     | T
     | {

@@ -105,6 +105,21 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       options: ['cash', 'transfer'],
     },
     {
+      name: 'SRL',
+      type: 'text',
+      // admin: {
+      //   condition: (data) => data?.paymentType === 'transfer',
+      // },
+      // validate: (val: any, { data }: { data: any }) => {
+      //   if (data?.paymentType === 'transfer') {
+      //     if (!val || val.trim() === '') {
+      //       return 'SRL is  required for payment type transfer'
+      //     }
+      //   }
+      //   return true
+      // },
+    },
+    {
       name: 'shippingAddress',
       type: 'group',
       fields: [

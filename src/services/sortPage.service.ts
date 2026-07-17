@@ -9,7 +9,7 @@ export const sortGenerator = (sortParam: string) => {
       sort = '-wholesalePrice'
       break
     default:
-      sort = undefined
+      sort = '-updatedAt'
   }
   return sort
 }

@@ -3,7 +3,7 @@ import { CustomOrder } from '@/collections/Orders/types/custom-order'
 export function buildTelegramMessage(
   order: CustomOrder,
 ) {
-  const { orderNumber, items, total, shippingAddress, paymentType, comment } = order
+  const { orderNumber, items, total, shippingAddress, paymentType, comment, SRL } = order
 
   const products = items
     ?.map((item: any, i: number) => {
@@ -23,7 +23,7 @@ export function buildTelegramMessage(
 👤 ${shippingAddress.name}
 📞 +373${shippingAddress.phone}
 📧 ${shippingAddress.email}
-💰 ${paymentType === 'cash' ? 'Наличными' : 'По перечислению'}
+💰 ${paymentType === 'cash' ? 'Наличными' : `По перечислению \nSRL: ${SRL}`}
 
 🚚 <b>Доставка:</b>
 ${shippingAddress.city}, ${shippingAddress.address}

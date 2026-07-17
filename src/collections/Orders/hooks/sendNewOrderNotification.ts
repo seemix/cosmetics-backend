@@ -18,6 +18,7 @@ export const sendNewOrderNotification: CollectionAfterChangeHook = async ({
       ...formattedDocs[0],
       paymentType: doc.paymentType,
       shippingAddress: doc.shippingAddress,
+      SRL: doc.SRL,
       comment: doc.comment
     }
 

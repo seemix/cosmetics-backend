@@ -6,8 +6,7 @@ export const createOrder: Endpoint = {
 
   handler: async (req: PayloadRequest) => {
     try {
-      const { items, shippingAddress, comment, paymentType } = await req?.json?.()
-      console.log(paymentType)
+      const { items, shippingAddress, comment, paymentType, SRL } = await req?.json?.()
       if (!items?.length) {
         return Response.json({ message: 'Items are required' }, { status: 400 })
       }
@@ -55,6 +54,7 @@ export const createOrder: Endpoint = {
           paymentType,
           status: 'pending',
           shippingAddress,
+          SRL,
           comment
         },
         locale: req.locale as 'ru' || 'ro',
