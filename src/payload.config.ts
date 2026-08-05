@@ -22,6 +22,7 @@ import { Categories } from '@/collections/Categories'
 import { Media } from '@/collections/Media'
 import { Pages } from '@/collections/Pages'
 import { Brands } from '@/collections/Brands'
+import { PromoCodes } from './collections/PromoCodes'
 import { Users } from '@/collections/Users'
 import { Posts } from './collections/Posts'
 import { plugins } from './plugins'
@@ -83,7 +84,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Posts, Categories, Brands, Media],
+  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),

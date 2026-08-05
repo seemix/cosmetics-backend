@@ -1,6 +1,7 @@
 import { PayloadRequest } from 'payload'
 import { ProductsByRelationResult } from '@/collections/Products/endpoints/types'
 import { pageGenerator, sortGenerator } from '@/services/sortPage.service'
+import { calculateProductPrice } from '@/services/price.service'
 
 type RelationConfig = {
   relationCollection: 'brands' | 'categories'
@@ -12,11 +13,49 @@ type Filter = {
   brand?: false
 }
 
+// 1. Експортуємо transformProduct
+export function transformProduct(product: any, req: PayloadRequest) {
+  const transformed: any = {
+    ...product,
+    gallery: Array.isArray(product.gallery) ? product.gallery.slice(0, 1) : [],
+  }
 
-function emptyResult(
-  page: number,
-  limit: number,
-): ProductsByRelationResult {
+  const { isWholesale, discountPrice } = calculateProductPrice({
+    product,
+    user: req.user,
+  })
+
+  // Приховуємо оптову ціну для роздрібних користувачів
+  if (!isWholesale) {
+    delete transformed.wholesalePrice
+  }
+
+  // Додаємо discountPrice, якщо є брендова знижка
+  if (discountPrice !== undefined) {
+    transformed.discountPrice = discountPrice
+  }
+
+  return transformed
+}
+
+// 2. Експортуємо formatPaginatedProducts
+export function formatPaginatedProducts(productsRes: any, req: PayloadRequest) {
+  return {
+    products: productsRes.docs.map((doc: any) => transformProduct(doc, req)),
+    pagination: {
+      page: productsRes?.page || 1,
+      limit: productsRes.limit || 12,
+      totalPages: productsRes.totalPages,
+      totalDocs: productsRes.totalDocs,
+      hasNextPage: productsRes.hasNextPage,
+      hasPrevPage: productsRes.hasPrevPage,
+      nextPage: (productsRes?.nextPage as number | null) ?? null,
+      prevPage: (productsRes?.prevPage as number | null) ?? null,
+    },
+  }
+}
+
+function emptyResult(page: number, limit: number): ProductsByRelationResult {
   return {
     products: [],
     pagination: {
@@ -32,6 +71,7 @@ function emptyResult(
   }
 }
 
+// 3. Експортуємо getProductsByRelation
 export async function getProductsByRelation(
   req: PayloadRequest,
   slug: string | undefined,
@@ -44,16 +84,12 @@ export async function getProductsByRelation(
     return emptyResult(page, limit)
   }
 
-  const isWholesaleUser = req.user?.wholesale === true
-
-  const filter: Filter =
-    config.relationField === 'brand'
-      ? { categories: false }
-      : { brand: false }
+  const filter: Filter = config.relationField === 'brand' ? { categories: false } : {}
 
   const relationRes = await req.payload.find({
     collection: config.relationCollection,
     where: { slug: { equals: slug } },
+    locale: req.locale,
     limit: 1,
   })
 
@@ -87,14 +123,11 @@ export async function getProductsByRelation(
     return emptyResult(page, limit)
   }
 
-  const firstProduct = productsRes.docs[0]
+  const firstProduct = productsRes.docs[0] as any
   const extension: Record<string, unknown> = {}
 
-  // 🟦 Categories extension
   if (config.relationField === 'categories') {
-    // @ts-ignore
     const category = firstProduct?.categories?.[0]
-
     if (category) {
       extension.categories = category.parent
         ? [category.parent, { ...category, parent: undefined }]
@@ -102,50 +135,22 @@ export async function getProductsByRelation(
     }
   }
 
-  // 🟨 Brand extension
-  // @ts-ignore
   if (config.relationField === 'brand' && firstProduct.brand) {
-    // @ts-ignore
     const { description, generateSlug, ...safeBrand } = firstProduct.brand
     extension.brand = safeBrand
   }
 
-  // @ts-ignore
+  const paginatedData = formatPaginatedProducts(productsRes, req)
+
+  if (config.relationField === 'brand') {
+    paginatedData.products = paginatedData.products.map((p: any) => {
+      delete p.brand
+      return p
+    })
+  }
+
   return {
     ...extension,
-
-    products: productsRes.docs.map((product) => {
-      const base: any = {
-        ...product,
-        gallery: Array.isArray(product.gallery)
-          ? product.gallery.slice(0, 1)
-          : [],
-      }
-
-      if (!isWholesaleUser) {
-        delete base.wholesalePrice
-      }
-
-      if (config.relationField === 'categories') {
-        delete base.categories
-      }
-
-      if (config.relationField === 'brand') {
-        delete base.brand
-      }
-
-      return base
-    }),
-
-    pagination: {
-      page: productsRes?.page || 1,
-      limit: productsRes.limit || 12,
-      totalPages: productsRes.totalPages,
-      totalDocs: productsRes.totalDocs,
-      hasNextPage: productsRes.hasNextPage,
-      hasPrevPage: productsRes.hasPrevPage,
-      nextPage: productsRes?.nextPage as number | null,
-      prevPage: productsRes?.prevPage as number | null,
-    },
+    ...paginatedData,
   }
 }

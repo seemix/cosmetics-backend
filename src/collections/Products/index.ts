@@ -9,13 +9,14 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
-import { populateRelatedProducts } from '@/hooks/relatedProducts'
+import { populateRelatedProducts } from '@/collections/Products/hooks/relatedProducts'
 import { hideStockFields } from '@/services/hideStockProductFields'
 import { getProductsByCategory } from '@/collections/Products/endpoints/getProductsByCategory'
 import { getProductsByBrand } from '@/collections/Products/endpoints/getProductsByBrand'
 import { searchProducts } from '@/collections/Products/endpoints/searchProducts'
 import { getBestSellers } from '@/collections/Products/endpoints/getBestSellers'
 import { autoTranslate } from '@/collections/Products/hooks/autoTranslate'
+import { getSingleProduct } from '@/collections/Products/endpoints/getSingleProduct'
 
 
 // @ts-ignore
@@ -98,7 +99,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       },
       hooks: {
         beforeChange: [
-          ({ data, originalDoc, value }) => {
+          ({ data, originalDoc }) => {
             const title = data?.title || originalDoc?.title || '';
             const article = data?.article || originalDoc?.article || '';
             return `${title} [${article}]`.trim();
@@ -254,7 +255,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     },
     slugField(),
   ],
-  endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers],
+  endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers, getSingleProduct],
   hooks: {
    afterRead: [populateRelatedProducts],
    afterChange: [autoTranslate],

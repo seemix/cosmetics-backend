@@ -40,11 +40,11 @@ export const Users: CollectionConfig = {
     useSessions: false,
     verify: {
       generateEmailSubject: ({ user }) => {
-        const locale = (user?.locale as 'ru' | 'ro') || 'ru';
-        return emailSubject('verifyEmail', locale);
+        const locale = (user?.locale as 'ru' | 'ro') || 'ru'
+        return emailSubject('verifyEmail', locale)
       },
       generateEmailHTML: ({ token, user }) => {
-        const locale = (user?.locale as 'ru' | 'ro') || 'ru';
+        const locale = (user?.locale as 'ru' | 'ro') || 'ru'
         const url = `${process.env.FRONTEND_URL}/${locale}/verify-email/${token}`
         return `${emailHeader}${verifyEmail(user.locale, user.name, url)}${emailFooter}`
       },
@@ -58,7 +58,7 @@ export const Users: CollectionConfig = {
         if (!token || !user) {
           return ''
         }
-        const locale = args?.user?.locale || 'ru';
+        const locale = args?.user?.locale || 'ru'
         const url = `${process.env.FRONTEND_URL}/${locale}/reset-password/${token}`
         return `${emailHeader}${forgotPassword(user.locale, user.name, url)}${emailFooter}`
       },
@@ -104,6 +104,28 @@ export const Users: CollectionConfig = {
     {
       name: 'street',
       type: 'text',
+    },
+    {
+      name: 'brandDiscounts',
+      type: 'array',
+      admin: {
+        description: 'Personal discounts',
+      },
+      fields: [
+        {
+          name: 'brand',
+          type: 'relationship',
+          relationTo: 'brands',
+          required: true,
+        },
+        {
+          name: 'discountPercent',
+          type: 'number',
+          required: true,
+          min: 5,
+          max: 50,
+        },
+      ],
     },
     {
       name: 'roles',
@@ -166,6 +188,7 @@ export const Users: CollectionConfig = {
       relationTo: 'products',
       hasMany: true,
     },
+
   ],
   endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem, updateUserInfo],
 }

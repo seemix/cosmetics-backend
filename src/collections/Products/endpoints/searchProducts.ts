@@ -1,5 +1,6 @@
-import { sortGenerator } from '@/services/sortPage.service'
 import { Endpoint, PayloadRequest } from 'payload'
+import { sortGenerator } from '@/services/sortPage.service'
+import { formatPaginatedProducts } from '@/collections/Products/services/productsByRelation.service'
 
 type SearchProductsQuery = {
   q?: string
@@ -12,9 +13,7 @@ export const searchProducts: Endpoint = {
   path: '/products-search',
   method: 'get',
 
-  handler: async (
-    req: PayloadRequest,
-  ): Promise<Response> => {
+  handler: async (req: PayloadRequest): Promise<Response> => {
     const {
       q = '',
       page = '1',
@@ -23,8 +22,22 @@ export const searchProducts: Endpoint = {
     } = req.query as SearchProductsQuery
 
     if (!q || q.length < 2) {
-      return Response.json({ products: [], pagination: null })
+      return Response.json({
+        products: [],
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: 0,
+          totalDocs: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+          nextPage: null,
+          prevPage: null,
+        },
+      })
     }
+
+    // 1. Пошук брендів за запитом
     const brands = await req.payload.find({
       collection: 'brands',
       where: {
@@ -33,9 +46,9 @@ export const searchProducts: Endpoint = {
       limit: 100,
     })
 
-    const brandIds = brands.docs.map(b => b.id)
-    const isWholesaleUser = req.user?.wholesale === true
+    const brandIds = brands.docs.map((b) => b.id)
 
+    // 2. Пошук товарів
     const result = await req.payload.find({
       collection: 'products',
       locale: req.locale,
@@ -43,8 +56,7 @@ export const searchProducts: Endpoint = {
       draft: false,
       page: Number(page),
       limit: Number(limit),
-      depth: 2,
-
+      depth: 2, // Потрібно depth: 2, щоб отримати об'єкт brand для перевірки знижки
       select: {
         description: false,
         relatedProducts: false,
@@ -56,43 +68,20 @@ export const searchProducts: Endpoint = {
         shortDescription: false,
         inventory: false,
         categories: false,
-        brand: false,
       },
-
       where: {
         or: [
           { title: { like: q } },
           { subtitle: { like: q } },
           { article: { like: q } },
-          ...(brandIds.length
-            ? [{ brand: { in: brandIds } }]
-            : []),
+          ...(brandIds.length ? [{ brand: { in: brandIds } }] : []),
         ],
       },
     })
-    // @ts-ignore
-    const response = {
-      products: result.docs.map(doc => ({
-        id: doc.id,
-        title: doc.title,
-        subtitle: doc.subtitle,
-        slug: doc.slug,
-        gallery: doc.gallery,
-        article: doc.article,
-        retailPrice: doc.retailPrice,
-        action: doc.action,
-        bestSeller: doc.bestSeller,
-        ...(isWholesaleUser && { wholesalePrice: doc.wholesalePrice }),
-      })),
-      pagination: {
-        page: result.page,
-        limit: result.limit,
-        totalPages: result.totalPages,
-        totalDocs: result.totalDocs,
-        hasPrevPage: result.hasPrevPage,
-        hasNextPage: result.hasNextPage,
-      },
-    }
+
+    // 3. Форматування результату через єдиний хелпер
+    const response = formatPaginatedProducts(result, req)
+
     return Response.json(response)
   },
 }

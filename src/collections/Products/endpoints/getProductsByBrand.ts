@@ -1,5 +1,4 @@
 import { Endpoint, PayloadRequest } from 'payload'
-
 import { getProductsByRelation } from '@/collections/Products/services/productsByRelation.service'
 
 export const getProductsByBrand: Endpoint = {
@@ -12,7 +11,7 @@ export const getProductsByBrand: Endpoint = {
       {
         relationCollection: 'brands',
         relationField: 'brand',
-      }
+      },
     )
     return Response.json(docs)
   },
