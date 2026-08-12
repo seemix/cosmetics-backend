@@ -1,9 +1,11 @@
 import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
+import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
 
 type RemoveItemBody = {
   cartId?: string
   productId?: string
+  promoCode?: string
 }
 
 export const removeCartItem: Endpoint = {
@@ -12,12 +14,12 @@ export const removeCartItem: Endpoint = {
 
   handler: async (req) => {
     const { payload, user } = req
-    const  body = await (req as any).json()
+    const body = await (req as any).json()
     if (!user) {
       return Response.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    const { cartId, productId } = body as RemoveItemBody
+    const { cartId, productId, promoCode } = body as RemoveItemBody
     // 🛡 Базова валідація
     if (!cartId || !productId) {
       return Response.json(
@@ -71,8 +73,13 @@ export const removeCartItem: Endpoint = {
     const normalized = await normalizeCartResponse(
       payload,
       updatedCart,
-      req.locale
+      req.locale,
     )
+
+    if (promoCode) {
+      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalized, promoCode)
+      return Response.json({ success: true, cart: cartWithPromoDiscount })
+    }
     return Response.json({
       success: true,
       cart: normalized,

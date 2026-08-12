@@ -1,9 +1,10 @@
-export function normalizeCart(cart: any, productsMap: Map<string, any>, locale = 'ru') {
+import type { Payload } from 'payload'
+
+
+export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 'ro' | 'ru' = 'ru') {
   return {
     id: cart.id,
     subtotal: cart.subtotal,
-   // currency: cart.currency,
-   // status: cart.status,
 
     items: cart.items.map((item: any) => {
       const productId =
@@ -30,6 +31,7 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale =
         title: product?.title ?? '',
         subtitle,
         slug: product?.slug ?? '',
+        brandId: product?.brand.id,
         price: item.price,
         quantity: item.quantity,
         thumbnail,
@@ -38,7 +40,6 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale =
   }
 }
 
-import type { Payload } from 'payload'
 
 export async function normalizeCartResponse(
   payload: Payload,
@@ -58,6 +59,7 @@ export async function normalizeCartResponse(
     where: {
       id: { in: productIds },
     },
+    locale: locale as 'ru' | 'ro',
     limit: productIds.length,
   })
 
@@ -65,5 +67,5 @@ export async function normalizeCartResponse(
     products.docs.map((p: any) => [p.id, p])
   )
 
-  return normalizeCart(cart, productsMap, locale)
+  return normalizeCart(cart, productsMap, locale as 'ru' | 'ro')
 }

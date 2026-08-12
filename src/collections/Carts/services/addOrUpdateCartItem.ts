@@ -16,7 +16,6 @@ export function addOrUpdateCartItem(
       i.product.id === product.id,
   );
 
-  console.log(existingIndex)
 
   // 🆕 Якщо товару ще немає
   if (existingIndex === -1) {

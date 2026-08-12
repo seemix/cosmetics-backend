@@ -1,6 +1,7 @@
 import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { getOrCreateCart } from '@/collections/Carts/services/getOrCreateCart'
+import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
 
 export const addCartItem: Endpoint = {
   path: '/add-item',
@@ -8,7 +9,8 @@ export const addCartItem: Endpoint = {
 
   handler: async (req) => {
     const { payload, user } = req
-    const { productId, quantity } = await (req as any).json()
+    const { item, promoCode } = await (req as any).json()
+    const { productId, quantity } = item
 
     if (!user) {
       return Response.json({ message: 'Unauthorized' }, { status: 401 })
@@ -22,7 +24,7 @@ export const addCartItem: Endpoint = {
     }
 
     // 1️⃣ Отримуємо кошик
-    const cart = await getOrCreateCart(payload, user.id);
+    const cart = await getOrCreateCart(payload, user.id)
 
     // @ts-ignore
     if (!cart || cart.customer.id !== user.id) {
@@ -79,8 +81,12 @@ export const addCartItem: Endpoint = {
     const normalized = await normalizeCartResponse(
       payload,
       updatedCart,
-      req.locale
+      req.locale,
     )
+    if (promoCode) {
+      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalized, promoCode)
+      return Response.json({ success: true, cart: cartWithPromoDiscount })
+    }
     return Response.json({
       success: true,
       cart: normalized,

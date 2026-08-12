@@ -617,15 +617,12 @@ export interface Post {
 export interface PromoCode {
   id: string;
   code: string;
+  wholesale?: boolean | null;
   'discount %': number;
   /**
    * (Not selected: ALL brands)
    */
   brands?: (string | Brand)[] | null;
-  /**
-   * (Empty if unlimited)
-   */
-  maxUses?: number | null;
   /**
    * (Empty if permanent)
    */
@@ -1136,9 +1133,9 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface PromoCodesSelect<T extends boolean = true> {
   code?: T;
+  wholesale?: T;
   'discount %'?: T;
   brands?: T;
-  maxUses?: T;
   expirationDate?: T;
   isActive?: T;
   updatedAt?: T;

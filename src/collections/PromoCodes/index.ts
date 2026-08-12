@@ -1,7 +1,6 @@
-import type { CollectionConfig, FieldHook } from 'payload'
+import type { CollectionConfig } from 'payload'
 
 import { generatePromo } from './services/generatePromo'
-import { generateUniquePromo } from '@/collections/PromoCodes/hooks/generateUniquePromo'
 
 export const PromoCodes: CollectionConfig = {
   slug: 'promo-codes',
@@ -21,8 +20,13 @@ export const PromoCodes: CollectionConfig = {
       index: true,
       defaultValue: () => generatePromo(5),
       hooks: {
-        beforeValidate: [generateUniquePromo as FieldHook]
+     //   beforeValidate: [generateUniquePromo as FieldHook]
       },
+    },
+    {
+      name: 'wholesale',
+      type: 'checkbox',
+      defaultValue: false
     },
     {
       name: 'discount %',
@@ -39,14 +43,6 @@ export const PromoCodes: CollectionConfig = {
       admin: {
         description: '(Not selected: ALL brands)',
       },
-    },
-    {
-      name: 'maxUses',
-      type: 'number',
-      admin: {
-        description: '(Empty if unlimited)',
-      },
-
     },
     {
       name: 'expirationDate',

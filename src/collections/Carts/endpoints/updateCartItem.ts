@@ -1,5 +1,6 @@
 import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
+import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
 
 export const updateCartItem: Endpoint = {
   path: '/update-item',
@@ -11,7 +12,8 @@ export const updateCartItem: Endpoint = {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { productId, quantity } = await (req as any).json()
+    const { item, promoCode } = await (req as any).json()
+    const { productId, quantity } = item
 
     if (!productId || typeof quantity !== 'number') {
       return Response.json({ error: 'Invalid body' }, { status: 400 })
@@ -25,7 +27,7 @@ export const updateCartItem: Endpoint = {
       limit: 1,
     })
 
-   const cart = res.docs[0];
+    const cart = res.docs[0]
 
     // @ts-ignore
     if (!cart || cart.customer?.id !== user.id) {
@@ -54,11 +56,16 @@ export const updateCartItem: Endpoint = {
       req,
     })
 
-    const normalized = await normalizeCartResponse(
+    let normalized = await normalizeCartResponse(
       payload,
       updatedCart,
-      req.locale
+      req.locale,
     )
+    if (promoCode) {
+      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalized, promoCode)
+       return Response.json({ success: true, cart: cartWithPromoDiscount })
+    }
+
     return Response.json({
       success: true,
       cart: normalized,
