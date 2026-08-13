@@ -54,6 +54,8 @@ export const getNormalizedOrders = async (ordersDocs: any, req: PayloadRequest) 
         orderNumber: order.orderNumber,
         total: order.total,
         status: order.status,
+        promoCodeApplied: order.promoCodeApplied,
+        discount: order.discount,
         items: localizedItems,
       }
     }),

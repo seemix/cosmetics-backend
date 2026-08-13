@@ -327,6 +327,8 @@ export interface Order {
     address: string;
   };
   comment?: string | null;
+  promoCodeApplied?: string | null;
+  discount?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1443,6 +1445,8 @@ export interface OrdersSelect<T extends boolean = true> {
         address?: T;
       };
   comment?: T;
+  promoCodeApplied?: T;
+  discount?: T;
   updatedAt?: T;
   createdAt?: T;
 }

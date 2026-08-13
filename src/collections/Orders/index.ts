@@ -131,6 +131,8 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       ],
     },
     { name: 'comment', type: 'text' },
+    { name: 'promoCodeApplied', type: 'text' },
+    { name: 'discount', type: 'number' },
   ],
   endpoints: [createOrder, getMyOrders],
   hooks: {

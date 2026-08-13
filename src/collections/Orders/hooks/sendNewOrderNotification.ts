@@ -19,7 +19,9 @@ export const sendNewOrderNotification: CollectionAfterChangeHook = async ({
       paymentType: doc.paymentType,
       shippingAddress: doc.shippingAddress,
       SRL: doc.SRL,
-      comment: doc.comment
+      comment: doc.comment,
+      promoCodeApplied: doc.promoCodeApplied,
+      discount: doc.discount
     }
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN

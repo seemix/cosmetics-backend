@@ -3,7 +3,7 @@ import { CustomOrder } from '@/collections/Orders/types/custom-order'
 export function buildTelegramMessage(
   order: CustomOrder,
 ) {
-  const { orderNumber, items, total, shippingAddress, paymentType, comment, SRL } = order
+  const { orderNumber, items, total, shippingAddress, paymentType, comment, SRL, promoCodeApplied, discount } = order
 
   const products = items
     ?.map((item: any, i: number) => {
@@ -34,6 +34,6 @@ ${comment?.trim() ? `💬 <b>Комментарий:</b>\n${comment}\n` : ''}
 
 ${products}
 
-💰 <b>Сумма: ${total} MDL</b>
-`
+💰 <b>Сумма: ${total} MDL</b> 
+${promoCodeApplied && discount ? `| 📉 Скидка: ${discount} MDL  🏷️${promoCodeApplied} ` : ''}`
 }
