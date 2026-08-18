@@ -1,5 +1,5 @@
 import { Payload } from 'payload'
-import { ExcludedBrandItem, NormalizedCart } from '@/collections/Carts/types/normalizedCart'
+import { NormalizedCart } from '@/collections/Carts/types/normalizedCart'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
 import { applyPromoDiscount } from '@/collections/Carts/services/applyPromoDiscount'
 
@@ -20,9 +20,8 @@ export async function cartPromoHelper(payload: Payload, user: string, cart: Norm
     cartId: cart.id,
   })
   if (!promoResult.success) return cart
-  let excludeBrands: ExcludedBrandItem[]
 
-  excludeBrands = userBrandDiscounts.docs[0]?.brandDiscounts ?? []
+const excludeBrands = userBrandDiscounts.docs[0]?.brandDiscounts ?? []
 
   return applyPromoDiscount({
     cart,
