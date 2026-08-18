@@ -56,7 +56,7 @@ export const updateCartItem: Endpoint = {
       req,
     })
 
-    let normalized = await normalizeCartResponse(
+    const normalized = await normalizeCartResponse(
       payload,
       updatedCart,
       req.locale,
