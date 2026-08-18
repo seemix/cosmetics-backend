@@ -41,7 +41,7 @@ export const clearCart: Endpoint = {
 
     // 3️⃣ Повертаємо нормалізований кошик (порожній)
     return Response.json(
-      normalizeCart(updatedCart, new Map(), locale),
+      normalizeCart(updatedCart, new Map(), locale as 'ru' || 'ro'),
     )
   },
 }
