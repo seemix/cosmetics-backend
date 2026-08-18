@@ -55,7 +55,7 @@ export const getCartByUser: Endpoint = {
     )
 
     return Response.json(
-      normalizeCart(cart, productsMap, locale),
+      normalizeCart(cart, productsMap, locale as 'ru' || 'ro'),
     )
   },
 }
