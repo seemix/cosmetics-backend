@@ -12,11 +12,11 @@ export const createOrder: Endpoint = {
       const { items, shippingAddress, comment, paymentType, SRL, promoCode } = body || {}
 
       if (!items?.length) {
-        return Response.json({ message: 'Items are required' }, { status: 400 })
+        return Response.json({ error: 'Items are required' }, { status: 400 })
       }
 
       if (!shippingAddress) {
-        return Response.json({ message: 'Shipping address is required' }, { status: 400 })
+        return Response.json({ error: 'Shipping address is required' }, { status: 400 })
       }
 
       const user = req.user
@@ -33,7 +33,7 @@ export const createOrder: Endpoint = {
         })
 
         if (!promoResult.success) {
-          return Response.json({ message: promoResult.error }, { status: 400 })
+          return Response.json({ error: promoResult.error }, { status: 400 })
         }
 
         promoData = promoResult.promo
@@ -51,7 +51,7 @@ export const createOrder: Endpoint = {
 
       for (const item of items) {
         if (!item.product || !item.quantity) {
-          return Response.json({ message: 'Invalid item format' }, { status: 400 })
+          return Response.json({ error: 'Invalid item format' }, { status: 400 })
         }
 
         const product = await req.payload.findByID({

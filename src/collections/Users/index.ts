@@ -34,7 +34,7 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
   },
   auth: {
-    //cookies: { domain: '.nextlevelshop.md', secure: true, sameSite: 'Lax' },
+    cookies: { domain: '.nextlevelshop.md', secure: true, sameSite: 'Lax' },
     depth: 3,
     tokenExpiration: 1209600,
     useSessions: false,
