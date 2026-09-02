@@ -17,7 +17,7 @@ type Filter = {
 export function transformProduct(product: any, req: PayloadRequest) {
   const transformed: any = {
     ...product,
-    gallery: Array.isArray(product.gallery) ? product.gallery.slice(0, 1) : [],
+    gallery: Array.isArray(product.gallery) ? product.gallery : [],
   }
 
   const { isWholesale, discountPrice } = calculateProductPrice({
