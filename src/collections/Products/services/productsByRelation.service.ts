@@ -1,6 +1,6 @@
 import { PayloadRequest } from 'payload'
 import { ProductsByRelationResult } from '@/collections/Products/endpoints/types'
-import { pageGenerator, sortGenerator } from '@/services/sortPage.service'
+import { sortGenerator } from '@/services/sortPage.service'
 import { calculateProductPrice } from '@/services/price.service'
 
 type RelationConfig = {
@@ -98,13 +98,14 @@ export async function getProductsByRelation(
     return emptyResult(page, limit)
   }
 
+  // Отримуємо ВСІ товари зв'язку без пагінації (limit: 0),
+  // щоб коректно перенести unavailable товари на абсолютно останню сторінку загалом.
   const productsRes = await req.payload.find({
     collection: 'products',
     locale: req.locale,
     sort: sortGenerator(req.query.sort as string),
-    page: pageGenerator(req.query.page as string),
     draft: false,
-    limit,
+    limit: 0,
     depth: 2,
     select: {
       shortDescription: false,
@@ -123,14 +124,36 @@ export async function getProductsByRelation(
     return emptyResult(page, limit)
   }
 
-  // Переносимо елементи з unavailable: true в кінець масиву, зберігаючи початковий сорт
-  productsRes.docs.sort((a: any, b: any) => {
+  // Сортуємо ВСІ товари: спочатку доступні, потім unavailable: true (зберігаючи початковий сорт)
+  const allDocs = [...productsRes.docs].sort((a: any, b: any) => {
     const aUnavailable = a.unavailable ? 1 : 0
     const bUnavailable = b.unavailable ? 1 : 0
     return aUnavailable - bUnavailable
   })
 
-  const firstProduct = productsRes.docs[0] as any
+  const totalDocs = allDocs.length
+  const totalPages = Math.ceil(totalDocs / limit)
+  const validPage = Math.max(1, Math.min(page, totalPages || 1))
+
+  // Вирізаємо масив документів лише для поточної сторінки
+  const startIndex = (validPage - 1) * limit
+  const endIndex = startIndex + limit
+  const paginatedDocs = allDocs.slice(startIndex, endIndex)
+
+  // Формуємо об'єкт результату для formatPaginatedProducts
+  const paginatedResMock = {
+    docs: paginatedDocs,
+    totalDocs,
+    totalPages,
+    limit,
+    page: validPage,
+    hasNextPage: validPage < totalPages,
+    hasPrevPage: validPage > 1,
+    nextPage: validPage < totalPages ? validPage + 1 : null,
+    prevPage: validPage > 1 ? validPage - 1 : null,
+  }
+
+  const firstProduct = allDocs[0] as any
   const extension: Record<string, unknown> = {}
 
   if (config.relationField === 'categories') {
@@ -147,7 +170,7 @@ export async function getProductsByRelation(
     extension.brand = safeBrand
   }
 
-  const paginatedData = formatPaginatedProducts(productsRes, req)
+  const paginatedData = formatPaginatedProducts(paginatedResMock, req)
 
   if (config.relationField === 'brand') {
     paginatedData.products = paginatedData.products.map((p: any) => {
