@@ -123,6 +123,13 @@ export async function getProductsByRelation(
     return emptyResult(page, limit)
   }
 
+  // Переносимо елементи з unavailable: true в кінець масиву, зберігаючи початковий сорт
+  productsRes.docs.sort((a: any, b: any) => {
+    const aUnavailable = a.unavailable ? 1 : 0
+    const bUnavailable = b.unavailable ? 1 : 0
+    return aUnavailable - bUnavailable
+  })
+
   const firstProduct = productsRes.docs[0] as any
   const extension: Record<string, unknown> = {}
 
