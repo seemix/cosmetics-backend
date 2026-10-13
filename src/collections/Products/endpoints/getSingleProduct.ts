@@ -1,15 +1,18 @@
-import { Endpoint, PayloadRequest } from 'payload'
 import { transformProduct } from '@/collections/Products/services/productsByRelation.service'
+import { Endpoint, PayloadRequest } from 'payload'
 
 export const getSingleProduct: Endpoint = {
-  path: '/:slug',
+  path: '/:identifier', // Змінюємо :slug на загальніший :identifier
   method: 'get' as const,
 
   handler: async (req: PayloadRequest): Promise<Response> => {
-    const slug = req.routeParams?.slug as string | undefined
-    if (!slug) {
-      return Response.json({ message: 'Slug is required' }, { status: 400 })
+    const identifier = req.routeParams?.identifier as string | undefined
+    if (!identifier) {
+      return Response.json({ message: 'Identifier is required' }, { status: 400 })
     }
+
+    // Перевіряємо, чи переданий ідентифікатор є ID (наприклад, 24-символьний hex для MongoDB або число)
+    const isId = /^[0-9a-fA-F]{24}$/.test(identifier) || /^\d+$/.test(identifier)
 
     const result = await req.payload.find({
       collection: 'products',
@@ -26,7 +29,8 @@ export const getSingleProduct: Endpoint = {
         inventory: false
       },
       where: {
-        slug: { equals: slug },
+        // Якщо це ID, шукаємо по id, інакше по slug
+        [isId ? 'id' : 'slug']: { equals: identifier },
       },
     })
 
@@ -36,7 +40,6 @@ export const getSingleProduct: Endpoint = {
       return Response.json({ message: 'Product not found' }, { status: 404 })
     }
 
-    // 🎯 Застосовуємо ту саму логіку (опт + брендова знижка discountPrice + галерея)
     const formattedProduct = transformProduct(product, req)
 
     return Response.json(formattedProduct)

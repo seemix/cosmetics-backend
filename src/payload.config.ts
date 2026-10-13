@@ -28,6 +28,7 @@ import { Posts } from './collections/Posts'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
 import sharp from 'sharp'
+import payloadSidebar from 'payload-sidebar-plugin'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -132,6 +133,18 @@ export default buildConfig({
   //globals: [Header, Footer],
   plugins: [
     ...plugins,
+    payloadSidebar({
+      icons: {
+        posts: 'file-code',
+        brands: 'award',
+        carts: 'shopping-cart',
+        'promo-codes': 'tag',
+        transactions: 'credit-card',
+        products: 'package',
+        orders: 'clipboard-list',
+        users: 'users',
+      },
+    }),
     // storage-adapter-placeholder
   ],
   secret: process.env.PAYLOAD_SECRET || '',

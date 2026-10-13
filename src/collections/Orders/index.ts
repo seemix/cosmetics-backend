@@ -4,6 +4,7 @@ import { createOrder } from '@/collections/Orders/endpoints/createOrder'
 import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
 import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
+import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
 
 export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -50,7 +51,6 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     {
       name: 'items',
       type: 'array',
-
       fields: [
         {
           name: 'product',
@@ -78,19 +78,27 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
               type: 'number',
               required: true,
               admin: {
+                components: {
+                  Field: '@/collections/Orders/components/PriceField#PriceField',
+                },
                 width: '50%',
+                // За бажанням можна увімкнути readOnly, щоб ціну не редагували вручну:
+                // readOnly: true,
               },
+
             },
           ],
         },
       ],
     },
-
     {
       name: 'total',
       type: 'number',
       required: true,
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        readOnly: true, // Загальну суму теж краще зробити readonly, оскільки вона рахується автоматично
+      },
     },
     {
       name: 'status',
@@ -107,17 +115,6 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     {
       name: 'SRL',
       type: 'text',
-      // admin: {
-      //   condition: (data) => data?.paymentType === 'transfer',
-      // },
-      // validate: (val: any, { data }: { data: any }) => {
-      //   if (data?.paymentType === 'transfer') {
-      //     if (!val || val.trim() === '') {
-      //       return 'SRL is  required for payment type transfer'
-      //     }
-      //   }
-      //   return true
-      // },
     },
     {
       name: 'shippingAddress',
@@ -136,7 +133,9 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   ],
   endpoints: [createOrder, getMyOrders],
   hooks: {
-    beforeChange: [setOrderNumber],
+    // Додаємо хук перед збереженням замовлення.
+    // Важливо: setOrderNumber має виконуватись або до, або після, порядок можна скоригувати за потреби.
+    beforeChange: [setOrderNumber, populatePricesAndTotal],
     afterChange: [sendNewOrderNotification],
   },
 })
