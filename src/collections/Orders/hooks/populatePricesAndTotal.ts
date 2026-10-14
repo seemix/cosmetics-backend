@@ -42,9 +42,8 @@ export const populatePricesAndTotal: CollectionBeforeChangeHook = async ({ data,
 
         if (productDoc) {
           // Вибираємо ціну в залежності від того, чи є користувач оптовим.
-          // Увага: перевірте, чи ваші поля в products називаються саме `price` та `wholesalePrice`
-          const regularPrice = (productDoc as any).price || 0
-          const wholesalePrice = (productDoc as any).wholesalePrice ?? regularPrice
+          const regularPrice = productDoc.retailPrice || 0
+          const wholesalePrice = productDoc.wholesalePrice ?? regularPrice
 
           item.price = isWholesale ? wholesalePrice : regularPrice
         }

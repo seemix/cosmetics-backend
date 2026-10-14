@@ -84,6 +84,13 @@ export const validatePromo: Endpoint = {
       return Response.json({ error: 'Cart not found' }, { status: 404 })
     }
 
+    const cartCustomerId =
+      typeof cart.customer === 'object' ? cart.customer?.id : cart.customer
+
+    if (!user?.id || cartCustomerId !== user.id) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const normalizedCart = await normalizeCartResponse(payload, cart, locale)
 
     const userDiscountCart = applyPromoDiscount({

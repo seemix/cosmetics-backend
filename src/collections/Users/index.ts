@@ -80,6 +80,10 @@ export const Users: CollectionConfig = {
       type: 'checkbox',
       label: 'WholeSale',
       defaultValue: false,
+      access: {
+        create: adminOnlyFieldAccess,
+        update: adminOnlyFieldAccess,
+      },
     },
     {
       name: 'surname',
@@ -108,6 +112,10 @@ export const Users: CollectionConfig = {
     {
       name: 'brandDiscounts',
       type: 'array',
+      access: {
+        create: adminOnlyFieldAccess,
+        update: adminOnlyFieldAccess,
+      },
       admin: {
         description: 'Personal discounts',
       },
