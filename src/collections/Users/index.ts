@@ -2,21 +2,21 @@ import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
-import { publicAccess } from '@/access/publicAccess'
 import { adminOrSelf } from '@/access/adminOrSelf'
+import { publicAccess } from '@/access/publicAccess'
 import { checkRole } from '@/access/utilities'
 
-import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
-import { emailHeader } from '@/email-templates/email-header'
-import { verifyEmail } from '@/email-templates/verify-email'
-import { emailFooter } from '@/email-templates/email-footer'
-import { forgotPassword } from '@/email-templates/forgot-password'
-import { emailSubject } from '@/email-templates/email-subject'
-import { getMyFavorites } from '@/collections/Users/endpoints/getMyFavorites'
 import { addFavoritesItem } from '@/collections/Users/endpoints/addFavoritesItem'
+import { getMyFavorites } from '@/collections/Users/endpoints/getMyFavorites'
 import { removeFavoritesItem } from '@/collections/Users/endpoints/removeFavoritesItem'
-import { getFavorites } from './endpoints/getFavorites'
 import { updateUserInfo } from '@/collections/Users/endpoints/updateUserInfo'
+import { emailFooter } from '@/email-templates/email-footer'
+import { emailHeader } from '@/email-templates/email-header'
+import { emailSubject } from '@/email-templates/email-subject'
+import { forgotPassword } from '@/email-templates/forgot-password'
+import { verifyEmail } from '@/email-templates/verify-email'
+import { getFavorites } from './endpoints/getFavorites'
+import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -80,10 +80,6 @@ export const Users: CollectionConfig = {
       type: 'checkbox',
       label: 'WholeSale',
       defaultValue: false,
-      access: {
-        create: adminOnlyFieldAccess,
-        update: adminOnlyFieldAccess,
-      },
     },
     {
       name: 'surname',
@@ -112,10 +108,6 @@ export const Users: CollectionConfig = {
     {
       name: 'brandDiscounts',
       type: 'array',
-      access: {
-        create: adminOnlyFieldAccess,
-        update: adminOnlyFieldAccess,
-      },
       admin: {
         description: 'Personal discounts',
       },
