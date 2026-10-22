@@ -113,13 +113,17 @@ Local API без `req`, що прямо суперечить правилу CLAU
 
 ### Етап 1. Дешеві незалежні чистки
 
-- [ ] **T2. Замінити inline-access на наявні хелпери.**
+- [x] **T2. Замінити inline-access на наявні хелпери.**
       Мета: один стиль контролю доступу в усіх колекціях.
       Файли: `Categories.ts`, `Media.ts`, `Posts/index.ts`, `Pages/index.ts`,
       `Brands/index.ts`, `Users/index.ts`.
       Готово: `publicAccess` і `adminOnly` імпортовані замість інлайнів, поведінка тотожна,
       `tsc --noEmit` чистий.
       Складність: XS. Модель: мала.
+      Виконано частково: `publicAccess` підставлено в Categories, Media, Posts, Pages, Brands.
+      `Users/index.ts` не змінено: `access.admin` приймає лише `boolean`, а `adminOnly`
+      має тип `Access` (може повернути `Where`), тому `tsc` відхиляє заміну (TS2322).
+      Для Users потрібен окремий хелпер з типом `boolean`; це виходить за межі T2.
 
 - [ ] **T3. Виправити локаль-фолбек.**
       Мета: прибрати `req.locale as 'ru' || 'ro'`, який завжди давав `'ru'`.

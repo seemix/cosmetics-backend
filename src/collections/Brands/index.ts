@@ -1,11 +1,12 @@
 import { CollectionConfig, slugField } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { publicAccess } from '@/access/publicAccess'
 import { getBrandInfo } from '@/collections/Brands/endpoints/getBrandInfo'
 
 export const Brands: CollectionConfig = {
   slug: 'brands',
   access: {
-    read: () => true,
+    read: publicAccess,
   },
   admin: {
     group: 'Ecommerce',
