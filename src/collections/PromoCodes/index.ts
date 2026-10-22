@@ -1,9 +1,17 @@
 import type { CollectionConfig } from 'payload'
 
+import { adminOnly } from '@/access/adminOnly'
+
 import { generatePromo } from './services/generatePromo'
 
 export const PromoCodes: CollectionConfig = {
   slug: 'promo-codes',
+  access: {
+    read: adminOnly,
+    create: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
+  },
   admin: {
     useAsTitle: 'code',
     group: 'Ecommerce',
