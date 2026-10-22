@@ -17,6 +17,7 @@ import { searchProducts } from '@/collections/Products/endpoints/searchProducts'
 import { getBestSellers } from '@/collections/Products/endpoints/getBestSellers'
 import { autoTranslate } from '@/collections/Products/hooks/autoTranslate'
 import { getSingleProduct } from '@/collections/Products/endpoints/getSingleProduct'
+import { setTitleWithArticle } from '@/collections/Products/hooks/setTitleWithArticle'
 
 
 // @ts-ignore
@@ -98,13 +99,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         hidden: true,
       },
       hooks: {
-        beforeChange: [
-          ({ data, originalDoc }) => {
-            const title = data?.title || originalDoc?.title || '';
-            const article = data?.article || originalDoc?.article || '';
-            return `${title} [${article}]`.trim();
-          },
-        ],
+        beforeChange: [setTitleWithArticle],
       },
     },
 
