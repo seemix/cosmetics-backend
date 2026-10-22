@@ -8,7 +8,7 @@ export const getMyOrders: Endpoint = {
   handler: async (req: PayloadRequest) => {
 
     if (!req.user) return Response.json({ message: 'Unauthorized' }, { status: 401 })
-    const { page } = req.query || 1
+    const { page } = req.query
     const orders = await req.payload.find({
       collection: 'orders',
       where: { customer: { equals: req.user.id } },
@@ -17,7 +17,6 @@ export const getMyOrders: Endpoint = {
       locale: req.locale,
       fallbackLocale: 'ru',
       req,
-      overrideAccess: true,
     });
 
     const formattedDocs = await getNormalizedOrders(orders.docs, req)
