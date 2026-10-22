@@ -44,6 +44,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       name: 'customer',
       type: 'relationship',
       relationTo: 'users',
+      index: true,
       admin: {
         position: 'sidebar',
       },
