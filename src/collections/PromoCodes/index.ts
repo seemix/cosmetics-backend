@@ -27,9 +27,6 @@ export const PromoCodes: CollectionConfig = {
       unique: true,
       index: true,
       defaultValue: () => generatePromo(5),
-      hooks: {
-     //   beforeValidate: [generateUniquePromo as FieldHook]
-      },
     },
     {
       name: 'wholesale',
