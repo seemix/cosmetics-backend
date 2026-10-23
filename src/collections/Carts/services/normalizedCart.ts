@@ -29,7 +29,7 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 
         title: product?.title ?? '',
         subtitle,
         slug: product?.slug ?? '',
-        brandId: product?.brand.id,
+        brandId: product?.brand?.id,
         price: item.price,
         quantity: item.quantity,
         thumbnail,
