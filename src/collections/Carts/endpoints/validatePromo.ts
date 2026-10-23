@@ -5,6 +5,7 @@ import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCa
 import { ExcludedBrandItem } from '@/collections/Carts/types/normalizedCart'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
 import { isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
+import { getCustomerPricingProfile } from '@/collections/Users/services/getPricingProfile'
 
 export const validatePromo: Endpoint = {
   method: 'post',
@@ -24,15 +25,9 @@ export const validatePromo: Endpoint = {
     let excludeBrands: ExcludedBrandItem[] = []
     let wholesale = false
     if (user?.id) {
-      const userBrandDiscounts = await payload.find({
-        collection: 'users',
-        limit: 1,
-        depth: 0,
-        where: { id: { equals: user.id } },
-        select: { brandDiscounts: true, wholesale: true },
-      })
-      excludeBrands = userBrandDiscounts.docs[0]?.brandDiscounts ?? []
-      wholesale = Boolean(userBrandDiscounts.docs[0]?.wholesale)
+      const profile = await getCustomerPricingProfile(req, user.id)
+      excludeBrands = profile.brandDiscounts
+      wholesale = profile.wholesale
     }
 
     const promoResult = await checkPromoCode({

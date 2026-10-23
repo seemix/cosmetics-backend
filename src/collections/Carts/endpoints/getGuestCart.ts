@@ -25,7 +25,7 @@ export const getGuestCart: Endpoint = {
     })
 
     if (promoCode && normalizedCart) {
-      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalizedCart, promoCode)
+      const cartWithPromoDiscount = await cartPromoHelper(req, req?.user?.id as string, normalizedCart, promoCode)
       return Response.json({ success: true, cart: cartWithPromoDiscount })
     }
     return Response.json({ success: true, cart: normalizedCart })

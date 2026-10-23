@@ -72,7 +72,7 @@ export const removeCartItem: Endpoint = {
     )
 
     if (promoCode) {
-      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalized, promoCode)
+      const cartWithPromoDiscount = await cartPromoHelper(req, req?.user?.id as string, normalized, promoCode)
       return Response.json({ success: true, cart: cartWithPromoDiscount })
     }
     return Response.json({

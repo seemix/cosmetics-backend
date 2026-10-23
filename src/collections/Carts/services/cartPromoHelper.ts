@@ -1,32 +1,24 @@
-import { Payload } from 'payload'
+import type { PayloadRequest } from 'payload'
 import { NormalizedCart } from '@/collections/Carts/types/normalizedCart'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
 import { applyPromoDiscount } from '@/collections/Carts/services/applyPromoDiscount'
+import { getCustomerPricingProfile } from '@/collections/Users/services/getPricingProfile'
 
-export async function cartPromoHelper(payload: Payload, user: string, cart: NormalizedCart, promoCode: string): Promise<NormalizedCart | null> {
-  const userBrandDiscounts = await payload.find({
-    collection: 'users',
-    limit: 1,
-    depth: 0,
-    where: { id: { equals: user } },
-    select: { brandDiscounts: true, wholesale: true },
-  })
-  const wholesale = Boolean(userBrandDiscounts.docs[0]?.wholesale)
+export async function cartPromoHelper(req: PayloadRequest, user: string, cart: NormalizedCart, promoCode: string): Promise<NormalizedCart | null> {
+  const { wholesale, brandDiscounts } = await getCustomerPricingProfile(req, user)
 
   const promoResult = await checkPromoCode({
-    payload,
+    payload: req.payload,
     promoCode,
     wholesale,
     cartId: cart.id,
   })
   if (!promoResult.success) return cart
 
-const excludeBrands = userBrandDiscounts.docs[0]?.brandDiscounts ?? []
-
   return applyPromoDiscount({
     cart,
     brandIds: promoResult.promo.brands as string[],
     discountPercent: promoResult.promo['discount %'],
-    excludeBrands,
+    excludeBrands: brandDiscounts,
   })
 }
