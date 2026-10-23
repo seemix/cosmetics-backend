@@ -39,6 +39,37 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 
 }
 
 
+export type BuildProductsMapOptions = {
+  /** Локаль для `payload.find`. `'all'` повертає всі локалі поля. */
+  locale?: 'ru' | 'ro' | 'all'
+  /** Глибина populate. `undefined` — дефолт конфігурації. */
+  depth?: number
+}
+
+/**
+ * Єдина побудова `productsMap` для нормалізації кошика.
+ * Опції зберігають різну поведінку викликів: `locale: 'all'` + `depth: 2`
+ * для гостьового кошика і `/me`, конкретна локаль — для решти.
+ */
+export async function buildProductsMap(
+  payload: Payload,
+  productIds: string[],
+  options: BuildProductsMapOptions = {},
+): Promise<Map<string, any>> {
+  const products = await payload.find({
+    collection: 'products',
+    where: {
+      id: { in: productIds },
+    },
+    locale: options.locale,
+    depth: options.depth,
+    limit: productIds.length,
+  })
+
+  return new Map(products.docs.map((p: any) => [p.id, p]))
+}
+
+
 export async function normalizeCartResponse(
   payload: Payload,
   cart: any,
@@ -46,18 +77,9 @@ export async function normalizeCartResponse(
 ) {
   const productIds = getCartProductIds(cart)
 
-  const products = await payload.find({
-    collection: 'products',
-    where: {
-      id: { in: productIds },
-    },
+  const productsMap = await buildProductsMap(payload, productIds, {
     locale: locale as 'ru' | 'ro',
-    limit: productIds.length,
   })
-
-  const productsMap = new Map(
-    products.docs.map((p: any) => [p.id, p])
-  )
 
   return normalizeCart(cart, productsMap, locale as 'ru' | 'ro')
 }

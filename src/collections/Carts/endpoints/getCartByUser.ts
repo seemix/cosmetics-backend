@@ -1,6 +1,6 @@
 import { Endpoint } from 'payload'
 
-import { normalizeCart} from '@/collections/Carts/services/normalizedCart'
+import { buildProductsMap, normalizeCart } from '@/collections/Carts/services/normalizedCart'
 import { getCartProductIds } from '@/collections/Carts/utilities/cartItem'
 
 export const getCartByUser: Endpoint = {
@@ -33,19 +33,10 @@ export const getCartByUser: Endpoint = {
     const productIds = getCartProductIds(cart)
 
     // 3️⃣ Окремий запит до products (ПОВНИЙ)
-    const productsResult = await payload.find({
-      collection: 'products',
-      where: {
-        id: { in: productIds },
-      },
+    const productsMap = await buildProductsMap(payload, productIds, {
       locale: 'all',
       depth: 2,
-      limit: productIds.length,
     })
-
-    const productsMap = new Map(
-      productsResult.docs.map((p: any) => [p.id, p]),
-    )
 
     return Response.json(
       normalizeCart(cart, productsMap, locale as 'ru' || 'ro'),
