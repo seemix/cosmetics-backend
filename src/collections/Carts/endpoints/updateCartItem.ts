@@ -1,6 +1,7 @@
 import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
+import { getCartItemProductId, isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
 
 export const updateCartItem: Endpoint = {
   path: '/update-item',
@@ -29,19 +30,12 @@ export const updateCartItem: Endpoint = {
 
     const cart = res.docs[0]
 
-    // @ts-ignore
-    if (!cart || cart.customer?.id !== user.id) {
+    if (!cart || !isCartOwnedBy(cart, user.id)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // @ts-ignore
-    const items = cart.items.map((item: any) => {
-      const itemProductId =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product?.id
-
-      if (itemProductId !== productId) return item
+    const items = (cart.items ?? []).map((item: any) => {
+      if (getCartItemProductId(item) !== productId) return item
 
       return {
         ...item,

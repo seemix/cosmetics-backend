@@ -4,6 +4,7 @@ import { applyPromoDiscount } from '@/collections/Carts/services/applyPromoDisco
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { ExcludedBrandItem } from '@/collections/Carts/types/normalizedCart'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
+import { isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
 
 export const validatePromo: Endpoint = {
   method: 'post',
@@ -84,10 +85,7 @@ export const validatePromo: Endpoint = {
       return Response.json({ error: 'Cart not found' }, { status: 404 })
     }
 
-    const cartCustomerId =
-      typeof cart.customer === 'object' ? cart.customer?.id : cart.customer
-
-    if (!user?.id || cartCustomerId !== user.id) {
+    if (!user?.id || !isCartOwnedBy(cart, user.id)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 

@@ -1,6 +1,7 @@
 import { Endpoint } from 'payload'
 
 import { normalizeCart} from '@/collections/Carts/services/normalizedCart'
+import { getCartProductIds } from '@/collections/Carts/utilities/cartItem'
 
 export const getCartByUser: Endpoint = {
   path: '/me',
@@ -29,15 +30,7 @@ export const getCartByUser: Endpoint = {
     }
 
     // 2️⃣ Збираємо product IDs
-
-    // @ts-ignore
-    const productIds = cart.items
-      .map((item: any) =>
-        typeof item.product === 'string'
-          ? item.product
-          : item.product?.id,
-      )
-      .filter(Boolean)
+    const productIds = getCartProductIds(cart)
 
     // 3️⃣ Окремий запит до products (ПОВНИЙ)
     const productsResult = await payload.find({

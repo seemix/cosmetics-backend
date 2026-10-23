@@ -2,6 +2,7 @@ import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { getOrCreateCart } from '@/collections/Carts/services/getOrCreateCart'
 import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
+import { getCartItemProductId, isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
 
 export const addCartItem: Endpoint = {
   path: '/add-item',
@@ -26,8 +27,7 @@ export const addCartItem: Endpoint = {
     // 1️⃣ Отримуємо кошик
     const cart = await getOrCreateCart(payload, user.id)
 
-    // @ts-ignore
-    if (!cart || cart.customer.id !== user.id) {
+    if (!isCartOwnedBy(cart, user.id)) {
       return Response.json(
         { message: 'Cart not found or forbidden' },
         { status: 403 },
@@ -35,30 +35,19 @@ export const addCartItem: Endpoint = {
     }
 
     // 2️⃣ Шукаємо товар у кошику
-    const existingItem = cart.items?.find((item: any) => {
-      const product =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product.id
-
-      return product === productId
-    })
+    const existingItem = cart.items?.find(
+      (item: any) => getCartItemProductId(item) === productId,
+    )
 
     let updatedItems
 
     if (existingItem) {
       // 🟦 Збільшуємо кількість
-      // @ts-ignore
-      updatedItems = cart.items.map((item: any) => {
-        const product =
-          typeof item.product === 'string'
-            ? item.product
-            : item.product.id
-
-        return product === productId
+      updatedItems = (cart.items ?? []).map((item: any) =>
+        getCartItemProductId(item) === productId
           ? { ...item, quantity: item.quantity + quantity }
-          : item
-      })
+          : item,
+      )
     } else {
       // 🟩 Додаємо новий item
       updatedItems = [

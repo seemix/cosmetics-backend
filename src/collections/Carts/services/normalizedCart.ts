@@ -1,4 +1,5 @@
 import type { Payload } from 'payload'
+import { getCartItemProductId, getCartProductIds } from '@/collections/Carts/utilities/cartItem'
 
 
 export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 'ro' | 'ru' = 'ru') {
@@ -7,12 +8,9 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 
     subtotal: cart.subtotal,
 
     items: cart.items.map((item: any) => {
-      const productId =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product?.id
+      const productId = getCartItemProductId(item)
 
-      const product = productsMap.get(productId)
+      const product = productId ? productsMap.get(productId) : undefined
 
       const thumbnail =
         product?.gallery?.[0]?.image?.sizes?.thumbnail?.url ??
@@ -46,13 +44,7 @@ export async function normalizeCartResponse(
   cart: any,
   locale = 'ru'
 ) {
-  const productIds = cart.items
-    .map((item: any) =>
-      typeof item.product === 'string'
-        ? item.product
-        : item.product?.id
-    )
-    .filter(Boolean)
+  const productIds = getCartProductIds(cart)
 
   const products = await payload.find({
     collection: 'products',

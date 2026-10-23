@@ -1,6 +1,7 @@
 import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
+import { getCartItemProductId, isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
 
 type RemoveItemBody = {
   cartId?: string
@@ -35,8 +36,7 @@ export const removeCartItem: Endpoint = {
       depth: 1,
     })
 
-    // @ts-ignore
-    if (!cart || cart?.customer?.id !== user.id) {
+    if (!cart || !isCartOwnedBy(cart, user.id)) {
       return Response.json(
         { message: 'Cart not found or forbidden' },
         { status: 403 },
@@ -44,14 +44,9 @@ export const removeCartItem: Endpoint = {
     }
 
     // 2️⃣ Фільтруємо items
-    const filteredItems = (cart.items || []).filter((item: any) => {
-      const product =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product.id
-
-      return product !== productId
-    })
+    const filteredItems = (cart.items || []).filter(
+      (item: any) => getCartItemProductId(item) !== productId,
+    )
 
     // Якщо нічого не змінилось
     if (filteredItems.length === cart.items?.length) {
