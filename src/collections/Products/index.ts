@@ -18,6 +18,7 @@ import { getBestSellers } from '@/collections/Products/endpoints/getBestSellers'
 import { autoTranslate } from '@/collections/Products/hooks/autoTranslate'
 import { getSingleProduct } from '@/collections/Products/endpoints/getSingleProduct'
 import { setTitleWithArticle } from '@/collections/Products/hooks/setTitleWithArticle'
+import { canReadWholesalePrice } from '@/access/canReadWholesalePrice'
 
 
 // @ts-ignore
@@ -78,9 +79,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     {
       name: 'wholesalePrice', type: 'number', admin: { position: 'sidebar' },
       access: {
-        read: ({ req }) => {
-          return req.user?.wholesale === true
-        },
+        read: canReadWholesalePrice,
       },
     },
     {

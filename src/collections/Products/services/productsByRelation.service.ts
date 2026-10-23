@@ -2,6 +2,7 @@ import { PayloadRequest } from 'payload'
 import { ProductsByRelationResult } from '@/collections/Products/endpoints/types'
 import { sortGenerator } from '@/services/sortPage.service'
 import { calculateProductPrice } from '@/services/price.service'
+import { canUserReadWholesalePrice } from '@/access/canReadWholesalePrice'
 
 type RelationConfig = {
   relationCollection: 'brands' | 'categories'
@@ -20,13 +21,13 @@ export function transformProduct(product: any, req: PayloadRequest) {
     gallery: Array.isArray(product.gallery) ? product.gallery : [],
   }
 
-  const { isWholesale, discountPrice } = calculateProductPrice({
+  const { discountPrice } = calculateProductPrice({
     product,
     user: req.user,
   })
 
-  // Приховуємо оптову ціну для роздрібних користувачів
-  if (!isWholesale) {
+  // Приховуємо оптову ціну для тих, кому вона не доступна
+  if (!canUserReadWholesalePrice(req.user)) {
     delete transformed.wholesalePrice
   }
 
