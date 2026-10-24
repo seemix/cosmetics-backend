@@ -59,6 +59,7 @@ export const sendNewOrderNotification: CollectionAfterChangeHook = async ({
           data: {
             telegramMessageId: String(messageId),
           },
+          req,
         })
       }
     } else if (operation === 'update' && doc.telegramMessageId) {

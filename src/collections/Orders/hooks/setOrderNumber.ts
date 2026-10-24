@@ -7,6 +7,7 @@ export const setOrderNumber: CollectionBeforeChangeHook = async ({ req, data, op
     collection: 'orders',
     sort: '-createdAt',
     limit: 1,
+    req,
   });
 
   let nextNumber = 1;

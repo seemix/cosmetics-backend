@@ -178,5 +178,31 @@ describe('createOrder: запит і роздрібне замовлення', (
       expect(status).toBe(500)
       expect(body).toEqual({ success: false, message: 'Failed to create order' })
     })
+
+    it('помилка після створення замовлення відкочує транзакцію: у БД нічого не лишається', async () => {
+      const brand = await data.brand()
+      const product = await data.product({ brand: brand.id, retailPrice: 100 })
+      const before = (await payload.count({ collection: 'orders' })).totalDocs
+
+      // Штучна помилка на читанні щойно створеного замовлення, тобто вже після запису в БД.
+      const findByID = payload.findByID.bind(payload)
+      const spy = vi.spyOn(payload, 'findByID').mockImplementation((async (args: Parameters<typeof payload.findByID>[0]) => {
+        if (args.collection === 'orders') throw new Error('Injected failure')
+        return findByID(args)
+      }) as typeof payload.findByID)
+
+      try {
+        const { status, body } = await callCreateOrder(payload, {
+          body: { items: [{ product: product.id, quantity: 1 }], shippingAddress },
+        })
+
+        expect(status).toBe(500)
+        expect(body).toEqual({ success: false, message: 'Failed to create order' })
+      } finally {
+        spy.mockRestore()
+      }
+
+      expect((await payload.count({ collection: 'orders' })).totalDocs).toBe(before)
+    })
   })
 })
