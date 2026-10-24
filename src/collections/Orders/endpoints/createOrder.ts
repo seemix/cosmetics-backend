@@ -2,6 +2,7 @@ import { commitTransaction, initTransaction, killTransaction } from 'payload'
 import type { Endpoint, PayloadRequest } from 'payload'
 import { calculateProductPrice } from '@/services/price.service'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
+import { flushAfterCommit, openAfterCommitQueue } from '@/services/notifications/afterCommit'
 
 export const createOrder: Endpoint = {
   path: '/create',
@@ -113,6 +114,8 @@ export const createOrder: Endpoint = {
       // 2. Створення замовлення в БД.
       // Замовлення, його хуки і читання результату йдуть в одній транзакції:
       // при помилці на будь-якому кроці в БД нічого не лишається.
+      // Сповіщення з хуків чекають у черзі й надсилаються лише після коміту.
+      const afterCommit = openAfterCommitQueue(req)
       shouldCommit = await initTransaction(req)
 
       const createdOrder = await req.payload.create({
@@ -158,6 +161,7 @@ export const createOrder: Endpoint = {
       }
 
       if (shouldCommit) await commitTransaction(req)
+      await flushAfterCommit(req, afterCommit)
 
       return Response.json(
         {

@@ -1,6 +1,8 @@
 import { CollectionAfterChangeHook } from 'payload'
 import * as deepl from 'deepl-node'
 
+import { EXTERNAL_TIMEOUT_MS, withTimeout } from '@/services/notifications/withTimeout'
+
 const translator = new deepl.Translator(process.env.DEEPL_KEY as string)
 
 export const autoTranslate: CollectionAfterChangeHook = async ({
@@ -20,12 +22,16 @@ export const autoTranslate: CollectionAfterChangeHook = async ({
 
     if (newValue && newValue !== oldValue) {
       try {
-        const result = await translator.translateText(newValue, 'ru', 'ro')
+        const result = await withTimeout(
+          translator.translateText(newValue, 'ru', 'ro'),
+          EXTERNAL_TIMEOUT_MS,
+          'DeepL',
+        )
         if ('text' in result) {
           translatedData[field] = result.text
         }
       } catch (e) {
-        console.error(`Error translating ${field}:`, e)
+        req.payload.logger.error({ err: e }, `Error translating ${field}`)
       }
     }
   }
