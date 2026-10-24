@@ -51,7 +51,7 @@ export const createOrder: Endpoint = {
         typeof brand === 'object' ? brand.id : brand,
       ) ?? []
 
-      const discountPercent = promoData?.['discount %'] ?? 0
+      const discountPercent = promoData?.discountPercent ?? 0
 
       for (const item of items) {
         if (!item.product || !item.quantity) {

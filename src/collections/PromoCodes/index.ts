@@ -34,7 +34,8 @@ export const PromoCodes: CollectionConfig = {
       defaultValue: false
     },
     {
-      name: 'discount %',
+      name: 'discountPercent',
+      label: 'Discount %',
       type: 'number',
       required: true,
       defaultValue: 10,

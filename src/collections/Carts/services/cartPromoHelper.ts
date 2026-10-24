@@ -18,7 +18,7 @@ export async function cartPromoHelper(req: PayloadRequest, user: string, cart: N
   return applyPromoDiscount({
     cart,
     brandIds: promoResult.promo.brands as string[],
-    discountPercent: promoResult.promo['discount %'],
+    discountPercent: promoResult.promo.discountPercent,
     excludeBrands: brandDiscounts,
   })
 }

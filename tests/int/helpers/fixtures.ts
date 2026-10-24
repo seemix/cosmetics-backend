@@ -83,7 +83,7 @@ export class TestData {
       collection: 'promo-codes',
       data: {
         code: `PROMO-${uid()}`,
-        'discount %': options.percent ?? 10,
+        discountPercent: options.percent ?? 10,
         brands: options.brands,
         wholesale: options.wholesale ?? false,
         isActive: options.isActive ?? true,

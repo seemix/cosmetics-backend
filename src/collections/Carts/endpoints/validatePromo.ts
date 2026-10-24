@@ -57,7 +57,7 @@ export const validatePromo: Endpoint = {
       const discountCart = applyPromoDiscount({
         cart,
         brandIds: promo.brands as string[],
-        discountPercent: promo['discount %'],
+        discountPercent: promo.discountPercent,
       })
 
       return Response.json(discountCart)
@@ -90,7 +90,7 @@ export const validatePromo: Endpoint = {
     const userDiscountCart = applyPromoDiscount({
       cart: normalizedCart,
       brandIds: promo.brands as string[],
-      discountPercent: promo['discount %'],
+      discountPercent: promo.discountPercent,
       excludeBrands,
     })
 
