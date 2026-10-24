@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { PayloadRequest } from 'payload'
 import { getCartItemProductId, getCartProductIds } from '@/collections/Carts/utilities/cartItem'
 
 
@@ -52,11 +52,11 @@ export type BuildProductsMapOptions = {
  * для гостьового кошика і `/me`, конкретна локаль — для решти.
  */
 export async function buildProductsMap(
-  payload: Payload,
+  req: PayloadRequest,
   productIds: string[],
   options: BuildProductsMapOptions = {},
 ): Promise<Map<string, any>> {
-  const products = await payload.find({
+  const products = await req.payload.find({
     collection: 'products',
     where: {
       id: { in: productIds },
@@ -64,6 +64,7 @@ export async function buildProductsMap(
     locale: options.locale,
     depth: options.depth,
     limit: productIds.length,
+    req,
   })
 
   return new Map(products.docs.map((p: any) => [p.id, p]))
@@ -71,13 +72,13 @@ export async function buildProductsMap(
 
 
 export async function normalizeCartResponse(
-  payload: Payload,
+  req: PayloadRequest,
   cart: any,
   locale = 'ru'
 ) {
   const productIds = getCartProductIds(cart)
 
-  const productsMap = await buildProductsMap(payload, productIds, {
+  const productsMap = await buildProductsMap(req, productIds, {
     locale: locale as 'ru' | 'ro',
   })
 

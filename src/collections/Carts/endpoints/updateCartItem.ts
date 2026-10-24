@@ -7,7 +7,7 @@ export const updateCartItem: Endpoint = {
   path: '/update-item',
   method: 'patch',
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -20,12 +20,13 @@ export const updateCartItem: Endpoint = {
       return Response.json({ error: 'Invalid body' }, { status: 400 })
     }
 
-    const res = await payload.find({
+    const res = await req.payload.find({
       collection: 'carts',
       where: {
         customer: { equals: user.id },
       },
       limit: 1,
+      req,
     })
 
     const cart = res.docs[0]
@@ -43,7 +44,7 @@ export const updateCartItem: Endpoint = {
       }
     })
 
-    const updatedCart = await payload.update({
+    const updatedCart = await req.payload.update({
       collection: 'carts',
       id: cart.id,
       data: { items },
@@ -51,7 +52,7 @@ export const updateCartItem: Endpoint = {
     })
 
     const normalized = await normalizeCartResponse(
-      payload,
+      req,
       updatedCart,
       req.locale,
     )

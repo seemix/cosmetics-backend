@@ -8,7 +8,7 @@ export async function cartPromoHelper(req: PayloadRequest, user: string, cart: N
   const { wholesale, brandDiscounts } = await getCustomerPricingProfile(req, user)
 
   const promoResult = await checkPromoCode({
-    payload: req.payload,
+    req,
     promoCode,
     wholesale,
     cartId: cart.id,

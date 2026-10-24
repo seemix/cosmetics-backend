@@ -11,7 +11,7 @@ export const validatePromo: Endpoint = {
   method: 'post',
   path: '/promo',
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
 
     // 1. Безпечне отримання тіла запиту
     const body = typeof req.json === 'function' ? await req.json() : req.json || req.body
@@ -31,7 +31,7 @@ export const validatePromo: Endpoint = {
     }
 
     const promoResult = await checkPromoCode({
-      payload,
+      req,
       promoCode,
       wholesale,
       cartId,
@@ -49,7 +49,7 @@ export const validatePromo: Endpoint = {
     // 3. Обробка гостьового кошика
     if (items && !cartId) {
 
-      const cart = await fetchGuestCart({ payload, items, locale })
+      const cart = await fetchGuestCart({ req, items, locale })
       if (!cart) {
         return Response.json({ error: 'Cart not found or empty' }, { status: 400 })
       }
@@ -69,10 +69,11 @@ export const validatePromo: Endpoint = {
     }
 
 
-    const cart = await payload.findByID({
+    const cart = await req.payload.findByID({
       collection: 'carts',
       id: cartId,
       depth: 1,
+      req,
     })
 
 
@@ -84,7 +85,7 @@ export const validatePromo: Endpoint = {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const normalizedCart = await normalizeCartResponse(payload, cart, locale)
+    const normalizedCart = await normalizeCartResponse(req, cart, locale)
 
     const userDiscountCart = applyPromoDiscount({
       cart: normalizedCart,

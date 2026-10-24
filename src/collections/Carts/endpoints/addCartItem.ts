@@ -9,7 +9,7 @@ export const addCartItem: Endpoint = {
   method: 'post',
 
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
     const { item, promoCode } = await (req as any).json()
     const { productId, quantity } = item
 
@@ -25,7 +25,7 @@ export const addCartItem: Endpoint = {
     }
 
     // 1️⃣ Отримуємо кошик
-    const cart = await getOrCreateCart(payload, user.id)
+    const cart = await getOrCreateCart(req, user.id)
 
     if (!isCartOwnedBy(cart, user.id)) {
       return Response.json(
@@ -60,15 +60,16 @@ export const addCartItem: Endpoint = {
     }
 
     // 3️⃣ Оновлюємо кошик (priceHook перераховує subtotal)
-    const updatedCart = await payload.update({
+    const updatedCart = await req.payload.update({
       collection: 'carts',
       id: cart.id,
       data: {
         items: updatedItems,
       },
+      req,
     })
     const normalized = await normalizeCartResponse(
-      payload,
+      req,
       updatedCart,
       req.locale,
     )

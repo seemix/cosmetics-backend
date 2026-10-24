@@ -6,7 +6,6 @@ export const getGuestCart: Endpoint = {
   path: '/guest',
   method: 'post',
   handler: async (req) => {
-    const { payload } = req
     const locale = req.locale || 'ru'
 
     const { items, promoCode } = await req.json?.()
@@ -19,7 +18,7 @@ export const getGuestCart: Endpoint = {
     }
 
     const normalizedCart = await fetchGuestCart({
-      payload,
+      req,
       items,
       locale,
     })

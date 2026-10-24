@@ -1,19 +1,21 @@
-import { getPayload, type Payload } from 'payload'
+import { getPayload, type Payload, type PayloadRequest } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import config from '@/payload.config'
 import { fetchGuestCart } from '@/collections/Carts/services/fetchGuestCart.service'
 import { buildProductsMap, normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 
-import { TestData } from './helpers/fixtures'
+import { makeRequest, TestData } from './helpers/fixtures'
 
 let payload: Payload
 let data: TestData
+let req: PayloadRequest
 
 describe('кошик', () => {
   beforeAll(async () => {
     payload = await getPayload({ config: await config })
     data = new TestData(payload)
+    req = makeRequest(payload)
   })
 
   afterAll(async () => {
@@ -70,7 +72,7 @@ describe('кошик', () => {
       const brand = await data.brand()
       const product = await data.product({ brand: brand.id, retailPrice: 100 })
 
-      const map = await buildProductsMap(payload, [product.id, '000000000000000000000000'], {
+      const map = await buildProductsMap(req, [product.id, '000000000000000000000000'], {
         locale: 'ru',
       })
 
@@ -88,13 +90,13 @@ describe('кошик', () => {
         data: { subtitle: 'Română' },
       })
 
-      const map = await buildProductsMap(payload, [product.id], { locale: 'all', depth: 2 })
+      const map = await buildProductsMap(req, [product.id], { locale: 'all', depth: 2 })
 
       expect(map.get(product.id)?.subtitle).toEqual({ ru: 'Русский', ro: 'Română' })
     })
 
     it('порожній список id дає порожній Map', async () => {
-      expect((await buildProductsMap(payload, [], { locale: 'ru' })).size).toBe(0)
+      expect((await buildProductsMap(req, [], { locale: 'ru' })).size).toBe(0)
     })
   })
 
@@ -111,8 +113,8 @@ describe('кошик', () => {
       const user = await data.user()
       const cart = await data.cart({ customer: user.id, items: [{ product: product.id, quantity: 2 }] })
 
-      const ru = await normalizeCartResponse(payload, cart, 'ru')
-      const ro = await normalizeCartResponse(payload, cart, 'ro')
+      const ru = await normalizeCartResponse(req, cart, 'ru')
+      const ro = await normalizeCartResponse(req, cart, 'ro')
 
       expect(ru.id).toBe(cart.id)
       expect(ru.subtotal).toBe(600)
@@ -131,7 +133,7 @@ describe('кошик', () => {
 
   describe('fetchGuestCart', () => {
     it('порожній список повертає null', async () => {
-      expect(await fetchGuestCart({ payload, items: [] })).toBeNull()
+      expect(await fetchGuestCart({ req, items: [] })).toBeNull()
     })
 
     it('рахує гостьовий кошик за роздрібною ціною і відкидає невідомі товари', async () => {
@@ -139,7 +141,7 @@ describe('кошик', () => {
       const product = await data.product({ brand: brand.id, retailPrice: 200, wholesalePrice: 150 })
 
       const cart = await fetchGuestCart({
-        payload,
+        req,
         items: [
           { productId: product.id, quantity: 3 },
           { productId: '000000000000000000000000', quantity: 1 },

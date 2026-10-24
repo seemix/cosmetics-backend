@@ -27,7 +27,7 @@ export const createOrder: Endpoint = {
       // 1. Валідація промокоду
       if (promoCode) {
         const promoResult = await checkPromoCode({
-          payload: req.payload,
+          req,
           promoCode,
           wholesale: isWholesale,
         })

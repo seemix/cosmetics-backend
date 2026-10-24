@@ -1,4 +1,4 @@
-import { Payload } from 'payload'
+import type { PayloadRequest } from 'payload'
 import { buildProductsMap, normalizeCart } from '@/collections/Carts/services/normalizedCart'
 import { NormalizedCart } from '@/collections/Carts/types/normalizedCart'
 
@@ -8,7 +8,7 @@ export type PreviewItem = {
 }
 
 export type FetchGuestCartParams = {
-  payload: Payload
+  req: PayloadRequest
   items: PreviewItem[]
   locale?: string
 }
@@ -34,7 +34,7 @@ export type guestCart = {
 }
 
 export const fetchGuestCart = async ({
-                                       payload,
+                                       req,
                                        items,
                                        locale = 'ru',
                                      }: FetchGuestCartParams): Promise<NormalizedCart | null> => {
@@ -52,7 +52,7 @@ export const fetchGuestCart = async ({
   }
 
   // 2️⃣ Запит продуктів
-  const productsMap = await buildProductsMap(payload, productIds, {
+  const productsMap = await buildProductsMap(req, productIds, {
     locale: 'all',
     depth: 2,
   })

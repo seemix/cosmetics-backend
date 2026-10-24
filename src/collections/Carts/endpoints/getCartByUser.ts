@@ -7,7 +7,7 @@ export const getCartByUser: Endpoint = {
   path: '/me',
   method: 'get',
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
     const locale = req.locale || 'ru'
 
     if (!user) {
@@ -15,13 +15,14 @@ export const getCartByUser: Endpoint = {
     }
 
     // 1️⃣ Отримуємо кошик
-    const cartResult = await payload.find({
+    const cartResult = await req.payload.find({
       collection: 'carts',
       where: {
         customer: { equals: user.id },
       },
       depth: 1,
       limit: 1,
+      req,
     })
 
     const cart = cartResult.docs[0]
@@ -33,7 +34,7 @@ export const getCartByUser: Endpoint = {
     const productIds = getCartProductIds(cart)
 
     // 3️⃣ Окремий запит до products (ПОВНИЙ)
-    const productsMap = await buildProductsMap(payload, productIds, {
+    const productsMap = await buildProductsMap(req, productIds, {
       locale: 'all',
       depth: 2,
     })

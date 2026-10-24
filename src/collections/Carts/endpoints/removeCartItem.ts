@@ -14,7 +14,7 @@ export const removeCartItem: Endpoint = {
   method: 'post',
 
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
     const body = await (req as any).json()
     if (!user) {
       return Response.json({ message: 'Unauthorized' }, { status: 401 })
@@ -30,10 +30,11 @@ export const removeCartItem: Endpoint = {
     }
 
     // 1️⃣ Отримуємо кошик
-    const cart = await payload.findByID({
+    const cart = await req.payload.findByID({
       collection: 'carts',
       id: cartId,
       depth: 1,
+      req,
     })
 
     if (!cart || !isCartOwnedBy(cart, user.id)) {
@@ -57,16 +58,17 @@ export const removeCartItem: Endpoint = {
     }
 
     // 3️⃣ Оновлюємо кошик (subtotal перераховується hook-ом)
-    const updatedCart = await payload.update({
+    const updatedCart = await req.payload.update({
       collection: 'carts',
       id: cartId,
       data: {
         items: filteredItems,
       },
+      req,
     })
 
     const normalized = await normalizeCartResponse(
-      payload,
+      req,
       updatedCart,
       req.locale,
     )
