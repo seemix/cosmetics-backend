@@ -32,11 +32,20 @@ export const autoTranslate: CollectionAfterChangeHook = async ({
 
   if (Object.keys(translatedData).length === 0) return
 
-  await req.payload.update({
-    collection: collection.slug,
-    id: doc.id,
-    locale: 'ro',
-    data: translatedData,
-    depth: 0
-  })
+  // `req` потрібен, щоб update виконався в тій самій транзакції, що й збереження документа.
+  // createLocalReq записує `locale` у передану req, тому після виклику повертаємо початкову.
+  const { locale, fallbackLocale } = req
+  try {
+    await req.payload.update({
+      collection: collection.slug,
+      id: doc.id,
+      locale: 'ro',
+      data: translatedData,
+      depth: 0,
+      req
+    })
+  } finally {
+    req.locale = locale
+    req.fallbackLocale = fallbackLocale
+  }
 }

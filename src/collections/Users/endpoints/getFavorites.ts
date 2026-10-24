@@ -11,6 +11,7 @@ export const getFavorites: Endpoint = {
       collection: 'users',
       id: req.user.id,
       depth: 0,
+      req,
     })
     if (favorites?.length === 0 || !favorites) return Response.json({ docs: [] })
 
@@ -36,6 +37,7 @@ export const getFavorites: Endpoint = {
         variants: false,
         relatedProducts: false,
       },
+      req,
     })
     const sanitizedDocs = products.docs.map((doc) => {
 

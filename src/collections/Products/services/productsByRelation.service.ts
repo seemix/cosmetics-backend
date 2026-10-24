@@ -92,6 +92,7 @@ export async function getProductsByRelation(
     where: { slug: { equals: slug } },
     locale: req.locale,
     limit: 1,
+    req,
   })
 
   const relation = relationRes.docs[0]
@@ -119,6 +120,7 @@ export async function getProductsByRelation(
     where: {
       [config.relationField]: { equals: relation.id },
     },
+    req,
   })
 
   if (!productsRes.docs.length) {

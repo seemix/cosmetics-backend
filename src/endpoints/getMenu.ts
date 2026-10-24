@@ -15,6 +15,7 @@ export const getMenu: Endpoint = {
         },
         depth: 0,
         limit: 0,
+        req,
       })
 
       const brands = await req.payload.find({
@@ -25,6 +26,7 @@ export const getMenu: Endpoint = {
         },
         depth: 0,
         limit: 0,
+        req,
       })
 
       const tree = categoriesTree(categories.docs, brands.docs)

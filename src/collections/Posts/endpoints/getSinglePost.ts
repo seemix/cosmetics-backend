@@ -14,6 +14,7 @@ export const getSinglePost: Endpoint = {
       where: {
         slug: { equals: slug },
       },
+      req,
     })
     return Response.json(post.docs[0])
   },

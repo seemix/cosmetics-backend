@@ -17,6 +17,7 @@ export const getPageBySlug = {
       select: {
         generateSlug: false,
       },
+      req,
     })
     return Response.json(page.docs[0])
   },

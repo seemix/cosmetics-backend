@@ -23,6 +23,7 @@ export const populateRelatedProducts: CollectionAfterReadHook = async ({
     },
     depth: 2,
     limit: ids.length,
+    req,
   })
 
   doc.relatedProducts = related.docs.map(p => ({
