@@ -3,7 +3,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import config from '@/payload.config'
 
-import { TestData } from './helpers/fixtures'
+import { validatePromo } from '@/collections/Carts/endpoints/validatePromo'
+
+import { makeRequest, TestData } from './helpers/fixtures'
 import { callCreateOrder, loadOrder, shippingAddress, silenceSideEffects } from './helpers/orderCall'
 
 let payload: Payload
@@ -58,10 +60,8 @@ describe('createOrder: промокод і оптовий покупець', () 
       expect(order.promoCodeApplied).toBe(promo.code)
     })
 
-    // Відомий баг з docs/plan.md: в applyPromoDiscount порожній список брендів означає
-    // «усі бренди», а в createOrder — «жодного». Тест фіксує ПОТОЧНУ поведінку;
-    // коли баг виправлять, очікування треба змінити на знижку 10%.
-    it('[відомий баг] промокод без брендів не дає знижки в замовленні', async () => {
+    // T20: порожній список брендів промокоду означає «усі бренди», як і в кошику.
+    it('промокод без брендів знижує товари будь-якого бренду', async () => {
       const brand = await data.brand()
       const product = await data.product({ brand: brand.id, retailPrice: 1000 })
       const promo = await data.promo({ percent: 10 })
@@ -69,9 +69,44 @@ describe('createOrder: промокод і оптовий покупець', () 
       const { body } = await callCreateOrder(payload, { body: orderBody(product.id, 1, promo.code) })
 
       const order = await loadOrder(payload, data, body.order.id)
-      expect(order.total).toBe(1000)
-      expect(order.discount ?? null).toBeNull()
+      expect(order.total).toBe(900)
+      expect(order.discount).toBe(100)
       expect(order.promoCodeApplied).toBe(promo.code)
+    })
+
+    it('промокод без брендів: знижка в /validate-promo і в замовленні однакова', async () => {
+      const first = await data.product({ brand: (await data.brand()).id, retailPrice: 1000 })
+      const second = await data.product({ brand: (await data.brand()).id, retailPrice: 333 })
+      const promo = await data.promo({ percent: 15 })
+
+      const response = (await validatePromo.handler(
+        makeRequest(payload, {
+          body: {
+            promoCode: promo.code,
+            items: [
+              { productId: first.id, quantity: 2 },
+              { productId: second.id, quantity: 3 },
+            ],
+          },
+        }),
+      )) as Response
+      const cart = (await response.json()) as { promoDiscount: number; subtotal: number }
+
+      const { body } = await callCreateOrder(payload, {
+        body: {
+          items: [
+            { product: first.id, quantity: 2 },
+            { product: second.id, quantity: 3 },
+          ],
+          shippingAddress,
+          promoCode: promo.code,
+        },
+      })
+      const order = await loadOrder(payload, data, body.order.id)
+
+      expect(cart.promoDiscount).toBeGreaterThan(0)
+      expect(order.discount).toBe(cart.promoDiscount)
+      expect(order.total).toBe(cart.subtotal)
     })
   })
 

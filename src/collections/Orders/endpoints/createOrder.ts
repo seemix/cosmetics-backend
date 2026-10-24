@@ -1,6 +1,7 @@
 import { commitTransaction, initTransaction, killTransaction } from 'payload'
 import type { Endpoint, PayloadRequest } from 'payload'
 import { calculateProductPrice } from '@/services/price.service'
+import { getPromoBrandIds, isBrandEligibleForPromo } from '@/services/promo.service'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
 import { flushAfterCommit, openAfterCommitQueue } from '@/services/notifications/afterCommit'
 
@@ -47,9 +48,7 @@ export const createOrder: Endpoint = {
       let rawTotal = 0
       let totalDiscountAmount = 0
 
-      const promoBrandIds = promoData?.brands?.map((brand) =>
-        typeof brand === 'object' ? brand.id : brand,
-      ) ?? []
+      const promoBrandIds = getPromoBrandIds(promoData?.brands)
 
       const discountPercent = promoData?.discountPercent ?? 0
 
@@ -82,12 +81,11 @@ export const createOrder: Endpoint = {
 
         const productBrandId = typeof product.brand === 'object' ? product.brand?.id : product.brand
 
-        // Застосування промокоду
+        // Застосування промокоду (те саме правило брендів, що й у кошику)
         if (
           promoData &&
           !hasIndividualDiscount &&
-          productBrandId &&
-          promoBrandIds.includes(productBrandId)
+          isBrandEligibleForPromo(promoBrandIds, productBrandId)
         ) {
           itemDiscount = (price * discountPercent) / 100
           finalUnitPrice = price - itemDiscount
