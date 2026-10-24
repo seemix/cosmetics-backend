@@ -4,6 +4,7 @@ Headless-бекенд на Payload 3.65.0, Next.js 15, TypeScript, MongoDB.
 Планується складський і фінансовий облік.
 
 # Де код
+Рішення власника лежать у docs/decisions.md.
 Читати: payload.config.ts, src/collections, src/access, src/hooks,
 src/endpoints, src/fields, src/globals, src/plugins, src/services,
 src/utilities, src/email-templates, tests.
