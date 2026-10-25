@@ -82,6 +82,7 @@ export interface Config {
     purchases: Purchase;
     'stock-transfers': StockTransfer;
     'stock-adjustments': StockAdjustment;
+    'opening-balances': OpeningBalance;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -126,6 +127,7 @@ export interface Config {
     purchases: PurchasesSelect<false> | PurchasesSelect<true>;
     'stock-transfers': StockTransfersSelect<false> | StockTransfersSelect<true>;
     'stock-adjustments': StockAdjustmentsSelect<false> | StockAdjustmentsSelect<true>;
+    'opening-balances': OpeningBalancesSelect<false> | OpeningBalancesSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -932,6 +934,37 @@ export interface StockAdjustment {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "opening-balances".
+ */
+export interface OpeningBalance {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  documentDate: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  /**
+   * Required when reversing
+   */
+  reversalReason?: string | null;
+  comment?: string | null;
+  kind: 'stock';
+  stockLines?:
+    | {
+        warehouse: string | Warehouse;
+        product: string | Product;
+        quantity: number;
+        unitCostBani: number;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
@@ -1241,6 +1274,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'stock-adjustments';
         value: string | StockAdjustment;
+      } | null)
+    | ({
+        relationTo: 'opening-balances';
+        value: string | OpeningBalance;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1643,6 +1680,33 @@ export interface StockAdjustmentsSelect<T extends boolean = true> {
         diffQty?: T;
         unitCostBani?: T;
         valueBani?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "opening-balances_select".
+ */
+export interface OpeningBalancesSelect<T extends boolean = true> {
+  number?: T;
+  status?: T;
+  documentDate?: T;
+  postedAt?: T;
+  postedBy?: T;
+  reversedAt?: T;
+  reversedBy?: T;
+  reversalReason?: T;
+  comment?: T;
+  kind?: T;
+  stockLines?:
+    | T
+    | {
+        warehouse?: T;
+        product?: T;
+        quantity?: T;
+        unitCostBani?: T;
         id?: T;
       };
   updatedAt?: T;
