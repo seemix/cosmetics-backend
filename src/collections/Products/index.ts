@@ -1,4 +1,4 @@
-import { DefaultDocumentIDType, slugField, Where } from 'payload'
+import { DefaultDocumentIDType, Where } from 'payload'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 
@@ -20,11 +20,14 @@ import { getSingleProduct } from '@/collections/Products/endpoints/getSingleProd
 import { setTitleWithArticle } from '@/collections/Products/hooks/setTitleWithArticle'
 import { canReadWholesalePrice } from '@/access/canReadWholesalePrice'
 import { checkRole } from '@/access/utilities'
+import { localizedSlugField } from '@/fields/slug'
+import { collectionLabels, label, localized } from '@/i18n'
 
 
 // @ts-ignore
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
+  labels: collectionLabels('custom:collection:products:singular', 'custom:collection:products:plural'),
   versions: {
     drafts: true,
     maxPerDoc: 2,
@@ -34,6 +37,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   },
   admin: {
     ...defaultCollection?.admin,
+    group: localized('custom:group:ecommerce'),
     defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
     listSearchableFields: ['title', 'article'],
     meta: {
@@ -68,23 +72,24 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     article: true
   },
   fields: [
-    { name: 'title', type: 'text', localized: false, required: true },
-    { name: 'subtitle', type: 'text', localized: true, required: true },
-    { name: 'article', type: 'text', localized: false, required: true, admin: { position: 'sidebar' }, index: true },
-    { name: 'brand', type: 'relationship', relationTo: 'brands', required: true, admin: { position: 'sidebar' } },
-    { name: 'retailPrice', type: 'number', required: true, defaultValue: 0, admin: { position: 'sidebar' } },
-    { name: 'action', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
-    { name: 'bestSeller', type: 'checkbox', defaultValue: false, index: true, admin: { position: 'sidebar' } },
-    { name: 'unavailable', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
+    { name: 'title', label: label('custom:field:title'), type: 'text', localized: false, required: true },
+    { name: 'subtitle', label: label('custom:field:subtitle'), type: 'text', localized: true, required: true },
+    { name: 'article', label: label('custom:field:article'), type: 'text', localized: false, required: true, admin: { position: 'sidebar' }, index: true },
+    { name: 'brand', label: label('custom:field:brand'), type: 'relationship', relationTo: 'brands', required: true, admin: { position: 'sidebar' } },
+    { name: 'retailPrice', label: label('custom:field:retailPrice'), type: 'number', required: true, defaultValue: 0, admin: { position: 'sidebar' } },
+    { name: 'action', label: label('custom:field:action'), type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
+    { name: 'bestSeller', label: label('custom:field:bestSeller'), type: 'checkbox', defaultValue: false, index: true, admin: { position: 'sidebar' } },
+    { name: 'unavailable', label: label('custom:field:unavailable'), type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
 
     {
-      name: 'wholesalePrice', type: 'number', admin: { position: 'sidebar' },
+      name: 'wholesalePrice', label: label('custom:field:wholesalePrice'), type: 'number', admin: { position: 'sidebar' },
       access: {
         read: canReadWholesalePrice,
       },
     },
     {
       name: 'shortDescription',
+      label: label('custom:field:shortDescription'),
       type: 'textarea',
       localized: true,
       admin: {
@@ -137,17 +142,20 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
             },
             {
               name: 'gallery',
+              label: label('custom:field:gallery'),
               type: 'array',
               minRows: 1,
               fields: [
                 {
                   name: 'image',
+                  label: label('custom:field:image'),
                   type: 'upload',
                   relationTo: 'media',
                   required: true,
                 },
                 {
                   name: 'variantOption',
+                  label: label('custom:field:variantOption'),
                   type: 'relationship',
                   relationTo: 'variantOptions',
                   admin: {
@@ -190,12 +198,13 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               ],
             },
           ],
-          label: 'Content',
+          label: label('custom:tab:content'),
         },
         {
           fields: [
             {
               name: 'relatedProducts',
+              label: label('custom:field:relatedProducts'),
               type: 'relationship',
               filterOptions: ({ id }) => {
                 if (id) {
@@ -216,7 +225,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               relationTo: 'products',
             },
           ],
-          label: 'Product Details',
+          label: label('custom:tab:productDetails'),
         },
         // {
         //   name: 'meta',
@@ -249,6 +258,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     },
     {
       name: 'categories',
+      label: label('custom:field:categories'),
       type: 'relationship',
       admin: {
         position: 'sidebar',
@@ -257,7 +267,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       hasMany: true,
       relationTo: 'categories',
     },
-    slugField(),
+    localizedSlugField(),
   ],
   endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers, getSingleProduct],
   hooks: {

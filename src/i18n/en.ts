@@ -65,6 +65,20 @@ export const en = {
       squareSlide: 'Square slide',
       customLink: 'Custom link',
       excerpt: 'Excerpt',
+      subtitle: 'Subtitle',
+      article: 'Article',
+      brand: 'Brand',
+      retailPrice: 'Retail price',
+      wholesalePrice: 'Wholesale price',
+      action: 'Promotion',
+      bestSeller: 'Best seller',
+      unavailable: 'Unavailable',
+      shortDescription: 'Short description',
+      gallery: 'Gallery',
+      image: 'Image',
+      variantOption: 'Variant option',
+      relatedProducts: 'Related products',
+      categories: 'Categories',
     },
     collection: {
       brands: {
@@ -87,6 +101,14 @@ export const en = {
         singular: 'Post',
         plural: 'Posts',
       },
+      products: {
+        singular: 'Product',
+        plural: 'Products',
+      },
+    },
+    tab: {
+      content: 'Content',
+      productDetails: 'Product details',
     },
   },
 }

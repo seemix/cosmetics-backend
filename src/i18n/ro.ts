@@ -63,6 +63,20 @@ export const ro: CustomTranslationsObject = {
       squareSlide: 'Slide pătrat',
       customLink: 'Link personalizat',
       excerpt: 'Rezumat',
+      subtitle: 'Subtitlu',
+      article: 'Cod articol',
+      brand: 'Brand',
+      retailPrice: 'Preț cu amănuntul',
+      wholesalePrice: 'Preț en-gros',
+      action: 'Promoție',
+      bestSeller: 'Cel mai vândut',
+      unavailable: 'Indisponibil',
+      shortDescription: 'Descriere scurtă',
+      gallery: 'Galerie',
+      image: 'Imagine',
+      variantOption: 'Opțiune de variantă',
+      relatedProducts: 'Produse similare',
+      categories: 'Categorii',
     },
     collection: {
       brands: {
@@ -85,6 +99,14 @@ export const ro: CustomTranslationsObject = {
         singular: 'Articol',
         plural: 'Articole',
       },
+      products: {
+        singular: 'Produs',
+        plural: 'Produse',
+      },
+    },
+    tab: {
+      content: 'Conținut',
+      productDetails: 'Detalii produs',
     },
   },
 }

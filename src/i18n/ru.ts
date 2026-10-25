@@ -63,6 +63,20 @@ export const ru: CustomTranslationsObject = {
       squareSlide: 'Квадратный слайд',
       customLink: 'Своя ссылка',
       excerpt: 'Краткое описание',
+      subtitle: 'Подзаголовок',
+      article: 'Артикул',
+      brand: 'Бренд',
+      retailPrice: 'Розничная цена',
+      wholesalePrice: 'Оптовая цена',
+      action: 'Акция',
+      bestSeller: 'Хит продаж',
+      unavailable: 'Недоступен',
+      shortDescription: 'Краткое описание',
+      gallery: 'Галерея',
+      image: 'Изображение',
+      variantOption: 'Опция варианта',
+      relatedProducts: 'Похожие товары',
+      categories: 'Категории',
     },
     collection: {
       brands: {
@@ -85,6 +99,14 @@ export const ru: CustomTranslationsObject = {
         singular: 'Публикация',
         plural: 'Публикации',
       },
+      products: {
+        singular: 'Товар',
+        plural: 'Товары',
+      },
+    },
+    tab: {
+      content: 'Содержимое',
+      productDetails: 'Детали товара',
     },
   },
 }
