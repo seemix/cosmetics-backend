@@ -81,6 +81,7 @@ export interface Config {
     'product-costs': ProductCost;
     purchases: Purchase;
     'stock-transfers': StockTransfer;
+    'stock-adjustments': StockAdjustment;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -124,6 +125,7 @@ export interface Config {
     'product-costs': ProductCostsSelect<false> | ProductCostsSelect<true>;
     purchases: PurchasesSelect<false> | PurchasesSelect<true>;
     'stock-transfers': StockTransfersSelect<false> | StockTransfersSelect<true>;
+    'stock-adjustments': StockAdjustmentsSelect<false> | StockAdjustmentsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -878,6 +880,58 @@ export interface StockTransfer {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-adjustments".
+ */
+export interface StockAdjustment {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  documentDate: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  /**
+   * Required when reversing
+   */
+  reversalReason?: string | null;
+  comment?: string | null;
+  kind: 'writeoff' | 'inventory';
+  warehouse: string | Warehouse;
+  /**
+   * Required for a write-off
+   */
+  reason?: ('damage' | 'expired' | 'tester' | 'internal' | 'other') | null;
+  lines: {
+    product: string | Product;
+    quantity?: number | null;
+    /**
+     * Inventory: actual quantity on the shelf
+     */
+    countedQty?: number | null;
+    /**
+     * Stock at the moment of posting
+     */
+    expectedQty?: number | null;
+    /**
+     * Counted minus expected
+     */
+    diffQty?: number | null;
+    /**
+     * Inventory: required for a surplus of a product with no stock cost
+     */
+    unitCostBani?: number | null;
+    /**
+     * Calculated at posting, negative for a loss
+     */
+    valueBani?: number | null;
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
@@ -1183,6 +1237,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'stock-transfers';
         value: string | StockTransfer;
+      } | null)
+    | ({
+        relationTo: 'stock-adjustments';
+        value: string | StockAdjustment;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1553,6 +1611,38 @@ export interface StockTransfersSelect<T extends boolean = true> {
     | {
         product?: T;
         quantity?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-adjustments_select".
+ */
+export interface StockAdjustmentsSelect<T extends boolean = true> {
+  number?: T;
+  status?: T;
+  documentDate?: T;
+  postedAt?: T;
+  postedBy?: T;
+  reversedAt?: T;
+  reversedBy?: T;
+  reversalReason?: T;
+  comment?: T;
+  kind?: T;
+  warehouse?: T;
+  reason?: T;
+  lines?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        countedQty?: T;
+        expectedQty?: T;
+        diffQty?: T;
+        unitCostBani?: T;
+        valueBani?: T;
         id?: T;
       };
   updatedAt?: T;
