@@ -19,6 +19,7 @@ import { autoTranslate } from '@/collections/Products/hooks/autoTranslate'
 import { getSingleProduct } from '@/collections/Products/endpoints/getSingleProduct'
 import { setTitleWithArticle } from '@/collections/Products/hooks/setTitleWithArticle'
 import { canReadWholesalePrice } from '@/access/canReadWholesalePrice'
+import { checkRole } from '@/access/utilities'
 
 
 // @ts-ignore
@@ -103,6 +104,15 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     },
 
     ...hideStockFields(defaultCollection.fields),
+    {
+      // `ui`-поле не має даних: у відповіді API його немає. Бачить лише admin (собівартість).
+      name: 'stockPanel',
+      type: 'ui',
+      admin: {
+        components: { Field: '@/components/StockPanel/Field#StockPanel' },
+        condition: (_data, _siblingData, { user }) => checkRole(['admin'], user as never),
+      },
+    },
     {
       type: 'tabs',
       tabs: [

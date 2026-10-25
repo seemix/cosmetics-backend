@@ -38,6 +38,7 @@ import { AccountingSettings } from './globals/AccountingSettings'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
 import { stockCacheCheck, stockCacheRebuild } from '@/endpoints/stockCacheCheck'
+import { getProductStock } from '@/endpoints/getProductStock'
 import sharp from 'sharp'
 import payloadSidebar from 'payload-sidebar-plugin'
 
@@ -144,7 +145,7 @@ export default buildConfig({
         apiKey: process.env.RESEND_API_KEY,
       })
     : undefined,
-  endpoints: [getMenu, stockCacheCheck, stockCacheRebuild],
+  endpoints: [getMenu, stockCacheCheck, stockCacheRebuild, getProductStock],
   //globals: [Header, Footer],
   globals: [AccountingSettings],
   plugins: [

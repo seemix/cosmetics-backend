@@ -29,6 +29,7 @@ import { FixedToolbarFeatureClient as FixedToolbarFeatureClient_e70f5e05f09f93e0
 import { VariantOptionsSelector as VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
 import { PriceCell as PriceCell_e27bf7b8cc50640dcdd584767b8eac3c } from '@payloadcms/plugin-ecommerce/client'
 import { PriceInput as PriceInput_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
+import { StockPanel as StockPanel_996bde851071df39cfc22ae448b046ee } from '@/components/StockPanel/Field'
 import { OrderManager as OrderManager_335956527a86746b9253d4f624bab000 } from '@/collections/Orders/components/OrderManager'
 import { PriceField as PriceField_26d3ff61e3685d035d1966db2d7f432e } from '@/collections/Orders/components/PriceField'
 import { CustomNav as CustomNav_7a25bf58b9bf0789c79437d44273b9e5 } from 'payload-sidebar-plugin/rsc'
@@ -67,6 +68,7 @@ export const importMap = {
   "@payloadcms/plugin-ecommerce/rsc#VariantOptionsSelector": VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb,
   "@payloadcms/plugin-ecommerce/client#PriceCell": PriceCell_e27bf7b8cc50640dcdd584767b8eac3c,
   "@payloadcms/plugin-ecommerce/rsc#PriceInput": PriceInput_b91672ccd6e8b071c11142ab941fedfb,
+  "@/components/StockPanel/Field#StockPanel": StockPanel_996bde851071df39cfc22ae448b046ee,
   "@/collections/Orders/components/OrderManager#OrderManager": OrderManager_335956527a86746b9253d4f624bab000,
   "@/collections/Orders/components/PriceField#PriceField": PriceField_26d3ff61e3685d035d1966db2d7f432e,
   "payload-sidebar-plugin/rsc#CustomNav": CustomNav_7a25bf58b9bf0789c79437d44273b9e5,
