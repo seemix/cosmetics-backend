@@ -29,7 +29,7 @@ const customer = asUser(['customer'])
 
 const onPost = vi.fn<(args: DocumentTransitionArgs) => void>()
 const onReverse = vi.fn<(args: DocumentTransitionArgs) => void>()
-const lifecycle = documentLifecycle({ prefix, onPost, onReverse })
+const lifecycle = documentLifecycle({ prefix, counterKey: prefix, onPost, onReverse })
 const [beforeChange] = lifecycle.hooks.beforeChange
 const [beforeDelete] = lifecycle.hooks.beforeDelete
 
@@ -108,7 +108,7 @@ describe('A7: життєвий цикл документа', () => {
     })
 
     it('назва поля дати налаштовується', () => {
-      const { fields } = documentLifecycle({ prefix, dateField: { name: 'operationDate', label: 'Operation date' } })
+      const { fields } = documentLifecycle({ prefix, counterKey: prefix, dateField: { name: 'operationDate', label: 'Operation date' } })
 
       expect(fields.some((field) => 'name' in field && field.name === 'operationDate')).toBe(true)
     })

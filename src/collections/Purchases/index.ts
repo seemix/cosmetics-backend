@@ -8,9 +8,13 @@ import { documentLifecycle } from '@/services/documents/documentLifecycle'
 
 import { calculateFields } from './hooks/calculateFields'
 import { postPurchase, reversePurchase } from './hooks/postPurchase'
-import { startTransaction } from './hooks/startTransaction'
 
-const lifecycle = documentLifecycle({ prefix: 'PUR', onPost: postPurchase, onReverse: reversePurchase })
+const lifecycle = documentLifecycle({
+  prefix: 'PUR',
+  counterKey: 'purchaseNumber',
+  onPost: postPurchase,
+  onReverse: reversePurchase,
+})
 
 const calculated = { readOnly: true, description: 'Calculated' }
 
@@ -33,7 +37,7 @@ export const Purchases: CollectionConfig = {
   defaultSort: '-createdAt',
   indexes: [{ fields: ['supplier', 'status', 'postedAt'] }, { fields: ['status', 'postedAt'] }],
   hooks: {
-    beforeValidate: [startTransaction],
+    beforeValidate: lifecycle.hooks.beforeValidate,
     // Спершу розрахунок, потім правила статусів: проведення бачить остаточні суми.
     beforeChange: [calculateFields, ...lifecycle.hooks.beforeChange],
     beforeDelete: lifecycle.hooks.beforeDelete,

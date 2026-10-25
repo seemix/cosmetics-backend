@@ -162,6 +162,11 @@ describe('A9: приходна накладна', () => {
 
       expect(draft.status).toBe('draft')
       expect(draft.number).toMatch(/^PUR-\d{6}$/)
+      // Ключ лічильника з розд. 8.
+      const counter = await payload.db.connection
+        .collection<{ _id: string; value: number }>('counters')
+        .findOne({ _id: 'purchaseNumber' })
+      expect(draft.number).toBe(`PUR-${String(counter?.value).padStart(6, '0')}`)
       expect(draft.lines.map((line) => [line.amountBani, line.allocatedBani, line.landedBani])).toEqual([
         [120000, 7735, 127735],
         [37750, 2433, 40183],

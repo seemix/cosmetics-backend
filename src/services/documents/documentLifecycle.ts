@@ -5,6 +5,7 @@ import {
   commitTransaction,
   type CollectionBeforeChangeHook,
   type CollectionBeforeDeleteHook,
+  type CollectionBeforeValidateHook,
   type CollectionSlug,
   type Field,
   initTransaction,
@@ -36,8 +37,10 @@ export type DocumentTransitionArgs = {
 }
 
 export type DocumentLifecycleOptions = {
-  /** Префікс номера й ключ лічильника: `PUR` → `PUR-000001`. */
+  /** Префікс номера: `PUR` → `PUR-000001`. */
   prefix: string
+  /** Ключ у `counters` (розд. 8), напр. `purchaseNumber`. */
+  counterKey: string
   /** Поле дати документа: `documentDate` (за замовчуванням) або, наприклад, `operationDate`. */
   dateField?: { name: string; label: string }
   onPost?: (args: DocumentTransitionArgs) => Promise<void> | void
@@ -137,10 +140,24 @@ const headerFields = ({ dateField }: Required<Pick<DocumentLifecycleOptions, 'da
 /** Фабрика полів шапки й хуків життєвого циклу документа. */
 export const documentLifecycle = ({
   prefix,
+  counterKey,
   dateField = { name: 'documentDate', label: 'Document date' },
   onPost,
   onReverse,
 }: DocumentLifecycleOptions) => {
+  /**
+   * MongoDB стартує транзакцію першою операцією в сесії. При створенні першими йдуть паралельні
+   * запити валідації `filterOptions` (наприклад, постачальник і склад), і другий падає з
+   * `TransientTransactionError`. Один послідовний запит у сесії до валідації стартує транзакцію.
+   */
+  const startTransaction: CollectionBeforeValidateHook = async ({ collection, data, operation, req }) => {
+    if (operation === 'create' && (await req.transactionID)) {
+      await req.payload.count({ collection: collection.slug as CollectionSlug, where: { id: { exists: false } }, req })
+    }
+
+    return data
+  }
+
   const beforeChange: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
     if (operation === 'create') {
       if ((data.status ?? 'draft') !== 'draft') fail('A document is created as a draft and posted afterwards')
@@ -148,7 +165,7 @@ export const documentLifecycle = ({
       for (const field of SYSTEM_FIELDS) data[field] = null
       data.status = 'draft'
       // Номер видається поза транзакцією: номер відкоченого документа лишається пропуском (розд. 8).
-      data.number = formatDocNumber(prefix, await nextCounterValue(req, prefix))
+      data.number = formatDocNumber(prefix, await nextCounterValue(req, counterKey))
 
       return data
     }
@@ -215,6 +232,7 @@ export const documentLifecycle = ({
   return {
     fields: headerFields({ dateField }),
     hooks: {
+      beforeValidate: [startTransaction],
       beforeChange: [beforeChange],
       beforeDelete: [beforeDelete],
     },
