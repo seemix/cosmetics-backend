@@ -34,10 +34,20 @@ export const ru: CustomTranslationsObject = {
     group: {
       purchasing: 'Закупки',
       stock: 'Склад',
+      ecommerce: 'Магазин',
+      content: 'Контент',
+      users: 'Пользователи',
     },
     validation: {
       integer: 'Значение должно быть целым числом',
       wholeBani: 'Сумма должна быть целым числом бани',
+    },
+    error: {
+      periodLocked: 'Период закрыт до {{date}}',
+      insufficientStock: 'Недостаточно товара на складе: {{product}} ({{warehouse}}), запрошено {{requested}}, доступно {{available}}',
+      postedOrderLocked: 'Проведённый заказ нельзя редактировать: позиции, сумма, скидка и клиент зафиксированы',
+      cancelledIsFinal: 'Отменённый заказ нельзя вернуть в работу, создайте новый заказ',
+      postedOrderDeleteForbidden: 'Проведённый заказ нельзя удалить, отмените его',
     },
   },
 }

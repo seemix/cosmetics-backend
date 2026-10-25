@@ -36,10 +36,20 @@ export const en = {
     group: {
       purchasing: 'Purchasing',
       stock: 'Stock',
+      ecommerce: 'Ecommerce',
+      content: 'Content',
+      users: 'Users',
     },
     validation: {
       integer: 'Value must be an integer',
       wholeBani: 'Amount must be a whole number of bani',
+    },
+    error: {
+      periodLocked: 'The period is locked until {{date}}',
+      insufficientStock: 'Insufficient stock: {{product}} in {{warehouse}}, requested {{requested}}, available {{available}}',
+      postedOrderLocked: 'A posted order cannot be edited: items, total, discount and customer are frozen',
+      cancelledIsFinal: 'A cancelled order cannot be reopened, create a new order instead',
+      postedOrderDeleteForbidden: 'A posted order cannot be deleted, cancel it instead',
     },
   },
 }

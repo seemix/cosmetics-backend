@@ -34,10 +34,20 @@ export const ro: CustomTranslationsObject = {
     group: {
       purchasing: 'Achiziții',
       stock: 'Depozit',
+      ecommerce: 'Magazin',
+      content: 'Conținut',
+      users: 'Utilizatori',
     },
     validation: {
       integer: 'Valoarea trebuie să fie un număr întreg',
       wholeBani: 'Suma trebuie să fie un număr întreg de bani',
+    },
+    error: {
+      periodLocked: 'Perioada este închisă până la {{date}}',
+      insufficientStock: 'Stoc insuficient: {{product}} în depozitul {{warehouse}}, solicitat {{requested}}, disponibil {{available}}',
+      postedOrderLocked: 'Comanda operată nu poate fi editată: pozițiile, suma, reducerea și clientul sunt fixate',
+      cancelledIsFinal: 'Comanda anulată nu poate fi redeschisă, creați o comandă nouă',
+      postedOrderDeleteForbidden: 'Comanda operată nu poate fi ștearsă, anulați-o',
     },
   },
 }
