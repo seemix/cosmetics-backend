@@ -32,6 +32,10 @@ export const ru: CustomTranslationsObject = {
       partiallyPaid: 'Оплачено частично',
       warehouse: 'Склад',
       cashAccount: 'Касса',
+      debt: 'Долг',
+      advance: 'Аванс',
+      carrier: 'Перевозчик',
+      discrepancy: 'Расхождение',
       name: 'Название',
     },
     action: {
@@ -52,6 +56,7 @@ export const ru: CustomTranslationsObject = {
     validation: {
       integer: 'Значение должно быть целым числом',
       wholeBani: 'Сумма должна быть целым числом бани',
+      nonZeroBani: 'Сумма не должна быть нулевой',
     },
     error: {
       periodLocked: 'Период закрыт до {{date}}',
@@ -98,6 +103,8 @@ export const ru: CustomTranslationsObject = {
       paymentOrderNotPosted: 'По заказу {{order}} не списан товар, он не принимает оплату',
       paymentOverpaid: 'Переплата по заказу {{order}}: запрошено {{requested}}, осталось оплатить {{remaining}}',
       paymentExceedsPaid: 'По заказу {{order}} оплачено только {{paid}}, запрошено {{requested}}',
+      openingSupplierDuplicate: 'Поставщик может встречаться только один раз в начальных остатках',
+      openingSupplierDebtExists: 'У поставщика {{supplier}} уже есть активный начальный долг в документе {{document}}',
     },
     field: {
       title: 'Название',
@@ -222,6 +229,7 @@ export const ru: CustomTranslationsObject = {
       isSalary: 'Статья зарплаты',
       deltaBani: 'Изменение суммы',
       cashLines: 'Кассы',
+      supplierLines: 'Долги поставщикам',
       operationDate: 'Дата операции',
       toAccount: 'Касса-получатель',
       expenseCategory: 'Статья расходов',
@@ -397,6 +405,7 @@ export const ru: CustomTranslationsObject = {
       reasonOther: 'Другое',
       openingStock: 'Товарные остатки',
       openingCash: 'Кассы',
+      openingSupplierDebt: 'Долги поставщикам',
       accountCash: 'Наличные',
       accountBank: 'Банковский счёт',
       opExpense: 'Расход',

@@ -14,16 +14,24 @@ export const validateBani: BaniValidate = (value, options) => {
   return number(value, options)
 }
 
-type MoneyFieldOptions = Omit<NumberField, 'type' | 'hasMany' | 'maxRows' | 'minRows' | 'validate'> & { name: string }
+/** Сума не нульова: для рядків зі знаком, де нуль безглуздий (наприклад, борг або аванс). */
+const validateNonZeroBani: BaniValidate = (value, options) =>
+  value === 0 ? customT(options.req.t)('custom:validation:nonZeroBani') : validateBani(value, options)
+
+type MoneyFieldOptions = Omit<NumberField, 'type' | 'hasMany' | 'maxRows' | 'minRows' | 'validate'> & {
+  name: string
+  /** Забороняє нуль; знак суми довільний. */
+  nonZero?: boolean
+}
 
 /**
  * Поле грошей: у БД цілі бані, в адмінці ввід і показ у MDL з двома знаками.
  * Першим використанням треба перегенерувати importMap (`pnpm generate:importmap`).
  */
-export const moneyField = (options: MoneyFieldOptions): NumberField => ({
+export const moneyField = ({ nonZero, ...options }: MoneyFieldOptions): NumberField => ({
   ...options,
   type: 'number',
-  validate: validateBani,
+  validate: nonZero ? validateNonZeroBani : validateBani,
   admin: {
     ...options.admin,
     components: {

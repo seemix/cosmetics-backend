@@ -861,10 +861,17 @@ export interface OpeningBalance {
   reversedBy?: (string | null) | User;
   reversalReason?: string | null;
   comment?: string | null;
-  kind: 'stock' | 'cash';
+  kind: 'stock' | 'cash' | 'supplierDebt';
   cashLines?:
     | {
         account: string | CashAccount;
+        amountBani: number;
+        id?: string | null;
+      }[]
+    | null;
+  supplierLines?:
+    | {
+        supplier: string | Supplier;
         amountBani: number;
         id?: string | null;
       }[]
@@ -1710,6 +1717,13 @@ export interface OpeningBalancesSelect<T extends boolean = true> {
     | T
     | {
         account?: T;
+        amountBani?: T;
+        id?: T;
+      };
+  supplierLines?:
+    | T
+    | {
+        supplier?: T;
         amountBani?: T;
         id?: T;
       };

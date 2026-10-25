@@ -236,7 +236,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   надходження зменшує `paidBani`; `status` замовлення не змінюється (В6); тести.
   Складність: M. Модель: Opus.
 
-- [ ] **C4. Борги постачальникам і початкові борги.**
+- [x] **C4. Борги постачальникам і початкові борги.**
   Мета: `opening-balances` kind=supplierDebt; розрахунок боргу (розд. 6.3).
   Файли: `src/services/finance/debts.service.ts`, `OpeningBalances/index.ts`.
   Готово: функція боргу на дату по постачальнику з урахуванням `extraCosts.payee` і

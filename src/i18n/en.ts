@@ -34,6 +34,10 @@ export const en = {
       partiallyPaid: 'Partially paid',
       warehouse: 'Warehouse',
       cashAccount: 'Cash account',
+      debt: 'Debt',
+      advance: 'Advance payment',
+      carrier: 'Carrier',
+      discrepancy: 'Discrepancy',
       name: 'Name',
     },
     action: {
@@ -54,6 +58,7 @@ export const en = {
     validation: {
       integer: 'Value must be an integer',
       wholeBani: 'Amount must be a whole number of bani',
+      nonZeroBani: 'Amount must not be zero',
     },
     error: {
       periodLocked: 'The period is locked until {{date}}',
@@ -100,6 +105,8 @@ export const en = {
       paymentOrderNotPosted: 'Order {{order}} has not deducted stock, it cannot accept payments',
       paymentOverpaid: 'Overpayment on order {{order}}: requested {{requested}}, left to pay {{remaining}}',
       paymentExceedsPaid: 'Order {{order}} has only {{paid}} paid, requested {{requested}}',
+      openingSupplierDuplicate: 'A supplier can appear only once in an opening balance',
+      openingSupplierDebtExists: 'Supplier {{supplier}} already has an active opening debt in {{document}}',
     },
     field: {
       title: 'Title',
@@ -224,6 +231,7 @@ export const en = {
       isSalary: 'Salary category',
       deltaBani: 'Amount change',
       cashLines: 'Cash accounts',
+      supplierLines: 'Supplier debts',
       operationDate: 'Operation date',
       toAccount: 'To cash account',
       expenseCategory: 'Expense category',
@@ -399,6 +407,7 @@ export const en = {
       reasonOther: 'Other',
       openingStock: 'Stock',
       openingCash: 'Cash',
+      openingSupplierDebt: 'Supplier debts',
       accountCash: 'Cash',
       accountBank: 'Bank account',
       opExpense: 'Expense',

@@ -32,6 +32,10 @@ export const ro: CustomTranslationsObject = {
       partiallyPaid: 'Achitat parțial',
       warehouse: 'Depozit',
       cashAccount: 'Casă',
+      debt: 'Datorie',
+      advance: 'Avans',
+      carrier: 'Transportator',
+      discrepancy: 'Discrepanță',
       name: 'Denumire',
     },
     action: {
@@ -52,6 +56,7 @@ export const ro: CustomTranslationsObject = {
     validation: {
       integer: 'Valoarea trebuie să fie un număr întreg',
       wholeBani: 'Suma trebuie să fie un număr întreg de bani',
+      nonZeroBani: 'Suma nu trebuie să fie zero',
     },
     error: {
       periodLocked: 'Perioada este închisă până la {{date}}',
@@ -98,6 +103,8 @@ export const ro: CustomTranslationsObject = {
       paymentOrderNotPosted: 'Pentru comanda {{order}} stocul nu a fost descărcat, nu acceptă plăți',
       paymentOverpaid: 'Plată în plus pentru comanda {{order}}: solicitat {{requested}}, rămas de achitat {{remaining}}',
       paymentExceedsPaid: 'Pentru comanda {{order}} s-a achitat doar {{paid}}, solicitat {{requested}}',
+      openingSupplierDuplicate: 'Un furnizor poate apărea o singură dată într-un sold inițial',
+      openingSupplierDebtExists: 'Furnizorul {{supplier}} are deja o datorie inițială activă în documentul {{document}}',
     },
     field: {
       title: 'Titlu',
@@ -222,6 +229,7 @@ export const ro: CustomTranslationsObject = {
       isSalary: 'Categorie de salarii',
       deltaBani: 'Modificarea sumei',
       cashLines: 'Case',
+      supplierLines: 'Datorii față de furnizori',
       operationDate: 'Data operațiunii',
       toAccount: 'Casa de destinație',
       expenseCategory: 'Categorie de cheltuieli',
@@ -397,6 +405,7 @@ export const ro: CustomTranslationsObject = {
       reasonOther: 'Altele',
       openingStock: 'Stocuri',
       openingCash: 'Case',
+      openingSupplierDebt: 'Datorii față de furnizori',
       accountCash: 'Numerar',
       accountBank: 'Cont bancar',
       opExpense: 'Cheltuială',

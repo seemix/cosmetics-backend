@@ -4,6 +4,7 @@ import { adminOnly } from '@/access/adminOnly'
 import { activeCashAccountsOnly } from '@/collections/Finance/CashAccounts'
 import { applyCashMoves, revertCashMoves } from '@/services/finance/cashLedger.service'
 import { validateInteger } from '@/collections/Stock/shared'
+import { activeSuppliersOnly } from '@/collections/Suppliers'
 import { moneyField } from '@/fields/money'
 import { collectionLabels, customT, label, localized, type CustomTranslationsKeys } from '@/i18n'
 import { documentLifecycle, type DocumentTransitionArgs } from '@/services/documents/documentLifecycle'
@@ -12,6 +13,8 @@ import { receive, revert } from '@/services/stock/stockLedger.service'
 type Relation = string | { id: string }
 type StockLine = { warehouse: Relation; product: Relation; quantity: number; unitCostBani: number }
 type CashLine = { account: Relation; amountBani: number }
+type SupplierLine = { supplier: Relation; amountBani: number }
+type Kind = 'stock' | 'cash' | 'supplierDebt'
 
 const idOf = (value: Relation) => (typeof value === 'object' ? value.id : value)
 
@@ -94,34 +97,97 @@ const reverseCashOpening = async (args: DocumentTransitionArgs) => {
 }
 
 const kindOf = ({ data, originalDoc }: Pick<DocumentTransitionArgs, 'data' | 'originalDoc'>) =>
-  (data.kind ?? originalDoc.kind ?? 'stock') as 'stock' | 'cash'
+  (data.kind ?? originalDoc.kind ?? 'stock') as Kind
+
+/**
+ * Проведення kind=supplierDebt: журналів руху немає, борг рахує `debts.service`. Лише перевіряє,
+ * що постачальник не має активного рядка в іншому проведеному документі (дубль подвоїв би борг).
+ */
+const postSupplierDebt = async (args: DocumentTransitionArgs) => {
+  const { req, id, data, originalDoc } = args
+  const lines = (data.supplierLines ?? originalDoc.supplierLines ?? []) as SupplierLine[]
+
+  if (lines.length === 0) fail(req, 'custom:error:openingNoLines')
+
+  const suppliers = lines.map((line) => String(idOf(line.supplier)))
+  const { docs } = await req.payload.find({
+    collection: 'opening-balances',
+    where: {
+      kind: { equals: 'supplierDebt' },
+      status: { equals: 'posted' },
+      'supplierLines.supplier': { in: suppliers },
+      id: { not_equals: id },
+    },
+    pagination: false,
+    depth: 0,
+    req,
+  })
+
+  for (const doc of docs) {
+    const taken = (doc.supplierLines ?? []).map((line) => String(idOf(line.supplier))).find((s) => suppliers.includes(s))
+    if (!taken) continue
+
+    const supplier = await req.payload.findByID({ collection: 'suppliers', id: taken, depth: 0, req })
+    throw new APIError(
+      customT(req.t)('custom:error:openingSupplierDebtExists', {
+        supplier: supplier.name ?? taken,
+        document: String(doc.number),
+      }),
+      409,
+      undefined,
+      true,
+    )
+  }
+}
 
 const lifecycle = documentLifecycle({
   prefix: 'OPN',
   counterKey: 'openingNumber',
-  onPost: (args) => (kindOf(args) === 'cash' ? postCashOpening(args) : postOpening(args)),
-  onReverse: (args) => (kindOf(args) === 'cash' ? reverseCashOpening(args) : reverseOpening(args)),
+  onPost: (args) => {
+    const kind = kindOf(args)
+    if (kind === 'cash') return postCashOpening(args)
+    if (kind === 'supplierDebt') return postSupplierDebt(args)
+
+    return postOpening(args)
+  },
+  onReverse: (args) => {
+    const kind = kindOf(args)
+    if (kind === 'cash') return reverseCashOpening(args)
+    // supplierDebt: сторно лише змінює статус, і борг перестає враховуватися.
+    if (kind === 'supplierDebt') return
+
+    return reverseOpening(args)
+  },
 })
 
-/** Один рядок на пару товар × склад і на касу: дубль подвоїв би залишок. */
+/** Один рядок на пару товар × склад, на касу і на постачальника: дубль подвоїв би залишок чи борг. */
 const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
   if ((originalDoc?.status ?? 'draft') !== 'draft') return data
 
-  const isCash = kindOf({ data, originalDoc: originalDoc ?? {} }) === 'cash'
-  const keys = isCash
-    ? ((data.cashLines ?? originalDoc?.cashLines ?? []) as CashLine[]).map((line) => String(idOf(line.account)))
-    : ((data.stockLines ?? originalDoc?.stockLines ?? []) as StockLine[]).map(
-        (line) => `${idOf(line.product)}:${idOf(line.warehouse)}`,
-      )
+  const kind = kindOf({ data, originalDoc: originalDoc ?? {} })
+  const source = (key: string) => (data[key] ?? originalDoc?.[key] ?? []) as unknown[]
+  const keys =
+    kind === 'cash'
+      ? (source('cashLines') as CashLine[]).map((line) => String(idOf(line.account)))
+      : kind === 'supplierDebt'
+        ? (source('supplierLines') as SupplierLine[]).map((line) => String(idOf(line.supplier)))
+        : (source('stockLines') as StockLine[]).map((line) => `${idOf(line.product)}:${idOf(line.warehouse)}`)
 
   if (new Set(keys).size !== keys.length) {
-    fail(req, isCash ? 'custom:error:openingDuplicateAccount' : 'custom:error:openingDuplicate')
+    fail(
+      req,
+      kind === 'cash'
+        ? 'custom:error:openingDuplicateAccount'
+        : kind === 'supplierDebt'
+          ? 'custom:error:openingSupplierDuplicate'
+          : 'custom:error:openingDuplicate',
+    )
   }
 
   return data
 }
 
-/** Початкові залишки, див. docs/accounting/design.md, розд. 2.2, 10. Kinds supplierDebt/customerDebt додаються в C5. */
+/** Початкові залишки, див. docs/accounting/design.md, розд. 2.2, 10. Kind customerDebt додається в C5. */
 export const OpeningBalances: CollectionConfig = {
   slug: 'opening-balances',
   labels: collectionLabels('custom:collection:openingBalances:singular', 'custom:collection:openingBalances:plural'),
@@ -155,6 +221,7 @@ export const OpeningBalances: CollectionConfig = {
       options: [
         { label: label('custom:option:openingStock'), value: 'stock' },
         { label: label('custom:option:openingCash'), value: 'cash' },
+        { label: label('custom:option:openingSupplierDebt'), value: 'supplierDebt' },
       ],
     },
     {
@@ -177,6 +244,31 @@ export const OpeningBalances: CollectionConfig = {
               filterOptions: activeCashAccountsOnly,
             },
             moneyField({ name: 'amountBani', label: label('custom:term:amount'), required: true, min: 1 }),
+          ],
+        },
+      ],
+    },
+    {
+      name: 'supplierLines',
+      label: label('custom:field:supplierLines'),
+      type: 'array',
+      required: true,
+      minRows: 1,
+      admin: { condition: (data) => data?.kind === 'supplierDebt' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'supplier',
+              label: label('custom:term:supplier'),
+              type: 'relationship',
+              relationTo: 'suppliers',
+              required: true,
+              filterOptions: activeSuppliersOnly,
+            },
+            // Мінус = аванс, який ми сплатили постачальнику наперед.
+            moneyField({ name: 'amountBani', label: label('custom:term:amount'), required: true, nonZero: true }),
           ],
         },
       ],
