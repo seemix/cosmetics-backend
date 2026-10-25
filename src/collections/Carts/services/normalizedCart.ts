@@ -1,4 +1,5 @@
-import type { Payload } from 'payload'
+import type { PayloadRequest } from 'payload'
+import { getCartItemProductId, getCartProductIds } from '@/collections/Carts/utilities/cartItem'
 
 
 export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 'ro' | 'ru' = 'ru') {
@@ -7,12 +8,9 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 
     subtotal: cart.subtotal,
 
     items: cart.items.map((item: any) => {
-      const productId =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product?.id
+      const productId = getCartItemProductId(item)
 
-      const product = productsMap.get(productId)
+      const product = productId ? productsMap.get(productId) : undefined
 
       const thumbnail =
         product?.gallery?.[0]?.image?.sizes?.thumbnail?.url ??
@@ -31,7 +29,7 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 
         title: product?.title ?? '',
         subtitle,
         slug: product?.slug ?? '',
-        brandId: product?.brand.id,
+        brandId: product?.brand?.id,
         price: item.price,
         quantity: item.quantity,
         thumbnail,
@@ -41,31 +39,48 @@ export function normalizeCart(cart: any, productsMap: Map<string, any>, locale: 
 }
 
 
-export async function normalizeCartResponse(
-  payload: Payload,
-  cart: any,
-  locale = 'ru'
-) {
-  const productIds = cart.items
-    .map((item: any) =>
-      typeof item.product === 'string'
-        ? item.product
-        : item.product?.id
-    )
-    .filter(Boolean)
+export type BuildProductsMapOptions = {
+  /** Локаль для `payload.find`. `'all'` повертає всі локалі поля. */
+  locale?: 'ru' | 'ro' | 'all'
+  /** Глибина populate. `undefined` — дефолт конфігурації. */
+  depth?: number
+}
 
-  const products = await payload.find({
+/**
+ * Єдина побудова `productsMap` для нормалізації кошика.
+ * Опції зберігають різну поведінку викликів: `locale: 'all'` + `depth: 2`
+ * для гостьового кошика і `/me`, конкретна локаль — для решти.
+ */
+export async function buildProductsMap(
+  req: PayloadRequest,
+  productIds: string[],
+  options: BuildProductsMapOptions = {},
+): Promise<Map<string, any>> {
+  const products = await req.payload.find({
     collection: 'products',
     where: {
       id: { in: productIds },
     },
-    locale: locale as 'ru' | 'ro',
+    locale: options.locale,
+    depth: options.depth,
     limit: productIds.length,
+    req,
   })
 
-  const productsMap = new Map(
-    products.docs.map((p: any) => [p.id, p])
-  )
+  return new Map(products.docs.map((p: any) => [p.id, p]))
+}
+
+
+export async function normalizeCartResponse(
+  req: PayloadRequest,
+  cart: any,
+  locale = 'ru'
+) {
+  const productIds = getCartProductIds(cart)
+
+  const productsMap = await buildProductsMap(req, productIds, {
+    locale: locale as 'ru' | 'ro',
+  })
 
   return normalizeCart(cart, productsMap, locale as 'ru' | 'ro')
 }

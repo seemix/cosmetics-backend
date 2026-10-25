@@ -2,13 +2,14 @@ import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { getOrCreateCart } from '@/collections/Carts/services/getOrCreateCart'
 import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
+import { getCartItemProductId, isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
 
 export const addCartItem: Endpoint = {
   path: '/add-item',
   method: 'post',
 
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
     const { item, promoCode } = await (req as any).json()
     const { productId, quantity } = item
 
@@ -24,10 +25,9 @@ export const addCartItem: Endpoint = {
     }
 
     // 1️⃣ Отримуємо кошик
-    const cart = await getOrCreateCart(payload, user.id)
+    const cart = await getOrCreateCart(req, user.id)
 
-    // @ts-ignore
-    if (!cart || cart.customer.id !== user.id) {
+    if (!isCartOwnedBy(cart, user.id)) {
       return Response.json(
         { message: 'Cart not found or forbidden' },
         { status: 403 },
@@ -35,30 +35,19 @@ export const addCartItem: Endpoint = {
     }
 
     // 2️⃣ Шукаємо товар у кошику
-    const existingItem = cart.items?.find((item: any) => {
-      const product =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product.id
-
-      return product === productId
-    })
+    const existingItem = cart.items?.find(
+      (item: any) => getCartItemProductId(item) === productId,
+    )
 
     let updatedItems
 
     if (existingItem) {
       // 🟦 Збільшуємо кількість
-      // @ts-ignore
-      updatedItems = cart.items.map((item: any) => {
-        const product =
-          typeof item.product === 'string'
-            ? item.product
-            : item.product.id
-
-        return product === productId
+      updatedItems = (cart.items ?? []).map((item: any) =>
+        getCartItemProductId(item) === productId
           ? { ...item, quantity: item.quantity + quantity }
-          : item
-      })
+          : item,
+      )
     } else {
       // 🟩 Додаємо новий item
       updatedItems = [
@@ -71,20 +60,21 @@ export const addCartItem: Endpoint = {
     }
 
     // 3️⃣ Оновлюємо кошик (priceHook перераховує subtotal)
-    const updatedCart = await payload.update({
+    const updatedCart = await req.payload.update({
       collection: 'carts',
       id: cart.id,
       data: {
         items: updatedItems,
       },
+      req,
     })
     const normalized = await normalizeCartResponse(
-      payload,
+      req,
       updatedCart,
       req.locale,
     )
     if (promoCode) {
-      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalized, promoCode)
+      const cartWithPromoDiscount = await cartPromoHelper(req, req?.user?.id as string, normalized, promoCode)
       return Response.json({ success: true, cart: cartWithPromoDiscount })
     }
     return Response.json({

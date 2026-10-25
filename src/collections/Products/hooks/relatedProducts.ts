@@ -1,4 +1,5 @@
 import { CollectionAfterReadHook } from 'payload'
+import { canUserReadWholesalePrice } from '@/access/canReadWholesalePrice'
 
 export const populateRelatedProducts: CollectionAfterReadHook = async ({
                                                                          doc,
@@ -11,7 +12,7 @@ export const populateRelatedProducts: CollectionAfterReadHook = async ({
   )
 
   if (!ids.length) return doc
-  const user = req.user
+  const canSeeWholesalePrice = canUserReadWholesalePrice(req.user)
 
   const related = await req.payload.find({
     collection: 'products',
@@ -22,6 +23,7 @@ export const populateRelatedProducts: CollectionAfterReadHook = async ({
     },
     depth: 2,
     limit: ids.length,
+    req,
   })
 
   doc.relatedProducts = related.docs.map(p => ({
@@ -33,7 +35,7 @@ export const populateRelatedProducts: CollectionAfterReadHook = async ({
     gallery: p.gallery,
     subtitle: p.subtitle,
     // Поле додасться до об'єкта лише якщо умова істинна
-    ...(user?.wholesale && { wholesalePrice: p.wholesalePrice })
+    ...(canSeeWholesalePrice && { wholesalePrice: p.wholesalePrice })
   }))
 
   return doc

@@ -1,12 +1,13 @@
 import { CollectionConfig, slugField } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { publicAccess } from '@/access/publicAccess'
 import { getPosts } from '@/collections/Posts/endpoints/getPosts'
 import { getSinglePost } from '@/collections/Posts/endpoints/getSinglePost'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
   access: {
-    read: () => true,
+    read: publicAccess,
   },
   admin: {
     group: 'Content',

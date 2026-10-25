@@ -14,6 +14,7 @@ export const getBrandInfo: Endpoint = {
       where: {
         slug: { equals: slug },
       },
+      req,
     })
     return Response.json(brand.docs[0])
   },

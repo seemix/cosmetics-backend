@@ -19,6 +19,7 @@ export const removeFavoritesItem: Endpoint = {
       data: {
         favorites: favorites.filter(fav => fav !== id),
       },
+      req,
     })
     return Response.json(id)
   },

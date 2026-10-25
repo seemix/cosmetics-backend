@@ -1,8 +1,8 @@
-import type { Payload } from 'payload'
+import type { PayloadRequest } from 'payload'
 import type { PromoCode } from '@/payload-types'
 
 export type CheckPromoCodeParams = {
-  payload: Payload
+  req: PayloadRequest
   promoCode: string
   wholesale: boolean
   cartId?: string
@@ -13,7 +13,7 @@ export type CheckPromoCodeResult =
   | { success: false; error: string }
 
 export async function checkPromoCode({
-                                       payload,
+                                       req,
                                        promoCode,
                                        wholesale = false,
                                      }: CheckPromoCodeParams): Promise<CheckPromoCodeResult> {
@@ -21,10 +21,11 @@ export async function checkPromoCode({
     return { success: false, error: 'Promo code is required' }
   }
 
-  const { docs } = await payload.find({
+  const { docs } = await req.payload.find({
     collection: 'promo-codes',
     depth: 0,
     where: { code: { equals: promoCode.trim() } },
+    req,
   })
 
   const promo = docs[0]

@@ -1,6 +1,6 @@
 import { priceHook } from '@/collections/Carts/hooks/priceHook'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
-import { getCartByUser } from '@/endpoints/getCartByUser'
+import { getCartByUser } from '@/collections/Carts/endpoints/getCartByUser'
 import { updateCartItem } from '@/collections/Carts/endpoints/updateCartItem'
 import { addCartItem } from '@/collections/Carts/endpoints/addCartItem'
 import { Field } from 'payload'

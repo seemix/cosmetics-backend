@@ -1,4 +1,5 @@
 import { Endpoint, PayloadRequest } from 'payload'
+import { canUserReadWholesalePrice } from '@/access/canReadWholesalePrice'
 
 export const getFavorites: Endpoint = {
   path: '/favorites',
@@ -10,10 +11,11 @@ export const getFavorites: Endpoint = {
       collection: 'users',
       id: req.user.id,
       depth: 0,
+      req,
     })
     if (favorites?.length === 0 || !favorites) return Response.json({ docs: [] })
 
-    const isWholesaleUser = req.user?.wholesale === true
+    const canSeeWholesalePrice = canUserReadWholesalePrice(req.user)
     const products = await req.payload.find({
       collection: 'products',
       locale: req.locale,
@@ -35,6 +37,7 @@ export const getFavorites: Endpoint = {
         variants: false,
         relatedProducts: false,
       },
+      req,
     })
     const sanitizedDocs = products.docs.map((doc) => {
 
@@ -61,7 +64,7 @@ export const getFavorites: Endpoint = {
 
       return {
         ...rest,
-        ...(isWholesaleUser ? { wholesalePrice } : {}),
+        ...(canSeeWholesalePrice ? { wholesalePrice } : {}),
         gallery,
       }
     })

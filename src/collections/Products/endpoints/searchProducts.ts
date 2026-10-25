@@ -44,6 +44,7 @@ export const searchProducts: Endpoint = {
         title: { like: q },
       },
       limit: 100,
+      req,
     })
 
     const brandIds = brands.docs.map((b) => b.id)
@@ -77,6 +78,7 @@ export const searchProducts: Endpoint = {
           ...(brandIds.length ? [{ brand: { in: brandIds } }] : []),
         ],
       },
+      req,
     })
 
     // 3. Форматування результату через єдиний хелпер

@@ -10,6 +10,7 @@ export const getMyFavorites: Endpoint = {
       collection: 'users',
       id: req.user.id,
       depth: 0,
+      req,
     })
     if (favorites?.length === 0) return Response.json([])
 

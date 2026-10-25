@@ -1,4 +1,5 @@
 import type { NormalizedCart, ApplyDiscountParams } from '@/collections/Carts/types/normalizedCart'
+import { isBrandEligibleForPromo } from '@/services/promo.service'
 
 
 // Додаємо excludeBrands до типів параметрів (якщо ви не редагуєте NormalizeCart типи напряму)
@@ -14,7 +15,6 @@ export const applyPromoDiscount = ({
   }
 
   const validDiscountPercent = Math.min(Math.max(discountPercent, 0), 100)
-  const isApplyToAll = brandIds.length === 0
 
   // Створюємо Set для швидкої перевірки O(1) за заблокованими ID брендів
   const excludedBrandIds = new Set(excludeBrands?.map((item) => item.brand))
@@ -26,7 +26,7 @@ export const applyPromoDiscount = ({
     const isExcluded = item.brandId ? excludedBrandIds.has(item.brandId) : false
 
     // 2. Товар підпадає під промокод, ТІЛЬКИ якщо він підходить під умови ТА НЕ є в списку виключень
-    const isEligible = !isExcluded && (isApplyToAll || (item.brandId && brandIds.includes(item.brandId)))
+    const isEligible = !isExcluded && isBrandEligibleForPromo(brandIds, item.brandId)
 
     if (isEligible) {
       const originalItemSubtotal = item.price * item.quantity

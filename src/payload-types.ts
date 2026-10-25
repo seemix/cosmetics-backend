@@ -620,7 +620,7 @@ export interface PromoCode {
   id: string;
   code: string;
   wholesale?: boolean | null;
-  'discount %': number;
+  discountPercent: number;
   /**
    * (Not selected: ALL brands)
    */
@@ -1136,7 +1136,7 @@ export interface MediaSelect<T extends boolean = true> {
 export interface PromoCodesSelect<T extends boolean = true> {
   code?: T;
   wholesale?: T;
-  'discount %'?: T;
+  discountPercent?: T;
   brands?: T;
   expirationDate?: T;
   isActive?: T;

@@ -29,6 +29,7 @@ export const updateUserInfo: Endpoint = {
       collection: 'users',
       id: req.user.id,
       data: dataToUpdate,
+      req,
     })
 
     return Response.json(updatedUser)

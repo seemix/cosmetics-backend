@@ -1,10 +1,12 @@
 import { slugField } from 'payload'
 import type { CollectionConfig } from 'payload'
 
+import { publicAccess } from '@/access/publicAccess'
+
 export const Categories: CollectionConfig = {
   slug: 'categories',
   access: {
-    read: () => true,
+    read: publicAccess,
   },
   admin: {
     useAsTitle: 'title',

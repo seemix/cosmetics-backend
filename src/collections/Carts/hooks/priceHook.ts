@@ -14,6 +14,7 @@ export const priceHook: CollectionBeforeChangeHook = async ({ data, req, operati
     customer = await req.payload.findByID({
       collection: 'users',
       id: customerId,
+      req,
     })
   }
 
@@ -23,7 +24,7 @@ export const priceHook: CollectionBeforeChangeHook = async ({ data, req, operati
 
       const product =
         typeof item.product === 'string'
-          ? await req.payload.findByID({ collection: 'products', id: item.product, depth: 1 })
+          ? await req.payload.findByID({ collection: 'products', id: item.product, depth: 1, req })
           : item.product
 
       const { price, discountPrice } = calculateProductPrice({

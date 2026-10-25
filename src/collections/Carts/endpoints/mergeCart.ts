@@ -15,7 +15,7 @@ export const mergeCart: Endpoint = {
   path: '/merge',
   method: 'post',
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
     const body = await (req as any).json() as MergeCartBody
 
     if (!user) {
@@ -28,20 +28,21 @@ export const mergeCart: Endpoint = {
       return Response.json({ cart: null })
     }
 
-    let cart = await getOrCreateCart(payload, user.id)
+    let cart = await getOrCreateCart(req, user.id)
 
 
     for (const item of items) {
       cart = addOrUpdateCartItem(cart, item)
     }
 
-    const updatedCart = await payload.update({
+    const updatedCart = await req.payload.update({
       collection: 'carts',
       id: cart.id,
       data: cart,
+      req,
     })
     const normalized = await normalizeCartResponse(
-      payload,
+      req,
       updatedCart,
       req.locale,
     )

@@ -124,11 +124,15 @@ export default buildConfig({
       ]
     },
   }),
-  email: resendAdapter({
-    defaultFromAddress: 'noreply@nextlevelshop.md',
-    defaultFromName: 'Next Level Shop',
-    apiKey: process.env.RESEND_API_KEY as string,
-  }),
+  // Без RESEND_API_KEY Payload бере консольний транспорт: листи пишуться в лог,
+  // а при старті з'являється попередження "No email adapter provided".
+  email: process.env.RESEND_API_KEY
+    ? resendAdapter({
+        defaultFromAddress: 'noreply@nextlevelshop.md',
+        defaultFromName: 'Next Level Shop',
+        apiKey: process.env.RESEND_API_KEY,
+      })
+    : undefined,
   endpoints: [getMenu],
   //globals: [Header, Footer],
   plugins: [

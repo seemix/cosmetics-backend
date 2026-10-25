@@ -1,11 +1,12 @@
 import { CollectionConfig, slugField } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { publicAccess } from '@/access/publicAccess'
 import { getPageBySlug } from '@/collections/Pages/endpoints/getPageBySlug'
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
   access: {
-    read: () => true,
+    read: publicAccess,
   },
   admin: {
     group: 'Content',

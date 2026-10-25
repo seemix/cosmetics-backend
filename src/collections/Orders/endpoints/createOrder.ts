@@ -1,12 +1,17 @@
+import { commitTransaction, initTransaction, killTransaction } from 'payload'
 import type { Endpoint, PayloadRequest } from 'payload'
 import { calculateProductPrice } from '@/services/price.service'
+import { getPromoBrandIds, isBrandEligibleForPromo } from '@/services/promo.service'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
+import { flushAfterCommit, openAfterCommitQueue } from '@/services/notifications/afterCommit'
 
 export const createOrder: Endpoint = {
   path: '/create',
   method: 'post',
 
   handler: async (req: PayloadRequest): Promise<Response> => {
+    let shouldCommit = false
+
     try {
       const body = typeof req.json === 'function' ? await req.json() : req.json || req.body
       const { items, shippingAddress, comment, paymentType, SRL, promoCode } = body || {}
@@ -27,7 +32,7 @@ export const createOrder: Endpoint = {
       // 1. Валідація промокоду
       if (promoCode) {
         const promoResult = await checkPromoCode({
-          payload: req.payload,
+          req,
           promoCode,
           wholesale: isWholesale,
         })
@@ -43,11 +48,9 @@ export const createOrder: Endpoint = {
       let rawTotal = 0
       let totalDiscountAmount = 0
 
-      const promoBrandIds = promoData?.brands?.map((brand) =>
-        typeof brand === 'object' ? brand.id : brand,
-      ) ?? []
+      const promoBrandIds = getPromoBrandIds(promoData?.brands)
 
-      const discountPercent = promoData?.['discount %'] ?? 0
+      const discountPercent = promoData?.discountPercent ?? 0
 
       for (const item of items) {
         if (!item.product || !item.quantity) {
@@ -58,6 +61,7 @@ export const createOrder: Endpoint = {
           collection: 'products',
           id: item.product,
           depth: 1,
+          req,
         })
 
         if (!product) {
@@ -77,12 +81,11 @@ export const createOrder: Endpoint = {
 
         const productBrandId = typeof product.brand === 'object' ? product.brand?.id : product.brand
 
-        // Застосування промокоду
+        // Застосування промокоду (те саме правило брендів, що й у кошику)
         if (
           promoData &&
           !hasIndividualDiscount &&
-          productBrandId &&
-          promoBrandIds.includes(productBrandId)
+          isBrandEligibleForPromo(promoBrandIds, productBrandId)
         ) {
           itemDiscount = (price * discountPercent) / 100
           finalUnitPrice = price - itemDiscount
@@ -106,7 +109,13 @@ export const createOrder: Endpoint = {
       const roundedTotal = Math.round(rawTotal)
       const roundedDiscount = Math.round(totalDiscountAmount)
 
-      // 2. Створення замовлення в БД
+      // 2. Створення замовлення в БД.
+      // Замовлення, його хуки і читання результату йдуть в одній транзакції:
+      // при помилці на будь-якому кроці в БД нічого не лишається.
+      // Сповіщення з хуків чекають у черзі й надсилаються лише після коміту.
+      const afterCommit = openAfterCommitQueue(req)
+      shouldCommit = await initTransaction(req)
+
       const createdOrder = await req.payload.create({
         collection: 'orders',
         data: {
@@ -122,6 +131,7 @@ export const createOrder: Endpoint = {
           comment,
         },
         locale: (req.locale as 'ru' | 'ro') || 'ro',
+        req,
       })
 
       const order = await req.payload.findByID({
@@ -129,6 +139,7 @@ export const createOrder: Endpoint = {
         id: createdOrder.id,
         depth: 1,
         locale: req.locale,
+        req,
       })
 
       const responseOrder = {
@@ -147,6 +158,9 @@ export const createOrder: Endpoint = {
         }),
       }
 
+      if (shouldCommit) await commitTransaction(req)
+      await flushAfterCommit(req, afterCommit)
+
       return Response.json(
         {
           success: true,
@@ -155,6 +169,7 @@ export const createOrder: Endpoint = {
         { status: 201 },
       )
     } catch (error) {
+      if (shouldCommit) await killTransaction(req)
       console.error('Create order error:', error)
       return Response.json(
         {

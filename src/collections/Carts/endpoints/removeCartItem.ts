@@ -1,6 +1,7 @@
 import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
+import { getCartItemProductId, isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
 
 type RemoveItemBody = {
   cartId?: string
@@ -13,7 +14,7 @@ export const removeCartItem: Endpoint = {
   method: 'post',
 
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
     const body = await (req as any).json()
     if (!user) {
       return Response.json({ message: 'Unauthorized' }, { status: 401 })
@@ -29,14 +30,14 @@ export const removeCartItem: Endpoint = {
     }
 
     // 1️⃣ Отримуємо кошик
-    const cart = await payload.findByID({
+    const cart = await req.payload.findByID({
       collection: 'carts',
       id: cartId,
       depth: 1,
+      req,
     })
 
-    // @ts-ignore
-    if (!cart || cart?.customer?.id !== user.id) {
+    if (!cart || !isCartOwnedBy(cart, user.id)) {
       return Response.json(
         { message: 'Cart not found or forbidden' },
         { status: 403 },
@@ -44,14 +45,9 @@ export const removeCartItem: Endpoint = {
     }
 
     // 2️⃣ Фільтруємо items
-    const filteredItems = (cart.items || []).filter((item: any) => {
-      const product =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product.id
-
-      return product !== productId
-    })
+    const filteredItems = (cart.items || []).filter(
+      (item: any) => getCartItemProductId(item) !== productId,
+    )
 
     // Якщо нічого не змінилось
     if (filteredItems.length === cart.items?.length) {
@@ -62,22 +58,23 @@ export const removeCartItem: Endpoint = {
     }
 
     // 3️⃣ Оновлюємо кошик (subtotal перераховується hook-ом)
-    const updatedCart = await payload.update({
+    const updatedCart = await req.payload.update({
       collection: 'carts',
       id: cartId,
       data: {
         items: filteredItems,
       },
+      req,
     })
 
     const normalized = await normalizeCartResponse(
-      payload,
+      req,
       updatedCart,
       req.locale,
     )
 
     if (promoCode) {
-      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalized, promoCode)
+      const cartWithPromoDiscount = await cartPromoHelper(req, req?.user?.id as string, normalized, promoCode)
       return Response.json({ success: true, cart: cartWithPromoDiscount })
     }
     return Response.json({

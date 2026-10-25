@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { publicAccess } from '@/access/publicAccess'
 import { generateBlurHash } from '@/hooks/generateBlurHash'
 
 const filename = fileURLToPath(import.meta.url)
@@ -13,7 +14,7 @@ export const Media: CollectionConfig = {
   },
   slug: 'media',
   access: {
-    read: () => true,
+    read: publicAccess,
   },
 
   fields: [

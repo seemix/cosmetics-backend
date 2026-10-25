@@ -18,6 +18,7 @@ export const addFavoritesItem: Endpoint = {
       data: {
         favorites: [...favorites, id],
       },
+      req,
     })
     return Response.json(id)
   },

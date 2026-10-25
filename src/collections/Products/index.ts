@@ -17,6 +17,8 @@ import { searchProducts } from '@/collections/Products/endpoints/searchProducts'
 import { getBestSellers } from '@/collections/Products/endpoints/getBestSellers'
 import { autoTranslate } from '@/collections/Products/hooks/autoTranslate'
 import { getSingleProduct } from '@/collections/Products/endpoints/getSingleProduct'
+import { setTitleWithArticle } from '@/collections/Products/hooks/setTitleWithArticle'
+import { canReadWholesalePrice } from '@/access/canReadWholesalePrice'
 
 
 // @ts-ignore
@@ -71,15 +73,13 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     { name: 'brand', type: 'relationship', relationTo: 'brands', required: true, admin: { position: 'sidebar' } },
     { name: 'retailPrice', type: 'number', required: true, defaultValue: 0, admin: { position: 'sidebar' } },
     { name: 'action', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
-    { name: 'bestSeller', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
+    { name: 'bestSeller', type: 'checkbox', defaultValue: false, index: true, admin: { position: 'sidebar' } },
     { name: 'unavailable', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
 
     {
       name: 'wholesalePrice', type: 'number', admin: { position: 'sidebar' },
       access: {
-        read: ({ req }) => {
-          return req.user?.wholesale === true
-        },
+        read: canReadWholesalePrice,
       },
     },
     {
@@ -98,13 +98,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         hidden: true,
       },
       hooks: {
-        beforeChange: [
-          ({ data, originalDoc }) => {
-            const title = data?.title || originalDoc?.title || '';
-            const article = data?.article || originalDoc?.article || '';
-            return `${title} [${article}]`.trim();
-          },
-        ],
+        beforeChange: [setTitleWithArticle],
       },
     },
 

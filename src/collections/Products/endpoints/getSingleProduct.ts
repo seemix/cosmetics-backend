@@ -32,6 +32,7 @@ export const getSingleProduct: Endpoint = {
         // Якщо це ID, шукаємо по id, інакше по slug
         [isId ? 'id' : 'slug']: { equals: identifier },
       },
+      req,
     })
 
     const product = result.docs[0]

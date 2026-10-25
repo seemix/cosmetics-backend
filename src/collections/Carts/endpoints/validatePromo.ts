@@ -4,12 +4,14 @@ import { applyPromoDiscount } from '@/collections/Carts/services/applyPromoDisco
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { ExcludedBrandItem } from '@/collections/Carts/types/normalizedCart'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
+import { isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
+import { getCustomerPricingProfile } from '@/collections/Users/services/getPricingProfile'
 
 export const validatePromo: Endpoint = {
   method: 'post',
   path: '/promo',
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
 
     // 1. Безпечне отримання тіла запиту
     const body = typeof req.json === 'function' ? await req.json() : req.json || req.body
@@ -23,19 +25,13 @@ export const validatePromo: Endpoint = {
     let excludeBrands: ExcludedBrandItem[] = []
     let wholesale = false
     if (user?.id) {
-      const userBrandDiscounts = await payload.find({
-        collection: 'users',
-        limit: 1,
-        depth: 0,
-        where: { id: { equals: user.id } },
-        select: { brandDiscounts: true, wholesale: true },
-      })
-      excludeBrands = userBrandDiscounts.docs[0]?.brandDiscounts ?? []
-      wholesale = Boolean(userBrandDiscounts.docs[0]?.wholesale)
+      const profile = await getCustomerPricingProfile(req, user.id)
+      excludeBrands = profile.brandDiscounts
+      wholesale = profile.wholesale
     }
 
     const promoResult = await checkPromoCode({
-      payload,
+      req,
       promoCode,
       wholesale,
       cartId,
@@ -53,7 +49,7 @@ export const validatePromo: Endpoint = {
     // 3. Обробка гостьового кошика
     if (items && !cartId) {
 
-      const cart = await fetchGuestCart({ payload, items, locale })
+      const cart = await fetchGuestCart({ req, items, locale })
       if (!cart) {
         return Response.json({ error: 'Cart not found or empty' }, { status: 400 })
       }
@@ -61,7 +57,7 @@ export const validatePromo: Endpoint = {
       const discountCart = applyPromoDiscount({
         cart,
         brandIds: promo.brands as string[],
-        discountPercent: promo['discount %'],
+        discountPercent: promo.discountPercent,
       })
 
       return Response.json(discountCart)
@@ -73,10 +69,11 @@ export const validatePromo: Endpoint = {
     }
 
 
-    const cart = await payload.findByID({
+    const cart = await req.payload.findByID({
       collection: 'carts',
       id: cartId,
       depth: 1,
+      req,
     })
 
 
@@ -84,19 +81,16 @@ export const validatePromo: Endpoint = {
       return Response.json({ error: 'Cart not found' }, { status: 404 })
     }
 
-    const cartCustomerId =
-      typeof cart.customer === 'object' ? cart.customer?.id : cart.customer
-
-    if (!user?.id || cartCustomerId !== user.id) {
+    if (!user?.id || !isCartOwnedBy(cart, user.id)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const normalizedCart = await normalizeCartResponse(payload, cart, locale)
+    const normalizedCart = await normalizeCartResponse(req, cart, locale)
 
     const userDiscountCart = applyPromoDiscount({
       cart: normalizedCart,
       brandIds: promo.brands as string[],
-      discountPercent: promo['discount %'],
+      discountPercent: promo.discountPercent,
       excludeBrands,
     })
 

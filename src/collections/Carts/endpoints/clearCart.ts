@@ -5,7 +5,7 @@ export const clearCart: Endpoint = {
   path: '/clear',
   method: 'post',
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
     const locale = req.locale || 'ru'
 
     if (!user) {
@@ -16,13 +16,14 @@ export const clearCart: Endpoint = {
     }
 
     // 1️⃣ Знаходимо кошик користувача
-    const cartResult = await payload.find({
+    const cartResult = await req.payload.find({
       collection: 'carts',
       where: {
         customer: { equals: user.id },
       },
       limit: 1,
       depth: 0,
+      req,
     })
 
     const cart = cartResult.docs[0]
@@ -31,12 +32,13 @@ export const clearCart: Endpoint = {
     }
 
     // 2️⃣ Очищаємо items
-    const updatedCart = await payload.update({
+    const updatedCart = await req.payload.update({
       collection: 'carts',
       id: cart.id,
       data: {
         items: [],
       },
+      req,
     })
 
     // 3️⃣ Повертаємо нормалізований кошик (порожній)

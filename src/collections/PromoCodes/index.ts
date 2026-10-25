@@ -1,9 +1,17 @@
 import type { CollectionConfig } from 'payload'
 
+import { adminOnly } from '@/access/adminOnly'
+
 import { generatePromo } from './services/generatePromo'
 
 export const PromoCodes: CollectionConfig = {
   slug: 'promo-codes',
+  access: {
+    read: adminOnly,
+    create: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
+  },
   admin: {
     useAsTitle: 'code',
     group: 'Ecommerce',
@@ -19,9 +27,6 @@ export const PromoCodes: CollectionConfig = {
       unique: true,
       index: true,
       defaultValue: () => generatePromo(5),
-      hooks: {
-     //   beforeValidate: [generateUniquePromo as FieldHook]
-      },
     },
     {
       name: 'wholesale',
@@ -29,7 +34,8 @@ export const PromoCodes: CollectionConfig = {
       defaultValue: false
     },
     {
-      name: 'discount %',
+      name: 'discountPercent',
+      label: 'Discount %',
       type: 'number',
       required: true,
       defaultValue: 10,

@@ -6,7 +6,6 @@ export const getGuestCart: Endpoint = {
   path: '/guest',
   method: 'post',
   handler: async (req) => {
-    const { payload } = req
     const locale = req.locale || 'ru'
 
     const { items, promoCode } = await req.json?.()
@@ -19,13 +18,13 @@ export const getGuestCart: Endpoint = {
     }
 
     const normalizedCart = await fetchGuestCart({
-      payload,
+      req,
       items,
       locale,
     })
 
     if (promoCode && normalizedCart) {
-      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalizedCart, promoCode)
+      const cartWithPromoDiscount = await cartPromoHelper(req, req?.user?.id as string, normalizedCart, promoCode)
       return Response.json({ success: true, cart: cartWithPromoDiscount })
     }
     return Response.json({ success: true, cart: normalizedCart })

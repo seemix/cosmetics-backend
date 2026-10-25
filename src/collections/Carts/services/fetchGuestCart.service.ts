@@ -1,5 +1,5 @@
-import { Payload } from 'payload'
-import { normalizeCart } from '@/collections/Carts/services/normalizedCart'
+import type { PayloadRequest } from 'payload'
+import { buildProductsMap, normalizeCart } from '@/collections/Carts/services/normalizedCart'
 import { NormalizedCart } from '@/collections/Carts/types/normalizedCart'
 
 export type PreviewItem = {
@@ -8,7 +8,7 @@ export type PreviewItem = {
 }
 
 export type FetchGuestCartParams = {
-  payload: Payload
+  req: PayloadRequest
   items: PreviewItem[]
   locale?: string
 }
@@ -34,7 +34,7 @@ export type guestCart = {
 }
 
 export const fetchGuestCart = async ({
-                                       payload,
+                                       req,
                                        items,
                                        locale = 'ru',
                                      }: FetchGuestCartParams): Promise<NormalizedCart | null> => {
@@ -52,19 +52,10 @@ export const fetchGuestCart = async ({
   }
 
   // 2️⃣ Запит продуктів
-  const productsResult = await payload.find({
-    collection: 'products',
-    where: {
-      id: { in: productIds },
-    },
+  const productsMap = await buildProductsMap(req, productIds, {
     locale: 'all',
     depth: 2,
-    limit: productIds.length,
   })
-
-  const productsMap = new Map(
-    productsResult.docs.map((p: any) => [p.id, p]),
-  )
 
   // 3️⃣ Формування структури кошика
   const formattedItems = items

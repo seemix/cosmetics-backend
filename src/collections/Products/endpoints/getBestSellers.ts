@@ -26,6 +26,7 @@ export const getBestSellers: Endpoint = {
         variants: false,
         relatedProducts: false,
       },
+      req,
     })
 
     // Проганяємо через хелпер: автоматично розрахує знижку та прибере wholesalePrice для звичайних юзерів

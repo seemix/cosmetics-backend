@@ -18,6 +18,7 @@ export const getPosts: Endpoint = {
       select: {
         content: false,
       },
+      req,
     })
     return Response.json(posts)
   },

@@ -1,12 +1,13 @@
 import { Endpoint } from 'payload'
 import { normalizeCartResponse } from '@/collections/Carts/services/normalizedCart'
 import { cartPromoHelper } from '@/collections/Carts/services/cartPromoHelper'
+import { getCartItemProductId, isCartOwnedBy } from '@/collections/Carts/utilities/cartItem'
 
 export const updateCartItem: Endpoint = {
   path: '/update-item',
   method: 'patch',
   handler: async (req) => {
-    const { payload, user } = req
+    const { user } = req
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -19,29 +20,23 @@ export const updateCartItem: Endpoint = {
       return Response.json({ error: 'Invalid body' }, { status: 400 })
     }
 
-    const res = await payload.find({
+    const res = await req.payload.find({
       collection: 'carts',
       where: {
         customer: { equals: user.id },
       },
       limit: 1,
+      req,
     })
 
     const cart = res.docs[0]
 
-    // @ts-ignore
-    if (!cart || cart.customer?.id !== user.id) {
+    if (!cart || !isCartOwnedBy(cart, user.id)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // @ts-ignore
-    const items = cart.items.map((item: any) => {
-      const itemProductId =
-        typeof item.product === 'string'
-          ? item.product
-          : item.product?.id
-
-      if (itemProductId !== productId) return item
+    const items = (cart.items ?? []).map((item: any) => {
+      if (getCartItemProductId(item) !== productId) return item
 
       return {
         ...item,
@@ -49,7 +44,7 @@ export const updateCartItem: Endpoint = {
       }
     })
 
-    const updatedCart = await payload.update({
+    const updatedCart = await req.payload.update({
       collection: 'carts',
       id: cart.id,
       data: { items },
@@ -57,12 +52,12 @@ export const updateCartItem: Endpoint = {
     })
 
     const normalized = await normalizeCartResponse(
-      payload,
+      req,
       updatedCart,
       req.locale,
     )
     if (promoCode) {
-      const cartWithPromoDiscount = await cartPromoHelper(payload, req?.user?.id as string, normalized, promoCode)
+      const cartWithPromoDiscount = await cartPromoHelper(req, req?.user?.id as string, normalized, promoCode)
        return Response.json({ success: true, cart: cartWithPromoDiscount })
     }
 
