@@ -27,6 +27,9 @@ import { Users } from '@/collections/Users'
 import { Posts } from './collections/Posts'
 import { Warehouses } from './collections/Warehouses'
 import { Suppliers } from './collections/Suppliers'
+import { StockMoves } from './collections/Stock/StockMoves'
+import { StockBalances } from './collections/Stock/StockBalances'
+import { ProductCosts } from './collections/Stock/ProductCosts'
 import { AccountingSettings } from './globals/AccountingSettings'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
@@ -88,7 +91,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers],
+  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
@@ -153,6 +156,9 @@ export default buildConfig({
         users: 'users',
         warehouses: 'warehouse',
         suppliers: 'truck',
+        'stock-moves': 'history',
+        'stock-balances': 'boxes',
+        'product-costs': 'coins',
         'accounting-settings': 'settings',
       },
     }),

@@ -76,6 +76,9 @@ export interface Config {
     'promo-codes': PromoCode;
     warehouses: Warehouse;
     suppliers: Supplier;
+    'stock-moves': StockMove;
+    'stock-balances': StockBalance;
+    'product-costs': ProductCost;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -114,6 +117,9 @@ export interface Config {
     'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
     warehouses: WarehousesSelect<false> | WarehousesSelect<true>;
     suppliers: SuppliersSelect<false> | SuppliersSelect<true>;
+    'stock-moves': StockMovesSelect<false> | StockMovesSelect<true>;
+    'stock-balances': StockBalancesSelect<false> | StockBalancesSelect<true>;
+    'product-costs': ProductCostsSelect<false> | ProductCostsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -686,6 +692,90 @@ export interface Supplier {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-moves".
+ */
+export interface StockMove {
+  id: string;
+  date: string;
+  product: string | Product;
+  /**
+   * Резерв, завжди порожнє
+   */
+  variant?: (string | null) | Variant;
+  warehouse: string | Warehouse;
+  /**
+   * + прихід, − витрата
+   */
+  qtyDelta: number;
+  /**
+   * За середньою; для переміщень 0
+   */
+  valueDeltaBani: number;
+  /**
+   * Дробове значення, довідково
+   */
+  unitCostBani?: number | null;
+  moveType:
+    | 'opening'
+    | 'purchase'
+    | 'sale'
+    | 'sale_cancel'
+    | 'transfer_out'
+    | 'transfer_in'
+    | 'writeoff'
+    | 'inventory'
+    | 'reversal';
+  docCollection: string;
+  docId: string;
+  docNumber?: string | null;
+  reversalOf?: (string | null) | StockMove;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-balances".
+ */
+export interface StockBalance {
+  id: string;
+  product: string | Product;
+  /**
+   * Резерв, завжди порожнє
+   */
+  variant?: (string | null) | Variant;
+  warehouse: string | Warehouse;
+  qty: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-costs".
+ */
+export interface ProductCost {
+  id: string;
+  product: string | Product;
+  /**
+   * Сума по всіх складах
+   */
+  qty: number;
+  /**
+   * Якщо кількість 0, то й вартість 0
+   */
+  valueBani: number;
+  /**
+   * valueBani / qty, дробове, лише показ
+   */
+  avgCostBani?: number | null;
+  /**
+   * Довідково
+   */
+  lastPurchaseUnitCostBani?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
@@ -973,6 +1063,18 @@ export interface PayloadLockedDocument {
         value: string | Supplier;
       } | null)
     | ({
+        relationTo: 'stock-moves';
+        value: string | StockMove;
+      } | null)
+    | ({
+        relationTo: 'stock-balances';
+        value: string | StockBalance;
+      } | null)
+    | ({
+        relationTo: 'product-costs';
+        value: string | ProductCost;
+      } | null)
+    | ({
         relationTo: 'forms';
         value: string | Form;
       } | null)
@@ -1228,6 +1330,51 @@ export interface SuppliersSelect<T extends boolean = true> {
   isCarrier?: T;
   isActive?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-moves_select".
+ */
+export interface StockMovesSelect<T extends boolean = true> {
+  date?: T;
+  product?: T;
+  variant?: T;
+  warehouse?: T;
+  qtyDelta?: T;
+  valueDeltaBani?: T;
+  unitCostBani?: T;
+  moveType?: T;
+  docCollection?: T;
+  docId?: T;
+  docNumber?: T;
+  reversalOf?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-balances_select".
+ */
+export interface StockBalancesSelect<T extends boolean = true> {
+  product?: T;
+  variant?: T;
+  warehouse?: T;
+  qty?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-costs_select".
+ */
+export interface ProductCostsSelect<T extends boolean = true> {
+  product?: T;
+  qty?: T;
+  valueBani?: T;
+  avgCostBani?: T;
+  lastPurchaseUnitCostBani?: T;
   updatedAt?: T;
   createdAt?: T;
 }
