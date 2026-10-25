@@ -55,6 +55,15 @@ export const en = {
       postedOrderLocked: 'A posted order cannot be edited: items, total, discount and customer are frozen',
       cancelledIsFinal: 'A cancelled order cannot be reopened, create a new order instead',
       postedOrderDeleteForbidden: 'A posted order cannot be deleted, cancel it instead',
+      adminOnlyPost: 'Only an admin can post a document',
+      adminOnlyReverse: 'Only an admin can reverse a document',
+      createAsDraft: 'A document is created as a draft and posted afterwards',
+      reversedFinal: 'A reversed document is final, create a new document instead',
+      postedOnlyReverse: 'A posted document can only be reversed',
+      postedImmutable: 'A posted document cannot be changed ({{fields}})',
+      onlyPostedReversible: 'Only a posted document can be reversed',
+      reversalReasonRequired: 'Reversal reason is required',
+      onlyDraftDeletable: 'Only a draft document can be deleted',
     },
     field: {
       title: 'Title',
@@ -134,6 +143,11 @@ export const en = {
       docId: 'Document ID',
       docNumber: 'Document number',
       reversalOf: 'Reversal of',
+      documentDate: 'Document date',
+      postedAt: 'Posted at',
+      postedBy: 'Posted by',
+      reversedAt: 'Reversed at',
+      reversedBy: 'Reversed by',
     },
     collection: {
       brands: {
@@ -217,6 +231,7 @@ export const en = {
       qtyDelta: '+ receipt, − issue',
       valueDelta: 'At average cost; 0 for transfers',
       unitCostFractional: 'Fractional value, for reference',
+      reversalRequired: 'Required when reversing',
     },
     option: {
       localeRu: 'Russian',

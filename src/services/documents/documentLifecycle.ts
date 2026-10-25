@@ -9,11 +9,13 @@ import {
   type CollectionSlug,
   type Field,
   initTransaction,
+  type LabelFunction,
   killTransaction,
   type PayloadRequest,
 } from 'payload'
 
 import { checkRole } from '@/access/utilities'
+import { customT, description, label, type CustomTranslationsKeys } from '@/i18n'
 import { formatDocNumber, nextCounterValue } from '@/services/counters'
 import { isTransientTransactionError } from '@/services/stock/errors'
 
@@ -42,7 +44,7 @@ export type DocumentLifecycleOptions = {
   /** Ключ у `counters` (розд. 8), напр. `purchaseNumber`. */
   counterKey: string
   /** Поле дати документа: `documentDate` (за замовчуванням) або, наприклад, `operationDate`. */
-  dateField?: { name: string; label: string }
+  dateField?: { name: string; label: string | LabelFunction }
   onPost?: (args: DocumentTransitionArgs) => Promise<void> | void
   onReverse?: (args: DocumentTransitionArgs) => Promise<void> | void
 }
@@ -56,14 +58,20 @@ const REVERSAL_FIELDS = new Set(['status', 'reversalReason', 'reversedAt', 'reve
 
 export const MAX_TRANSACTION_ATTEMPTS = 3
 
-const STATUS_OPTIONS: Array<{ label: string; value: DocumentStatus }> = [
-  { label: 'Draft', value: 'draft' },
-  { label: 'Posted', value: 'posted' },
-  { label: 'Reversed', value: 'reversed' },
+const STATUS_OPTIONS: Array<{ label: LabelFunction; value: DocumentStatus }> = [
+  { label: label('custom:status:draft'), value: 'draft' },
+  { label: label('custom:status:posted'), value: 'posted' },
+  { label: label('custom:status:reversed'), value: 'reversed' },
 ]
 
-const fail = (message: string, status = 400): never => {
-  throw new APIError(message, status, undefined, true)
+/** Помилка з текстом мовою адмінки (`req.t`); `code` лишається англійським ключем словника. */
+const fail = (
+  req: PayloadRequest,
+  key: CustomTranslationsKeys,
+  status = 400,
+  variables?: Record<string, string>,
+): never => {
+  throw new APIError(customT(req.t)(key, variables), status, undefined, true)
 }
 
 const idOf = (value: unknown) =>
@@ -81,19 +89,21 @@ const assertPeriodOpen = async (req: PayloadRequest, date: Date) => {
   const { lockedUntil } = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
 
   if (lockedUntil && date.getTime() <= new Date(lockedUntil).getTime()) {
-    fail(`The period is locked until ${lockedUntil}`, 409)
+    fail(req, 'custom:error:periodLocked', 409, { date: String(lockedUntil) })
   }
 }
 
-const assertAdmin = (req: PayloadRequest, action: string) => {
-  if (!checkRole(['admin'], req.user)) fail(`Only an admin can ${action} a document`, 403)
+const assertAdmin = (req: PayloadRequest, action: 'post' | 'reverse') => {
+  if (!checkRole(['admin'], req.user)) {
+    fail(req, action === 'post' ? 'custom:error:adminOnlyPost' : 'custom:error:adminOnlyReverse', 403)
+  }
 }
 
 /** Поля шапки документа (розд. 2.2). */
 const headerFields = ({ dateField }: Required<Pick<DocumentLifecycleOptions, 'dateField'>>): Field[] => [
   {
     name: 'number',
-    label: 'Number',
+    label: label('custom:term:number'),
     type: 'text',
     unique: true,
     index: true,
@@ -101,7 +111,7 @@ const headerFields = ({ dateField }: Required<Pick<DocumentLifecycleOptions, 'da
   },
   {
     name: 'status',
-    label: 'Status',
+    label: label('custom:term:status'),
     type: 'select',
     required: true,
     defaultValue: 'draft',
@@ -112,36 +122,36 @@ const headerFields = ({ dateField }: Required<Pick<DocumentLifecycleOptions, 'da
   { name: dateField.name, label: dateField.label, type: 'date', required: true },
   {
     name: 'postedAt',
-    label: 'Posted at',
+    label: label('custom:field:postedAt'),
     type: 'date',
     index: true,
     admin: { readOnly: true, position: 'sidebar', date: { pickerAppearance: 'dayAndTime' } },
   },
-  { name: 'postedBy', label: 'Posted by', type: 'relationship', relationTo: 'users', admin: { readOnly: true, position: 'sidebar' } },
+  { name: 'postedBy', label: label('custom:field:postedBy'), type: 'relationship', relationTo: 'users', admin: { readOnly: true, position: 'sidebar' } },
   {
     name: 'reversedAt',
-    label: 'Reversed at',
+    label: label('custom:field:reversedAt'),
     type: 'date',
     admin: { readOnly: true, position: 'sidebar', date: { pickerAppearance: 'dayAndTime' } },
   },
-  { name: 'reversedBy', label: 'Reversed by', type: 'relationship', relationTo: 'users', admin: { readOnly: true, position: 'sidebar' } },
+  { name: 'reversedBy', label: label('custom:field:reversedBy'), type: 'relationship', relationTo: 'users', admin: { readOnly: true, position: 'sidebar' } },
   {
     name: 'reversalReason',
-    label: 'Reversal reason',
+    label: label('custom:term:reversalReason'),
     type: 'textarea',
     admin: {
-      description: 'Required when reversing',
+      description: description('custom:desc:reversalRequired'),
       condition: (data) => data?.status === 'posted' || data?.status === 'reversed',
     },
   },
-  { name: 'comment', label: 'Comment', type: 'textarea' },
+  { name: 'comment', label: label('custom:term:comment'), type: 'textarea' },
 ]
 
 /** Фабрика полів шапки й хуків життєвого циклу документа. */
 export const documentLifecycle = ({
   prefix,
   counterKey,
-  dateField = { name: 'documentDate', label: 'Document date' },
+  dateField = { name: 'documentDate', label: label('custom:field:documentDate') },
   onPost,
   onReverse,
 }: DocumentLifecycleOptions) => {
@@ -160,7 +170,7 @@ export const documentLifecycle = ({
 
   const beforeChange: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
     if (operation === 'create') {
-      if ((data.status ?? 'draft') !== 'draft') fail('A document is created as a draft and posted afterwards')
+      if ((data.status ?? 'draft') !== 'draft') fail(req, 'custom:error:createAsDraft')
 
       for (const field of SYSTEM_FIELDS) data[field] = null
       data.status = 'draft'
@@ -175,17 +185,17 @@ export const documentLifecycle = ({
     const to = (data.status ?? from) as DocumentStatus
     const id = String(original.id)
 
-    if (from === 'reversed') fail('A reversed document is final, create a new document instead', 409)
+    if (from === 'reversed') fail(req, 'custom:error:reversedFinal', 409)
 
     if (from === 'posted') {
-      if (to !== 'posted' && to !== 'reversed') fail('A posted document can only be reversed', 409)
+      if (to !== 'posted' && to !== 'reversed') fail(req, 'custom:error:postedOnlyReverse', 409)
 
       const allowed = to === 'reversed' ? REVERSAL_FIELDS : new Set<string>()
       const changed = changedFields(data, original).filter((key) => !allowed.has(key))
-      if (changed.length > 0) fail(`A posted document cannot be changed (${changed.join(', ')})`, 409)
+      if (changed.length > 0) fail(req, 'custom:error:postedImmutable', 409, { fields: changed.join(', ') })
     }
 
-    if (from === 'draft' && to === 'reversed') fail('Only a posted document can be reversed', 409)
+    if (from === 'draft' && to === 'reversed') fail(req, 'custom:error:onlyPostedReversible', 409)
 
     // Системні поля не змінюються вручну.
     for (const field of SYSTEM_FIELDS) data[field] = original[field] ?? null
@@ -203,7 +213,7 @@ export const documentLifecycle = ({
     if (from === 'posted' && to === 'reversed') {
       assertAdmin(req, 'reverse')
       const reason = typeof data.reversalReason === 'string' ? data.reversalReason.trim() : ''
-      if (!reason) fail('Reversal reason is required')
+      if (!reason) fail(req, 'custom:error:reversalReasonRequired')
       const date = new Date()
       await assertPeriodOpen(req, date)
 
@@ -226,7 +236,7 @@ export const documentLifecycle = ({
     })
     const status = (doc as { status?: DocumentStatus } | null)?.status
 
-    if (status && status !== 'draft') fail('Only a draft document can be deleted', 409)
+    if (status && status !== 'draft') fail(req, 'custom:error:onlyDraftDeletable', 409)
   }
 
   return {

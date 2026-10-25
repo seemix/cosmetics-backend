@@ -53,6 +53,15 @@ export const ru: CustomTranslationsObject = {
       postedOrderLocked: 'Проведённый заказ нельзя редактировать: позиции, сумма, скидка и клиент зафиксированы',
       cancelledIsFinal: 'Отменённый заказ нельзя вернуть в работу, создайте новый заказ',
       postedOrderDeleteForbidden: 'Проведённый заказ нельзя удалить, отмените его',
+      adminOnlyPost: 'Проводить документ может только администратор',
+      adminOnlyReverse: 'Сторнировать документ может только администратор',
+      createAsDraft: 'Документ создаётся как черновик и проводится позже',
+      reversedFinal: 'Сторнированный документ окончателен, создайте новый документ',
+      postedOnlyReverse: 'Проведённый документ можно только сторнировать',
+      postedImmutable: 'Проведённый документ нельзя изменить ({{fields}})',
+      onlyPostedReversible: 'Сторнировать можно только проведённый документ',
+      reversalReasonRequired: 'Укажите причину сторно',
+      onlyDraftDeletable: 'Удалить можно только черновик',
     },
     field: {
       title: 'Название',
@@ -132,6 +141,11 @@ export const ru: CustomTranslationsObject = {
       docId: 'ID документа',
       docNumber: 'Номер документа',
       reversalOf: 'Сторно для',
+      documentDate: 'Дата документа',
+      postedAt: 'Проведён',
+      postedBy: 'Кем проведён',
+      reversedAt: 'Сторнирован',
+      reversedBy: 'Кем сторнирован',
     },
     collection: {
       brands: {
@@ -215,6 +229,7 @@ export const ru: CustomTranslationsObject = {
       qtyDelta: '+ приход, − расход',
       valueDelta: 'По средней себестоимости; 0 для перемещений',
       unitCostFractional: 'Дробное значение, для справки',
+      reversalRequired: 'Обязательно при сторно',
     },
     option: {
       localeRu: 'Русский',

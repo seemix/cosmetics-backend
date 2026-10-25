@@ -53,6 +53,15 @@ export const ro: CustomTranslationsObject = {
       postedOrderLocked: 'Comanda operată nu poate fi editată: pozițiile, suma, reducerea și clientul sunt fixate',
       cancelledIsFinal: 'Comanda anulată nu poate fi redeschisă, creați o comandă nouă',
       postedOrderDeleteForbidden: 'Comanda operată nu poate fi ștearsă, anulați-o',
+      adminOnlyPost: 'Doar un administrator poate opera documentul',
+      adminOnlyReverse: 'Doar un administrator poate storna documentul',
+      createAsDraft: 'Documentul se creează ca ciornă și se operează ulterior',
+      reversedFinal: 'Documentul stornat este final, creați un document nou',
+      postedOnlyReverse: 'Un document operat poate fi doar stornat',
+      postedImmutable: 'Un document operat nu poate fi modificat ({{fields}})',
+      onlyPostedReversible: 'Se poate storna doar un document operat',
+      reversalReasonRequired: 'Motivul stornării este obligatoriu',
+      onlyDraftDeletable: 'Se poate șterge doar o ciornă',
     },
     field: {
       title: 'Titlu',
@@ -132,6 +141,11 @@ export const ro: CustomTranslationsObject = {
       docId: 'ID document',
       docNumber: 'Număr document',
       reversalOf: 'Stornare pentru',
+      documentDate: 'Data documentului',
+      postedAt: 'Data operării',
+      postedBy: 'Operat de',
+      reversedAt: 'Data stornării',
+      reversedBy: 'Stornat de',
     },
     collection: {
       brands: {
@@ -215,6 +229,7 @@ export const ro: CustomTranslationsObject = {
       qtyDelta: '+ intrare, − ieșire',
       valueDelta: 'La cost mediu; 0 pentru transferuri',
       unitCostFractional: 'Valoare fracționară, pentru referință',
+      reversalRequired: 'Obligatoriu la stornare',
     },
     option: {
       localeRu: 'Rusă',
