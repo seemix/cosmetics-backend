@@ -1,3 +1,4 @@
+import { customT } from '@/i18n'
 import type { DocumentTransitionArgs } from '@/services/documents/documentLifecycle'
 import { receive, revert } from '@/services/stock/stockLedger.service'
 
@@ -18,7 +19,7 @@ export const postPurchase = async (args: DocumentTransitionArgs) => {
   const lines = (data.lines ?? originalDoc.lines ?? []) as LineData[]
   const warehouse = idOf((data.warehouse ?? originalDoc.warehouse) as Relation)
 
-  if (lines.length === 0) throw new Error('A purchase without lines cannot be posted')
+  if (lines.length === 0) throw new Error(customT(req.t)('custom:error:purchaseNoLines'))
 
   await receive(req, {
     doc: docRef(args),

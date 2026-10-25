@@ -62,6 +62,7 @@ export const ro: CustomTranslationsObject = {
       onlyPostedReversible: 'Se poate storna doar un document operat',
       reversalReasonRequired: 'Motivul stornării este obligatoriu',
       onlyDraftDeletable: 'Se poate șterge doar o ciornă',
+      purchaseNoLines: 'O achiziție fără linii nu poate fi operată',
     },
     field: {
       title: 'Titlu',
@@ -146,6 +147,17 @@ export const ro: CustomTranslationsObject = {
       postedBy: 'Operat de',
       reversedAt: 'Data stornării',
       reversedBy: 'Stornat de',
+      supplierInvoiceNo: 'Nr. facturii furnizorului',
+      allocationBase: 'Repartizează costurile suplimentare după',
+      lines: 'Linii',
+      allocatedBani: 'Costuri suplimentare repartizate',
+      landedBani: 'Suma cu costuri suplimentare',
+      landedUnitCost: 'Costul unitar cu costuri suplimentare, bani',
+      extraCosts: 'Costuri suplimentare',
+      payee: 'Beneficiar',
+      goodsTotalBani: 'Total mărfuri',
+      extraTotalBani: 'Total costuri suplimentare',
+      landedTotalBani: 'Total cu costuri suplimentare',
     },
     collection: {
       brands: {
@@ -208,6 +220,10 @@ export const ro: CustomTranslationsObject = {
         singular: 'Mișcare de stoc',
         plural: 'Mișcări de stoc',
       },
+      purchases: {
+        singular: 'Achiziție',
+        plural: 'Achiziții',
+      },
     },
     tab: {
       content: 'Conținut',
@@ -230,6 +246,9 @@ export const ro: CustomTranslationsObject = {
       valueDelta: 'La cost mediu; 0 pentru transferuri',
       unitCostFractional: 'Valoare fracționară, pentru referință',
       reversalRequired: 'Obligatoriu la stornare',
+      calculated: 'Calculat',
+      fractionalDisplay: 'Fracționar, doar pentru afișare',
+      extraCosts: 'Logistică, vamă, ambalare',
     },
     option: {
       localeRu: 'Rusă',
@@ -238,6 +257,8 @@ export const ro: CustomTranslationsObject = {
       roleCustomer: 'Client',
       paymentCash: 'Numerar',
       paymentTransfer: 'Transfer bancar',
+      allocAmount: 'Suma liniei',
+      allocQuantity: 'Cantitate',
     },
     moveType: {
       opening: 'Sold inițial',

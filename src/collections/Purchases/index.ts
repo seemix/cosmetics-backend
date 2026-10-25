@@ -4,6 +4,7 @@ import { adminOnly } from '@/access/adminOnly'
 import { validateInteger } from '@/collections/Stock/shared'
 import { activeSuppliersOnly } from '@/collections/Suppliers'
 import { moneyField } from '@/fields/money'
+import { collectionLabels, description, label, localized } from '@/i18n'
 import { documentLifecycle } from '@/services/documents/documentLifecycle'
 
 import { calculateFields } from './hooks/calculateFields'
@@ -16,12 +17,12 @@ const lifecycle = documentLifecycle({
   onReverse: reversePurchase,
 })
 
-const calculated = { readOnly: true, description: 'Calculated' }
+const calculated = { readOnly: true, description: description('custom:desc:calculated') }
 
 /** Приходна накладна, див. docs/accounting/design.md, розд. 2.2, 3.2. */
 export const Purchases: CollectionConfig = {
   slug: 'purchases',
-  labels: { singular: 'Purchase', plural: 'Purchases' },
+  labels: collectionLabels('custom:collection:purchases:singular', 'custom:collection:purchases:plural'),
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -32,7 +33,7 @@ export const Purchases: CollectionConfig = {
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'supplier', 'warehouse', 'landedTotalBani', 'postedAt'],
     listSearchableFields: ['number', 'supplierInvoiceNo'],
-    group: 'Purchasing',
+    group: localized('custom:group:purchasing'),
   },
   defaultSort: '-createdAt',
   indexes: [{ fields: ['supplier', 'status', 'postedAt'] }, { fields: ['status', 'postedAt'] }],
@@ -46,17 +47,17 @@ export const Purchases: CollectionConfig = {
     ...lifecycle.fields,
     {
       name: 'supplier',
-      label: 'Supplier',
+      label: label('custom:term:supplier'),
       type: 'relationship',
       relationTo: 'suppliers',
       required: true,
       index: true,
       filterOptions: activeSuppliersOnly,
     },
-    { name: 'supplierInvoiceNo', label: 'Supplier invoice no.', type: 'text' },
+    { name: 'supplierInvoiceNo', label: label('custom:field:supplierInvoiceNo'), type: 'text' },
     {
       name: 'warehouse',
-      label: 'Warehouse',
+      label: label('custom:term:warehouse'),
       type: 'relationship',
       relationTo: 'warehouses',
       required: true,
@@ -64,41 +65,41 @@ export const Purchases: CollectionConfig = {
     },
     {
       name: 'allocationBase',
-      label: 'Allocate extra costs by',
+      label: label('custom:field:allocationBase'),
       type: 'select',
       required: true,
       defaultValue: 'amount',
       options: [
-        { label: 'Line amount', value: 'amount' },
-        { label: 'Quantity', value: 'quantity' },
+        { label: label('custom:option:allocAmount'), value: 'amount' },
+        { label: label('custom:option:allocQuantity'), value: 'quantity' },
       ],
     },
     {
       name: 'lines',
-      label: 'Lines',
+      label: label('custom:field:lines'),
       type: 'array',
       required: true,
       minRows: 1,
       fields: [
-        { name: 'product', label: 'Product', type: 'relationship', relationTo: 'products', required: true },
+        { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
         {
           type: 'row',
           fields: [
-            { name: 'quantity', label: 'Quantity', type: 'number', required: true, min: 1, validate: validateInteger },
-            moneyField({ name: 'unitPriceBani', label: 'Unit price', required: true, min: 0 }),
-            moneyField({ name: 'amountBani', label: 'Amount', admin: calculated }),
+            { name: 'quantity', label: label('custom:term:quantity'), type: 'number', required: true, min: 1, validate: validateInteger },
+            moneyField({ name: 'unitPriceBani', label: label('custom:term:unitPrice'), required: true, min: 0 }),
+            moneyField({ name: 'amountBani', label: label('custom:term:amount'), admin: calculated }),
           ],
         },
         {
           type: 'row',
           fields: [
-            moneyField({ name: 'allocatedBani', label: 'Allocated extra costs', admin: calculated }),
-            moneyField({ name: 'landedBani', label: 'Landed amount', admin: calculated }),
+            moneyField({ name: 'allocatedBani', label: label('custom:field:allocatedBani'), admin: calculated }),
+            moneyField({ name: 'landedBani', label: label('custom:field:landedBani'), admin: calculated }),
             {
               name: 'landedUnitCost',
-              label: 'Landed unit cost, bani',
+              label: label('custom:field:landedUnitCost'),
               type: 'number',
-              admin: { readOnly: true, description: 'Fractional, display only' },
+              admin: { readOnly: true, description: description('custom:desc:fractionalDisplay') },
             },
           ],
         },
@@ -106,18 +107,18 @@ export const Purchases: CollectionConfig = {
     },
     {
       name: 'extraCosts',
-      label: 'Extra costs',
+      label: label('custom:field:extraCosts'),
       type: 'array',
-      admin: { description: 'Logistics, customs, packaging' },
+      admin: { description: description('custom:desc:extraCosts') },
       fields: [
-        { name: 'description', label: 'Description', type: 'text', required: true },
+        { name: 'description', label: label('custom:field:description'), type: 'text', required: true },
         {
           type: 'row',
           fields: [
-            moneyField({ name: 'amountBani', label: 'Amount', required: true, min: 1 }),
+            moneyField({ name: 'amountBani', label: label('custom:term:amount'), required: true, min: 1 }),
             {
               name: 'payee',
-              label: 'Payee',
+              label: label('custom:field:payee'),
               type: 'relationship',
               relationTo: 'suppliers',
               required: true,
@@ -130,9 +131,9 @@ export const Purchases: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        moneyField({ name: 'goodsTotalBani', label: 'Goods total', admin: calculated }),
-        moneyField({ name: 'extraTotalBani', label: 'Extra costs total', admin: calculated }),
-        moneyField({ name: 'landedTotalBani', label: 'Landed total', admin: calculated }),
+        moneyField({ name: 'goodsTotalBani', label: label('custom:field:goodsTotalBani'), admin: calculated }),
+        moneyField({ name: 'extraTotalBani', label: label('custom:field:extraTotalBani'), admin: calculated }),
+        moneyField({ name: 'landedTotalBani', label: label('custom:field:landedTotalBani'), admin: calculated }),
       ],
     },
   ],

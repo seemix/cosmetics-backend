@@ -62,6 +62,7 @@ export const ru: CustomTranslationsObject = {
       onlyPostedReversible: 'Сторнировать можно только проведённый документ',
       reversalReasonRequired: 'Укажите причину сторно',
       onlyDraftDeletable: 'Удалить можно только черновик',
+      purchaseNoLines: 'Закупку без строк нельзя провести',
     },
     field: {
       title: 'Название',
@@ -146,6 +147,17 @@ export const ru: CustomTranslationsObject = {
       postedBy: 'Кем проведён',
       reversedAt: 'Сторнирован',
       reversedBy: 'Кем сторнирован',
+      supplierInvoiceNo: 'Номер накладной поставщика',
+      allocationBase: 'Распределять доп. расходы по',
+      lines: 'Строки',
+      allocatedBani: 'Распределённые доп. расходы',
+      landedBani: 'Сумма с доп. расходами',
+      landedUnitCost: 'Себестоимость единицы с доп. расходами, бани',
+      extraCosts: 'Дополнительные расходы',
+      payee: 'Получатель платежа',
+      goodsTotalBani: 'Итого по товарам',
+      extraTotalBani: 'Итого доп. расходов',
+      landedTotalBani: 'Итого с доп. расходами',
     },
     collection: {
       brands: {
@@ -208,6 +220,10 @@ export const ru: CustomTranslationsObject = {
         singular: 'Движение запасов',
         plural: 'Движения запасов',
       },
+      purchases: {
+        singular: 'Закупка',
+        plural: 'Закупки',
+      },
     },
     tab: {
       content: 'Содержимое',
@@ -230,6 +246,9 @@ export const ru: CustomTranslationsObject = {
       valueDelta: 'По средней себестоимости; 0 для перемещений',
       unitCostFractional: 'Дробное значение, для справки',
       reversalRequired: 'Обязательно при сторно',
+      calculated: 'Рассчитывается',
+      fractionalDisplay: 'Дробное, только для показа',
+      extraCosts: 'Логистика, таможня, упаковка',
     },
     option: {
       localeRu: 'Русский',
@@ -238,6 +257,8 @@ export const ru: CustomTranslationsObject = {
       roleCustomer: 'Клиент',
       paymentCash: 'Наличные',
       paymentTransfer: 'Безналичный перевод',
+      allocAmount: 'Сумме строки',
+      allocQuantity: 'Количеству',
     },
     moveType: {
       opening: 'Начальный остаток',

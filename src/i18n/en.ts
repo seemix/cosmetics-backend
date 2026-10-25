@@ -64,6 +64,7 @@ export const en = {
       onlyPostedReversible: 'Only a posted document can be reversed',
       reversalReasonRequired: 'Reversal reason is required',
       onlyDraftDeletable: 'Only a draft document can be deleted',
+      purchaseNoLines: 'A purchase without lines cannot be posted',
     },
     field: {
       title: 'Title',
@@ -148,6 +149,17 @@ export const en = {
       postedBy: 'Posted by',
       reversedAt: 'Reversed at',
       reversedBy: 'Reversed by',
+      supplierInvoiceNo: 'Supplier invoice no.',
+      allocationBase: 'Allocate extra costs by',
+      lines: 'Lines',
+      allocatedBani: 'Allocated extra costs',
+      landedBani: 'Landed amount',
+      landedUnitCost: 'Landed unit cost, bani',
+      extraCosts: 'Extra costs',
+      payee: 'Payee',
+      goodsTotalBani: 'Goods total',
+      extraTotalBani: 'Extra costs total',
+      landedTotalBani: 'Landed total',
     },
     collection: {
       brands: {
@@ -210,6 +222,10 @@ export const en = {
         singular: 'Stock move',
         plural: 'Stock moves',
       },
+      purchases: {
+        singular: 'Purchase',
+        plural: 'Purchases',
+      },
     },
     tab: {
       content: 'Content',
@@ -232,6 +248,9 @@ export const en = {
       valueDelta: 'At average cost; 0 for transfers',
       unitCostFractional: 'Fractional value, for reference',
       reversalRequired: 'Required when reversing',
+      calculated: 'Calculated',
+      fractionalDisplay: 'Fractional, display only',
+      extraCosts: 'Logistics, customs, packaging',
     },
     option: {
       localeRu: 'Russian',
@@ -240,6 +259,8 @@ export const en = {
       roleCustomer: 'Customer',
       paymentCash: 'Cash',
       paymentTransfer: 'Bank transfer',
+      allocAmount: 'Line amount',
+      allocQuantity: 'Quantity',
     },
     moveType: {
       opening: 'Opening balance',
