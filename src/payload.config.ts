@@ -27,6 +27,9 @@ import { Users } from '@/collections/Users'
 import { Posts } from './collections/Posts'
 import { Warehouses } from './collections/Warehouses'
 import { Suppliers } from './collections/Suppliers'
+import { CashAccounts } from './collections/Finance/CashAccounts'
+import { CashMoves } from './collections/Finance/CashMoves'
+import { ExpenseCategories } from './collections/Finance/ExpenseCategories'
 import { StockMoves } from './collections/Stock/StockMoves'
 import { StockBalances } from './collections/Stock/StockBalances'
 import { ProductCosts } from './collections/Stock/ProductCosts'
@@ -52,7 +55,7 @@ const dirname = path.dirname(filename)
 
 // Порядок груп бічного меню: плагін порівнює за підписом групи, тож задаємо його для кожної мови.
 const sidebarGroupOrder: Record<string, number> = {}
-;(['ecommerce', 'stock', 'purchasing', 'users', 'content'] as const).forEach((group, index) => {
+;(['ecommerce', 'stock', 'purchasing', 'finance', 'users', 'content'] as const).forEach((group, index) => {
   for (const text of Object.values(localized(`custom:group:${group}`))) sidebarGroupOrder[text] = index + 1
 })
 
@@ -113,7 +116,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases, StockTransfers, StockAdjustments, OpeningBalances],
+  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases, StockTransfers, StockAdjustments, OpeningBalances, CashAccounts, ExpenseCategories, CashMoves],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
@@ -186,6 +189,9 @@ export default buildConfig({
         'stock-transfers': 'arrow-right',
         'stock-adjustments': 'clipboard-check',
         'opening-balances': 'bookmark',
+        'cash-accounts': 'wallet',
+        'expense-categories': 'list-checks',
+        'cash-moves': 'banknote',
         'accounting-settings': 'sliders-horizontal',
       },
     }),

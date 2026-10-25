@@ -83,6 +83,9 @@ export interface Config {
     'stock-transfers': StockTransfer;
     'stock-adjustments': StockAdjustment;
     'opening-balances': OpeningBalance;
+    'cash-accounts': CashAccount;
+    'expense-categories': ExpenseCategory;
+    'cash-moves': CashMove;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -128,6 +131,9 @@ export interface Config {
     'stock-transfers': StockTransfersSelect<false> | StockTransfersSelect<true>;
     'stock-adjustments': StockAdjustmentsSelect<false> | StockAdjustmentsSelect<true>;
     'opening-balances': OpeningBalancesSelect<false> | OpeningBalancesSelect<true>;
+    'cash-accounts': CashAccountsSelect<false> | CashAccountsSelect<true>;
+    'expense-categories': ExpenseCategoriesSelect<false> | ExpenseCategoriesSelect<true>;
+    'cash-moves': CashMovesSelect<false> | CashMovesSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -853,7 +859,14 @@ export interface OpeningBalance {
   reversedBy?: (string | null) | User;
   reversalReason?: string | null;
   comment?: string | null;
-  kind: 'stock';
+  kind: 'stock' | 'cash';
+  cashLines?:
+    | {
+        account: string | CashAccount;
+        amountBani: number;
+        id?: string | null;
+      }[]
+    | null;
   stockLines?:
     | {
         warehouse: string | Warehouse;
@@ -863,6 +876,50 @@ export interface OpeningBalance {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-accounts".
+ */
+export interface CashAccount {
+  id: string;
+  name: string;
+  code: string;
+  kind: 'cash' | 'bank';
+  balanceBani?: number | null;
+  allowNegative?: boolean | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "expense-categories".
+ */
+export interface ExpenseCategory {
+  id: string;
+  name: string;
+  code: string;
+  isSalary?: boolean | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-moves".
+ */
+export interface CashMove {
+  id: string;
+  date: string;
+  account: string | CashAccount;
+  deltaBani: number;
+  docCollection: string;
+  docId: string;
+  docNumber?: string | null;
+  reversalOf?: (string | null) | CashMove;
   updatedAt: string;
   createdAt: string;
 }
@@ -1181,6 +1238,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'opening-balances';
         value: string | OpeningBalance;
+      } | null)
+    | ({
+        relationTo: 'cash-accounts';
+        value: string | CashAccount;
+      } | null)
+    | ({
+        relationTo: 'expense-categories';
+        value: string | ExpenseCategory;
+      } | null)
+    | ({
+        relationTo: 'cash-moves';
+        value: string | CashMove;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1603,6 +1672,13 @@ export interface OpeningBalancesSelect<T extends boolean = true> {
   reversalReason?: T;
   comment?: T;
   kind?: T;
+  cashLines?:
+    | T
+    | {
+        account?: T;
+        amountBani?: T;
+        id?: T;
+      };
   stockLines?:
     | T
     | {
@@ -1612,6 +1688,47 @@ export interface OpeningBalancesSelect<T extends boolean = true> {
         unitCostBani?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-accounts_select".
+ */
+export interface CashAccountsSelect<T extends boolean = true> {
+  name?: T;
+  code?: T;
+  kind?: T;
+  balanceBani?: T;
+  allowNegative?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "expense-categories_select".
+ */
+export interface ExpenseCategoriesSelect<T extends boolean = true> {
+  name?: T;
+  code?: T;
+  isSalary?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-moves_select".
+ */
+export interface CashMovesSelect<T extends boolean = true> {
+  date?: T;
+  account?: T;
+  deltaBani?: T;
+  docCollection?: T;
+  docId?: T;
+  docNumber?: T;
+  reversalOf?: T;
   updatedAt?: T;
   createdAt?: T;
 }

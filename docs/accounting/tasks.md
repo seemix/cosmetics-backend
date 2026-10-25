@@ -217,7 +217,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
 
 Після етапу: каси, оплати покупців і постачальникам, витрати, переказ, борги.
 
-- [ ] **C1. Каси, статті витрат, початкові залишки кас.**
+- [x] **C1. Каси, статті витрат, початкові залишки кас.**
   Мета: `cash-accounts`, `expense-categories`, `cash-moves`, `opening-balances` kind=cash (розд. 2.1, 2.4).
   Файли: `src/collections/Finance/*`, `OpeningBalances/index.ts`, міграція з сидом `cash`, `bank` і статей.
   Готово: `balanceBani` лише RO; проведення OPN змінює баланс і журнал; сторно дзеркальне.

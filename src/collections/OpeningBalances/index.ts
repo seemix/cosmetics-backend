@@ -1,6 +1,8 @@
 import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type PayloadRequest } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { activeCashAccountsOnly } from '@/collections/Finance/CashAccounts'
+import { applyCashMoves, revertCashMoves } from '@/collections/Finance/cashLedger'
 import { validateInteger } from '@/collections/Stock/shared'
 import { moneyField } from '@/fields/money'
 import { collectionLabels, customT, label, localized, type CustomTranslationsKeys } from '@/i18n'
@@ -9,6 +11,7 @@ import { receive, revert } from '@/services/stock/stockLedger.service'
 
 type Relation = string | { id: string }
 type StockLine = { warehouse: Relation; product: Relation; quantity: number; unitCostBani: number }
+type CashLine = { account: Relation; amountBani: number }
 
 const idOf = (value: Relation) => (typeof value === 'object' ? value.id : value)
 
@@ -61,26 +64,64 @@ const reverseOpening = async (args: DocumentTransitionArgs) => {
   await revert(req, { doc: docRef(args), date, moves })
 }
 
+/** Проведення kind=cash: `cash-moves +amount` і `balanceBani += amount` у тій самій транзакції (розд. 3.2). */
+const postCashOpening = async (args: DocumentTransitionArgs) => {
+  const { req, data, originalDoc, date } = args
+  const lines = (data.cashLines ?? originalDoc.cashLines ?? []) as CashLine[]
+
+  if (lines.length === 0) fail(req, 'custom:error:openingNoLines')
+
+  await applyCashMoves(req, {
+    doc: docRef(args),
+    date,
+    lines: lines.map((line) => ({ account: idOf(line.account), deltaBani: line.amountBani })),
+  })
+}
+
+/** Сторно kind=cash: дзеркальні `cash-moves`; якщо з каси вже витрачено, помилка нестачі. */
+const reverseCashOpening = async (args: DocumentTransitionArgs) => {
+  const { req, id, date } = args
+
+  const { docs: moves } = await req.payload.find({
+    collection: 'cash-moves',
+    where: { docCollection: { equals: 'opening-balances' }, docId: { equals: id } },
+    pagination: false,
+    depth: 0,
+    req,
+  })
+
+  await revertCashMoves(req, { doc: docRef(args), date, moves })
+}
+
+const kindOf = ({ data, originalDoc }: Pick<DocumentTransitionArgs, 'data' | 'originalDoc'>) =>
+  (data.kind ?? originalDoc.kind ?? 'stock') as 'stock' | 'cash'
+
 const lifecycle = documentLifecycle({
   prefix: 'OPN',
   counterKey: 'openingNumber',
-  onPost: postOpening,
-  onReverse: reverseOpening,
+  onPost: (args) => (kindOf(args) === 'cash' ? postCashOpening(args) : postOpening(args)),
+  onReverse: (args) => (kindOf(args) === 'cash' ? reverseCashOpening(args) : reverseOpening(args)),
 })
 
-/** Один рядок на пару товар × склад: дубль подвоїв би залишок. */
+/** Один рядок на пару товар × склад і на касу: дубль подвоїв би залишок. */
 const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
   if ((originalDoc?.status ?? 'draft') !== 'draft') return data
 
-  const lines = (data.stockLines ?? originalDoc?.stockLines ?? []) as StockLine[]
-  const keys = lines.map((line) => `${idOf(line.product)}:${idOf(line.warehouse)}`)
+  const isCash = kindOf({ data, originalDoc: originalDoc ?? {} }) === 'cash'
+  const keys = isCash
+    ? ((data.cashLines ?? originalDoc?.cashLines ?? []) as CashLine[]).map((line) => String(idOf(line.account)))
+    : ((data.stockLines ?? originalDoc?.stockLines ?? []) as StockLine[]).map(
+        (line) => `${idOf(line.product)}:${idOf(line.warehouse)}`,
+      )
 
-  if (new Set(keys).size !== keys.length) fail(req, 'custom:error:openingDuplicate')
+  if (new Set(keys).size !== keys.length) {
+    fail(req, isCash ? 'custom:error:openingDuplicateAccount' : 'custom:error:openingDuplicate')
+  }
 
   return data
 }
 
-/** Початкові залишки, див. docs/accounting/design.md, розд. 2.2, 10. Kinds cash/supplierDebt/customerDebt додаються в C1/C5. */
+/** Початкові залишки, див. docs/accounting/design.md, розд. 2.2, 10. Kinds supplierDebt/customerDebt додаються в C5. */
 export const OpeningBalances: CollectionConfig = {
   slug: 'opening-balances',
   labels: collectionLabels('custom:collection:openingBalances:singular', 'custom:collection:openingBalances:plural'),
@@ -111,7 +152,34 @@ export const OpeningBalances: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'stock',
-      options: [{ label: label('custom:option:openingStock'), value: 'stock' }],
+      options: [
+        { label: label('custom:option:openingStock'), value: 'stock' },
+        { label: label('custom:option:openingCash'), value: 'cash' },
+      ],
+    },
+    {
+      name: 'cashLines',
+      label: label('custom:field:cashLines'),
+      type: 'array',
+      required: true,
+      minRows: 1,
+      admin: { condition: (data) => data?.kind === 'cash' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'account',
+              label: label('custom:term:cashAccount'),
+              type: 'relationship',
+              relationTo: 'cash-accounts',
+              required: true,
+              filterOptions: activeCashAccountsOnly,
+            },
+            moneyField({ name: 'amountBani', label: label('custom:term:amount'), required: true, min: 1 }),
+          ],
+        },
+      ],
     },
     {
       name: 'stockLines',
