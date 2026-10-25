@@ -5,17 +5,20 @@ import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
 import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
 import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
+import { collectionLabels, label, localized } from '@/i18n'
 
 export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
   slug: 'orders',
+  labels: collectionLabels('custom:collection:orders:singular', 'custom:collection:orders:plural'),
   admin: {
     useAsTitle: 'createdAt',
-    group: 'Ecommerce',
+    group: localized('custom:group:ecommerce'),
   },
   fields: [
     {
       name: 'orderNumber',
+      label: label('custom:field:orderNumber'),
       type: 'text',
       unique: true,
       admin: {
@@ -34,6 +37,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     },
     {
       name: 'telegramMessageId',
+      label: label('custom:field:telegramMessageId'),
       type: 'text',
       admin: {
         readOnly: true,
@@ -42,6 +46,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     },
     {
       name: 'customer',
+      label: label('custom:field:customer'),
       type: 'relationship',
       relationTo: 'users',
       index: true,
@@ -51,10 +56,12 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     },
     {
       name: 'items',
+      label: label('custom:field:items'),
       type: 'array',
       fields: [
         {
           name: 'product',
+          label: label('custom:term:product'),
           type: 'relationship',
           relationTo: 'products',
           required: true,
@@ -68,6 +75,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
           fields: [
             {
               name: 'quantity',
+              label: label('custom:term:quantity'),
               type: 'number',
               required: true,
               admin: {
@@ -76,6 +84,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
             },
             {
               name: 'price',
+              label: label('custom:field:price'),
               type: 'number',
               required: true,
               admin: {
@@ -94,6 +103,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     },
     {
       name: 'total',
+      label: label('custom:term:total'),
       type: 'number',
       required: true,
       admin: {
@@ -103,34 +113,46 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     },
     {
       name: 'status',
+      label: label('custom:term:status'),
       type: 'select',
-      options: ['pending', 'paid', 'shipped', 'cancelled'],
+      options: [
+        { label: label('custom:status:pending'), value: 'pending' },
+        { label: label('custom:status:paid'), value: 'paid' },
+        { label: label('custom:status:shipped'), value: 'shipped' },
+        { label: label('custom:status:cancelled'), value: 'cancelled' },
+      ],
       defaultValue: 'pending',
       admin: { position: 'sidebar' },
     },
     {
       name: 'paymentType',
+      label: label('custom:field:paymentType'),
       type: 'select',
-      options: ['cash', 'transfer'],
+      options: [
+        { label: label('custom:option:paymentCash'), value: 'cash' },
+        { label: label('custom:option:paymentTransfer'), value: 'transfer' },
+      ],
     },
     {
       name: 'SRL',
+      label: label('custom:field:srl'),
       type: 'text',
     },
     {
       name: 'shippingAddress',
+      label: label('custom:field:shippingAddress'),
       type: 'group',
       fields: [
-        { name: 'name', type: 'text', required: true },
-        { name: 'phone', type: 'text', required: true },
-        { name: 'email', type: 'email', required: true },
-        { name: 'city', type: 'text', required: true },
-        { name: 'address', type: 'text', required: true },
+        { name: 'name', label: label('custom:field:fullName'), type: 'text', required: true },
+        { name: 'phone', label: label('custom:field:phone'), type: 'text', required: true },
+        { name: 'email', label: label('custom:field:email'), type: 'email', required: true },
+        { name: 'city', label: label('custom:field:city'), type: 'text', required: true },
+        { name: 'address', label: label('custom:field:address'), type: 'text', required: true },
       ],
     },
-    { name: 'comment', type: 'text' },
-    { name: 'promoCodeApplied', type: 'text' },
-    { name: 'discount', type: 'number' },
+    { name: 'comment', label: label('custom:term:comment'), type: 'text' },
+    { name: 'promoCodeApplied', label: label('custom:field:promoCodeApplied'), type: 'text' },
+    { name: 'discount', label: label('custom:field:discount'), type: 'number' },
   ],
   endpoints: [createOrder, getMyOrders],
   hooks: {

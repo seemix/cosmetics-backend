@@ -6,6 +6,10 @@ export const ro: CustomTranslationsObject = {
       draft: 'Ciornă',
       posted: 'Operat',
       reversed: 'Stornat',
+      pending: 'În așteptare',
+      paid: 'Plătită',
+      shipped: 'Expediată',
+      cancelled: 'Anulată',
     },
     term: {
       amount: 'Sumă',
@@ -99,6 +103,17 @@ export const ro: CustomTranslationsObject = {
       brands: 'Branduri',
       expirationDate: 'Data expirării',
       isActive: 'Activ',
+      orderNumber: 'Număr comandă',
+      telegramMessageId: 'ID mesaj Telegram',
+      customer: 'Client',
+      items: 'Poziții',
+      paymentType: 'Tip de plată',
+      srl: 'SRL',
+      shippingAddress: 'Adresă de livrare',
+      fullName: 'Nume și prenume',
+      address: 'Adresă',
+      promoCodeApplied: 'Cod promoțional aplicat',
+      discount: 'Reducere',
     },
     collection: {
       brands: {
@@ -137,6 +152,10 @@ export const ro: CustomTranslationsObject = {
         singular: 'Cod promoțional',
         plural: 'Coduri promoționale',
       },
+      orders: {
+        singular: 'Comandă',
+        plural: 'Comenzi',
+      },
     },
     tab: {
       content: 'Conținut',
@@ -152,6 +171,8 @@ export const ro: CustomTranslationsObject = {
       localeRo: 'Română',
       roleAdmin: 'Administrator',
       roleCustomer: 'Client',
+      paymentCash: 'Numerar',
+      paymentTransfer: 'Transfer bancar',
     },
   },
 }

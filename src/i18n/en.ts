@@ -8,6 +8,10 @@ export const en = {
       draft: 'Draft',
       posted: 'Posted',
       reversed: 'Reversed',
+      pending: 'Pending',
+      paid: 'Paid',
+      shipped: 'Shipped',
+      cancelled: 'Cancelled',
     },
     term: {
       amount: 'Amount',
@@ -101,6 +105,17 @@ export const en = {
       brands: 'Brands',
       expirationDate: 'Expiration date',
       isActive: 'Active',
+      orderNumber: 'Order number',
+      telegramMessageId: 'Telegram message ID',
+      customer: 'Customer',
+      items: 'Items',
+      paymentType: 'Payment type',
+      srl: 'SRL',
+      shippingAddress: 'Shipping address',
+      fullName: 'Full name',
+      address: 'Address',
+      promoCodeApplied: 'Promo code applied',
+      discount: 'Discount',
     },
     collection: {
       brands: {
@@ -139,6 +154,10 @@ export const en = {
         singular: 'Promo code',
         plural: 'Promo codes',
       },
+      orders: {
+        singular: 'Order',
+        plural: 'Orders',
+      },
     },
     tab: {
       content: 'Content',
@@ -154,6 +173,8 @@ export const en = {
       localeRo: 'Romanian',
       roleAdmin: 'Administrator',
       roleCustomer: 'Customer',
+      paymentCash: 'Cash',
+      paymentTransfer: 'Bank transfer',
     },
   },
 }

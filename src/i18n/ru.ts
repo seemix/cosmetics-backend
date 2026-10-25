@@ -6,6 +6,10 @@ export const ru: CustomTranslationsObject = {
       draft: 'Черновик',
       posted: 'Проведён',
       reversed: 'Сторнирован',
+      pending: 'Ожидает',
+      paid: 'Оплачен',
+      shipped: 'Отправлен',
+      cancelled: 'Отменён',
     },
     term: {
       amount: 'Сумма',
@@ -99,6 +103,17 @@ export const ru: CustomTranslationsObject = {
       brands: 'Бренды',
       expirationDate: 'Дата окончания',
       isActive: 'Активен',
+      orderNumber: 'Номер заказа',
+      telegramMessageId: 'ID сообщения Telegram',
+      customer: 'Клиент',
+      items: 'Позиции',
+      paymentType: 'Тип оплаты',
+      srl: 'SRL',
+      shippingAddress: 'Адрес доставки',
+      fullName: 'Имя и фамилия',
+      address: 'Адрес',
+      promoCodeApplied: 'Применённый промокод',
+      discount: 'Скидка',
     },
     collection: {
       brands: {
@@ -137,6 +152,10 @@ export const ru: CustomTranslationsObject = {
         singular: 'Промокод',
         plural: 'Промокоды',
       },
+      orders: {
+        singular: 'Заказ',
+        plural: 'Заказы',
+      },
     },
     tab: {
       content: 'Содержимое',
@@ -152,6 +171,8 @@ export const ru: CustomTranslationsObject = {
       localeRo: 'Румынский',
       roleAdmin: 'Администратор',
       roleCustomer: 'Клиент',
+      paymentCash: 'Наличные',
+      paymentTransfer: 'Безналичный перевод',
     },
   },
 }
