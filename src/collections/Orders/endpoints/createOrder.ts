@@ -1,17 +1,16 @@
-import { commitTransaction, initTransaction, killTransaction } from 'payload'
 import type { Endpoint, PayloadRequest } from 'payload'
 import { calculateProductPrice } from '@/services/price.service'
 import { getPromoBrandIds, isBrandEligibleForPromo } from '@/services/promo.service'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
 import { flushAfterCommit, openAfterCommitQueue } from '@/services/notifications/afterCommit'
+import { runInTransaction } from '@/services/documents/documentLifecycle'
+import { InsufficientStockError } from '@/services/stock/errors'
 
 export const createOrder: Endpoint = {
   path: '/create',
   method: 'post',
 
   handler: async (req: PayloadRequest): Promise<Response> => {
-    let shouldCommit = false
-
     try {
       const body = typeof req.json === 'function' ? await req.json() : req.json || req.body
       const { items, shippingAddress, comment, paymentType, SRL, promoCode } = body || {}
@@ -44,7 +43,7 @@ export const createOrder: Endpoint = {
         promoData = promoResult.promo
       }
 
-      const orderItems = []
+      const orderItems: Array<{ product: string; quantity: number; price: number }> = []
       let rawTotal = 0
       let totalDiscountAmount = 0
 
@@ -113,53 +112,57 @@ export const createOrder: Endpoint = {
       // Замовлення, його хуки і читання результату йдуть в одній транзакції:
       // при помилці на будь-якому кроці в БД нічого не лишається.
       // Сповіщення з хуків чекають у черзі й надсилаються лише після коміту.
-      const afterCommit = openAfterCommitQueue(req)
-      shouldCommit = await initTransaction(req)
+      // Конфлікт паралельних списань (WriteConflict тощо) повторює транзакцію до 3 разів,
+      // з новою чергою сповіщень і новим номером замовлення.
+      const { afterCommit, responseOrder } = await runInTransaction(req, async () => {
+        const afterCommit = openAfterCommitQueue(req)
 
-      const createdOrder = await req.payload.create({
-        collection: 'orders',
-        data: {
-          customer: user?.id,
-          items: orderItems,
-          total: roundedTotal,
-          discount: roundedDiscount > 0 ? roundedDiscount : undefined,
-          promoCodeApplied: promoData ? promoData.code : undefined,
-          paymentType,
-          status: 'pending',
-          shippingAddress,
-          SRL,
-          comment,
-        },
-        locale: (req.locale as 'ru' | 'ro') || 'ro',
-        context: { orderSource: 'web' },
-        req,
+        const createdOrder = await req.payload.create({
+          collection: 'orders',
+          data: {
+            customer: user?.id,
+            items: orderItems,
+            total: roundedTotal,
+            discount: roundedDiscount > 0 ? roundedDiscount : undefined,
+            promoCodeApplied: promoData ? promoData.code : undefined,
+            paymentType,
+            status: 'pending',
+            shippingAddress,
+            SRL,
+            comment,
+          },
+          locale: (req.locale as 'ru' | 'ro') || 'ro',
+          context: { orderSource: 'web' },
+          req,
+        })
+
+        const order = await req.payload.findByID({
+          collection: 'orders',
+          id: createdOrder.id,
+          depth: 1,
+          locale: req.locale,
+          req,
+        })
+
+        const responseOrder = {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          items: order.items?.map((item) => {
+            const product = typeof item.product === 'object' ? item.product : null
+
+            return {
+              title: product?.title,
+              article: product?.article,
+              subtitle: product?.subtitle,
+              quantity: item.quantity,
+              price: item.price,
+            }
+          }),
+        }
+
+        return { afterCommit, responseOrder }
       })
 
-      const order = await req.payload.findByID({
-        collection: 'orders',
-        id: createdOrder.id,
-        depth: 1,
-        locale: req.locale,
-        req,
-      })
-
-      const responseOrder = {
-        id: order.id,
-        orderNumber: order.orderNumber,
-        items: order.items?.map((item) => {
-          const product = typeof item.product === 'object' ? item.product : null
-
-          return {
-            title: product?.title,
-            article: product?.article,
-            subtitle: product?.subtitle,
-            quantity: item.quantity,
-            price: item.price,
-          }
-        }),
-      }
-
-      if (shouldCommit) await commitTransaction(req)
       await flushAfterCommit(req, afterCommit)
 
       return Response.json(
@@ -170,7 +173,19 @@ export const createOrder: Endpoint = {
         { status: 201 },
       )
     } catch (error) {
-      if (shouldCommit) await killTransaction(req)
+      // Нестача на складі: транзакцію вже відкочено, замовлення й сповіщень немає.
+      if (error instanceof InsufficientStockError) {
+        return Response.json(
+          {
+            success: false,
+            code: 'INSUFFICIENT_STOCK',
+            message: error.message,
+            items: error.items.map(({ product, requested, available }) => ({ product, requested, available })),
+          },
+          { status: 409 },
+        )
+      }
+
       console.error('Create order error:', error)
       return Response.json(
         {

@@ -7,6 +7,8 @@ import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
 import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
 import { assignAccountingFields } from '@/collections/Orders/hooks/assignAccountingFields'
+import { deductOrderStock } from '@/collections/Orders/hooks/deductOrderStock'
+import { writeOrderStockMoves } from '@/collections/Orders/hooks/writeOrderStockMoves'
 import { guardPostedOrder } from '@/collections/Orders/hooks/guardPostedOrder'
 import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
@@ -248,7 +250,13 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   hooks: {
     // Додаємо хук перед збереженням замовлення.
     // Важливо: setOrderNumber має виконуватись або до, або після, порядок можна скоригувати за потреби.
-    beforeChange: [setOrderNumber, guardPostedOrder, populatePricesAndTotal, assignAccountingFields],
-    afterChange: [sendNewOrderNotification],
+    beforeChange: [
+      setOrderNumber,
+      guardPostedOrder,
+      populatePricesAndTotal,
+      assignAccountingFields,
+      deductOrderStock,
+    ],
+    afterChange: [writeOrderStockMoves, sendNewOrderNotification],
   },
 })

@@ -52,6 +52,7 @@ export const en = {
     error: {
       periodLocked: 'The period is locked until {{date}}',
       insufficientStock: 'Insufficient stock: {{product}} in {{warehouse}}, requested {{requested}}, available {{available}}',
+      orderWarehouseRequired: 'Stock control is on, but the order has no warehouse: set the default warehouse in the accounting settings',
       postedOrderLocked: 'A posted order cannot be edited: items, total, discount and customer are frozen',
       cancelledIsFinal: 'A cancelled order cannot be reopened, create a new order instead',
       postedOrderDeleteForbidden: 'A posted order cannot be deleted, cancel it instead',

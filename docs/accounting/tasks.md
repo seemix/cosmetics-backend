@@ -143,7 +143,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
 Після етапу: замовлення списують залишок у транзакції створення, скасування повертає.
 Вмикається прапорцем після проведення початкових залишків.
 
-- [ ] **S2.1. Заморозити проведене замовлення.** — залежить від підтвердження власника
+- [x] **S2.1. Заморозити проведене замовлення.** — залежить від підтвердження власника
   Мета: прибрати перерахунок цін на update (дизайн F6, Р2) і заборонити редагування після створення.
   Файли: `src/collections/Orders/hooks/populatePricesAndTotal.ts`, новий
   `Orders/hooks/guardPostedOrder.ts`, `Orders/index.ts`.
@@ -162,7 +162,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   `round(total×100)`; склад з налаштувань для web, ігнорує тіло запиту.
   Складність: S. Модель: Sonnet.
 
-- [ ] **S2.3. Списання при створенні замовлення.**
+- [x] **S2.3. Списання при створенні замовлення.**
   Мета: хуки `deductOrderStock` і `writeOrderStockMoves` (розд. 4.2, 9.2).
   Файли: `Orders/hooks/deductOrderStock.ts`, `Orders/hooks/writeOrderStockMoves.ts`, `Orders/index.ts`.
   Готово: при `stockControlEnabled = false` нічого не робить; інакше списує через A6,
@@ -171,7 +171,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   немає); створення з адмінки (Local API з `user` admin) теж списує.
   Складність: L. Модель: Opus.
 
-- [ ] **S2.4. Відповідь 409 і повтори в `createOrder`.**
+- [x] **S2.4. Відповідь 409 і повтори в `createOrder`.**
   Мета: зрозуміла помилка нестачі для фронтенду (розд. 4.5, Р11).
   Файли: `Orders/endpoints/createOrder.ts`.
   Готово: `InsufficientStockError` ⇒ 409 `{ success: false, code: 'INSUFFICIENT_STOCK',

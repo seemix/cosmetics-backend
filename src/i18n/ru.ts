@@ -50,6 +50,7 @@ export const ru: CustomTranslationsObject = {
     error: {
       periodLocked: 'Период закрыт до {{date}}',
       insufficientStock: 'Недостаточно товара на складе: {{product}} ({{warehouse}}), запрошено {{requested}}, доступно {{available}}',
+      orderWarehouseRequired: 'Учёт склада включён, но у заказа нет склада: укажите склад по умолчанию в настройках учёта',
       postedOrderLocked: 'Проведённый заказ нельзя редактировать: позиции, сумма, скидка и клиент зафиксированы',
       cancelledIsFinal: 'Отменённый заказ нельзя вернуть в работу, создайте новый заказ',
       postedOrderDeleteForbidden: 'Проведённый заказ нельзя удалить, отмените его',

@@ -201,6 +201,9 @@ type MoveData = {
   reversalOf?: string
 }
 
+/** Рух, уже проведений по кешу, але ще не записаний у журнал. */
+export type PendingStockMove = MoveData & { date: Date }
+
 const writeMove = (ctx: Context, doc: StockDocRef, move: MoveData): Promise<StockMove> =>
   ctx.req.payload.create({
     collection: 'stock-moves',
@@ -253,8 +256,17 @@ export const receive = async (
  */
 export const issue = async (
   req: PayloadRequest,
-  { doc, date, moveType, lines }: BaseArgs & { moveType: MoveType; lines: IssueLine[] },
-): Promise<StockMove[]> => {
+  { doc, ...args }: BaseArgs & { moveType: MoveType; lines: IssueLine[] },
+): Promise<StockMove[]> => writeMoves(req, doc, await issueWithoutMoves(req, args))
+
+/**
+ * Те саме, що `issue`, але без запису журналу: повертає обчислені рухи. Для документа, id якого
+ * ще немає (замовлення в `beforeChange`); рухи записує `writeMoves` у тій самій транзакції.
+ */
+export const issueWithoutMoves = async (
+  req: PayloadRequest,
+  { date, moveType, lines }: Omit<BaseArgs, 'doc'> & { moveType: MoveType; lines: IssueLine[] },
+): Promise<PendingStockMove[]> => {
   const ctx = await openContext(req, date)
   const sorted = byProductAndWarehouse(lines)
 
@@ -265,24 +277,37 @@ export const issue = async (
 
   await decreaseBalances(ctx, sorted)
 
-  const moves: StockMove[] = []
+  const moves: PendingStockMove[] = []
   for (const line of sorted) {
     const value = line.valueBani === undefined ? 'average' : -line.valueBani
     const { valueDeltaBani, unitCostBani } = await changeCost(ctx, line.product, -line.qty, value)
 
-    moves.push(
-      await writeMove(ctx, doc, {
-        product: line.product,
-        warehouse: line.warehouse,
-        qtyDelta: -line.qty,
-        valueDeltaBani,
-        unitCostBani,
-        moveType,
-      }),
-    )
+    moves.push({
+      product: line.product,
+      warehouse: line.warehouse,
+      qtyDelta: -line.qty,
+      valueDeltaBani,
+      unitCostBani,
+      moveType,
+      date: ctx.date,
+    })
   }
 
   return moves
+}
+
+/** Записує в журнал рухи, обчислені `issueWithoutMoves`, у транзакції `req`. */
+export const writeMoves = async (
+  req: PayloadRequest,
+  doc: StockDocRef,
+  moves: PendingStockMove[],
+): Promise<StockMove[]> => {
+  const session = await requireSession(req)
+  const result: StockMove[] = []
+
+  for (const { date, ...move } of moves) result.push(await writeMove({ req, session, date }, doc, move))
+
+  return result
 }
 
 /** Переміщення: умовно зі складу `from`, на склад `to`. Середня й `product-costs` не змінюються. */

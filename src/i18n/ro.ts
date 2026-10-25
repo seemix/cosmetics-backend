@@ -50,6 +50,7 @@ export const ro: CustomTranslationsObject = {
     error: {
       periodLocked: 'Perioada este închisă până la {{date}}',
       insufficientStock: 'Stoc insuficient: {{product}} în depozitul {{warehouse}}, solicitat {{requested}}, disponibil {{available}}',
+      orderWarehouseRequired: 'Evidența stocului este activă, dar comanda nu are depozit: setați depozitul implicit în setările contabile',
       postedOrderLocked: 'Comanda operată nu poate fi editată: pozițiile, suma, reducerea și clientul sunt fixate',
       cancelledIsFinal: 'Comanda anulată nu poate fi redeschisă, creați o comandă nouă',
       postedOrderDeleteForbidden: 'Comanda operată nu poate fi ștearsă, anulați-o',
