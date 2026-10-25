@@ -53,7 +53,7 @@ describe('A3: склади й налаштування обліку', () => {
 
   it('код складу унікальний', async () => {
     await expect(
-      payload.create({ collection: 'warehouses', data: { name: 'Дубль', code: 'main' } }),
+      payload.create({ collection: 'warehouses', data: { name: 'Duplicate', code: 'main' } }),
     ).rejects.toThrow()
   })
 

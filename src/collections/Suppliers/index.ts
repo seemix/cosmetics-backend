@@ -7,7 +7,7 @@ export const activeSuppliersOnly: Where = { isActive: { equals: true } }
 
 export const Suppliers: CollectionConfig = {
   slug: 'suppliers',
-  labels: { singular: 'Постачальник', plural: 'Постачальники' },
+  labels: { singular: 'Supplier', plural: 'Suppliers' },
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -18,56 +18,56 @@ export const Suppliers: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'phone', 'isCarrier', 'isActive'],
     listSearchableFields: ['name', 'idno', 'phone'],
-    group: 'Закупівлі',
+    group: 'Purchasing',
   },
   defaultSort: 'name',
   fields: [
     {
       name: 'name',
-      label: 'Назва',
+      label: 'Name',
       type: 'text',
       required: true,
       index: true,
     },
     {
       name: 'idno',
-      label: 'Фіскальний код',
+      label: 'Tax ID',
       type: 'text',
     },
     {
       type: 'row',
       fields: [
-        { name: 'phone', label: 'Телефон', type: 'text' },
+        { name: 'phone', label: 'Phone', type: 'text' },
         { name: 'email', label: 'Email', type: 'text' },
-        { name: 'contactPerson', label: 'Контактна особа', type: 'text' },
+        { name: 'contactPerson', label: 'Contact person', type: 'text' },
       ],
     },
     {
       name: 'bankDetails',
-      label: 'Банківські реквізити',
+      label: 'Bank details',
       type: 'textarea',
     },
     {
       name: 'isCarrier',
-      label: 'Перевізник',
+      label: 'Carrier',
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description: 'Може бути отримувачем коштів за логістику в накладній',
+        description: 'Can be the payee of logistics costs in a purchase',
       },
     },
     {
       name: 'isActive',
-      label: 'Активний',
+      label: 'Active',
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        description: 'Неактивного постачальника не можна обрати в нових документах',
+        description: 'An inactive supplier cannot be selected in new documents',
       },
     },
     {
       name: 'notes',
-      label: 'Нотатки',
+      label: 'Notes',
       type: 'textarea',
     },
   ],

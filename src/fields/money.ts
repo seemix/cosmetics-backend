@@ -6,7 +6,7 @@ type BaniValidate = Validate<number, unknown, unknown, NumberField>
 /** Сума в цілих банях: ціле число плюс стандартні required/min/max поля `number`. */
 export const validateBani: BaniValidate = (value, options) => {
   if (typeof value === 'number' && !Number.isInteger(value)) {
-    return 'Сума має бути цілим числом банів'
+    return 'Amount must be a whole number of bani'
   }
 
   return number(value, options)

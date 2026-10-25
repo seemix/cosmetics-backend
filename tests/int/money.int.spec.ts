@@ -31,12 +31,12 @@ describe('toBani', () => {
 })
 
 describe('formatMDL', () => {
-  it('два знаки, кома, пробіл між розрядами', () => {
-    expect(formatMDL(247720)).toBe('2 477,20')
-    expect(formatMDL(5)).toBe('0,05')
-    expect(formatMDL(0)).toBe('0,00')
-    expect(formatMDL(123456789)).toBe('1 234 567,89')
-    expect(formatMDL(-1250)).toBe('-12,50')
+  it('два знаки, крапка, кома між розрядами', () => {
+    expect(formatMDL(247720)).toBe('2,477.20')
+    expect(formatMDL(5)).toBe('0.05')
+    expect(formatMDL(0)).toBe('0.00')
+    expect(formatMDL(123456789)).toBe('1,234,567.89')
+    expect(formatMDL(-1250)).toBe('-12.50')
   })
 
   it('відхиляє нецілі бані', () => {

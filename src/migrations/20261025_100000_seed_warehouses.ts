@@ -3,8 +3,8 @@ import { MigrateDownArgs, MigrateUpArgs } from '@payloadcms/db-mongodb'
 // A3: довідник складів і глобал налаштувань обліку.
 // Сидимо склади `main` і `shop`; `defaultWebWarehouse` вказує на `main`, якщо ще не заданий.
 const WAREHOUSES = [
-  { code: 'main', name: 'Основний', sortOrder: 0 },
-  { code: 'shop', name: 'Магазин', sortOrder: 1 },
+  { code: 'main', name: 'Main', sortOrder: 0 },
+  { code: 'shop', name: 'Shop', sortOrder: 1 },
 ] as const
 
 export async function up({ payload, req }: MigrateUpArgs): Promise<void> {

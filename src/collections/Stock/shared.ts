@@ -19,7 +19,7 @@ type IntegerValidate = Validate<number, unknown, unknown, NumberField>
 /** Кількість у штуках: ціле число плюс стандартні required/min/max поля `number`. */
 export const validateInteger: IntegerValidate = (value, options) => {
   if (typeof value === 'number' && !Number.isInteger(value)) {
-    return 'Значення має бути цілим числом'
+    return 'Value must be an integer'
   }
 
   return number(value, options)

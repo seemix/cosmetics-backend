@@ -7,16 +7,16 @@ import { codeOnlyAccess, validateInteger } from './shared'
 /** Кеш середньої собівартості: один документ на товар, див. docs/accounting/design.md, розд. 2.3. */
 export const ProductCosts: CollectionConfig = {
   slug: 'product-costs',
-  labels: { singular: 'Собівартість товару', plural: 'Собівартість товарів' },
+  labels: { singular: 'Product cost', plural: 'Product costs' },
   access: codeOnlyAccess,
   admin: {
     defaultColumns: ['product', 'qty', 'valueBani', 'avgCostBani'],
-    group: 'Склад',
+    group: 'Stock',
   },
   fields: [
     {
       name: 'product',
-      label: 'Товар',
+      label: 'Product',
       type: 'relationship',
       relationTo: 'products',
       required: true,
@@ -25,28 +25,28 @@ export const ProductCosts: CollectionConfig = {
     },
     {
       name: 'qty',
-      label: 'Кількість',
+      label: 'Quantity',
       type: 'number',
       required: true,
       min: 0,
       validate: validateInteger,
-      admin: { description: 'Сума по всіх складах' },
+      admin: { description: 'Total across all warehouses' },
     },
     {
       name: 'valueBani',
-      label: 'Вартість залишку, бані',
+      label: 'Stock value, bani',
       type: 'number',
       required: true,
       min: 0,
       validate: validateBani,
-      admin: { description: 'Якщо кількість 0, то й вартість 0' },
+      admin: { description: 'If quantity is 0, value is 0 too' },
     },
     {
       name: 'avgCostBani',
-      label: 'Середня, бані',
+      label: 'Average cost, bani',
       type: 'number',
       virtual: true,
-      admin: { readOnly: true, description: 'valueBani / qty, дробове, лише показ' },
+      admin: { readOnly: true, description: 'valueBani / qty, fractional, display only' },
       hooks: {
         afterRead: [
           ({ siblingData }) => {
@@ -59,9 +59,9 @@ export const ProductCosts: CollectionConfig = {
     },
     {
       name: 'lastPurchaseUnitCostBani',
-      label: 'Остання закупівельна ціна, бані',
+      label: 'Last purchase unit cost, bani',
       type: 'number',
-      admin: { description: 'Довідково' },
+      admin: { description: 'For reference' },
     },
   ],
 }

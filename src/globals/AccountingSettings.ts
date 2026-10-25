@@ -6,38 +6,38 @@ const activeWarehouse = { isActive: { equals: true } }
 
 export const AccountingSettings: GlobalConfig = {
   slug: 'accounting-settings',
-  label: 'Налаштування обліку',
+  label: 'Accounting settings',
   access: {
     read: adminOnly,
     update: adminOnly,
   },
   admin: {
-    group: 'Склад',
+    group: 'Stock',
   },
   fields: [
     {
       name: 'stockControlEnabled',
-      label: 'Облік залишків увімкнено',
+      label: 'Stock control enabled',
       type: 'checkbox',
       defaultValue: false,
       admin: {
         description:
-          'Замовлення списують залишок. Вмикати лише після проведення початкових залишків (docs/accounting/design.md, розд. 10).',
+          'Orders deduct stock. Enable only after the opening balances are posted (docs/accounting/design.md, section 10).',
       },
     },
     {
       name: 'accountingStartAt',
-      label: 'Облік запущено',
+      label: 'Accounting started at',
       type: 'date',
       admin: {
         readOnly: true,
         date: { pickerAppearance: 'dayAndTime' },
-        description: 'Ставиться разом із вмиканням обліку',
+        description: 'Set together with enabling stock control',
       },
     },
     {
       name: 'defaultWebWarehouse',
-      label: 'Склад для замовлень із сайту',
+      label: 'Warehouse for web orders',
       type: 'relationship',
       relationTo: 'warehouses',
       required: true,
@@ -45,23 +45,23 @@ export const AccountingSettings: GlobalConfig = {
     },
     {
       name: 'defaultAdminWarehouse',
-      label: 'Склад за замовчуванням в адмінці',
+      label: 'Default warehouse in the admin panel',
       type: 'relationship',
       relationTo: 'warehouses',
       filterOptions: activeWarehouse,
     },
     {
       name: 'lockedUntil',
-      label: 'Закритий період до',
+      label: 'Period locked until',
       type: 'date',
       admin: {
         date: { pickerAppearance: 'dayAndTime' },
-        description: 'Проведення й сторно з датою не пізніше цієї заборонені',
+        description: 'Posting and reversal dated on or before this are forbidden',
       },
     },
     {
       name: 'assignOrderToCreatorIfNoManager',
-      label: 'Записувати замовлення на автора, якщо у клієнта немає менеджера',
+      label: 'Assign the order to its creator if the customer has no manager',
       type: 'checkbox',
       defaultValue: false,
     },

@@ -6,9 +6,9 @@ import type { NumberFieldClientComponent } from 'payload'
 
 import { formatMDL, toBani } from '@/utilities/money'
 
-/** Показуємо MDL з двома знаками без розділювача розрядів, щоб його можна було редагувати. */
+/** Показуємо MDL з двома знаками без розділювача розрядів (кому), щоб значення можна було редагувати. */
 const toInputText = (bani: unknown): string =>
-  typeof bani === 'number' && Number.isInteger(bani) ? formatMDL(bani).replace(/ /g, '') : ''
+  typeof bani === 'number' && Number.isInteger(bani) ? formatMDL(bani).replace(/,/g, '') : ''
 
 /** Ввід у MDL з двома знаками, у формі й БД лежать цілі бані. */
 export const MoneyField: NumberFieldClientComponent = (props) => {
@@ -78,7 +78,7 @@ export const MoneyField: NumberFieldClientComponent = (props) => {
           onFocus={() => {
             focused.current = true
           }}
-          placeholder={typeof placeholder === 'string' ? placeholder : '0,00'}
+          placeholder={typeof placeholder === 'string' ? placeholder : '0.00'}
           type="text"
           value={text}
         />

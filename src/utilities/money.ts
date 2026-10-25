@@ -21,17 +21,17 @@ export const toBani = (mdl: number | string): number => {
   return bani === 0 ? 0 : sign * bani
 }
 
-/** Цілі бані → "2 477,20" (пробіл між розрядами, кома, завжди два знаки). Без назви валюти. */
+/** Цілі бані → "2,477.20" (кома між розрядами, крапка, завжди два знаки). Без назви валюти. */
 export const formatMDL = (bani: number): string => {
   if (!Number.isInteger(bani)) {
     throw new RangeError(`Bani must be an integer, got ${bani}`)
   }
 
   const abs = Math.abs(bani)
-  const whole = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  const whole = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   const fraction = String(abs % 100).padStart(2, '0')
 
-  return `${bani < 0 ? '-' : ''}${whole},${fraction}`
+  return `${bani < 0 ? '-' : ''}${whole}.${fraction}`
 }
 
 /**

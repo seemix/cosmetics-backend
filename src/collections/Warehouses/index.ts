@@ -4,7 +4,7 @@ import { adminOnly } from '@/access/adminOnly'
 
 export const Warehouses: CollectionConfig = {
   slug: 'warehouses',
-  labels: { singular: 'Склад', plural: 'Склади' },
+  labels: { singular: 'Warehouse', plural: 'Warehouses' },
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -14,39 +14,39 @@ export const Warehouses: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'code', 'isActive', 'sortOrder'],
-    group: 'Склад',
+    group: 'Stock',
   },
   defaultSort: 'sortOrder',
   fields: [
     {
       name: 'name',
-      label: 'Назва',
+      label: 'Name',
       type: 'text',
       required: true,
     },
     {
       name: 'code',
-      label: 'Код',
+      label: 'Code',
       type: 'text',
       required: true,
       unique: true,
       index: true,
       admin: {
-        description: 'Стабільний ключ для налаштувань: main, shop',
+        description: 'Stable key used in settings: main, shop',
       },
     },
     {
       name: 'isActive',
-      label: 'Активний',
+      label: 'Active',
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        description: 'Неактивний склад не можна обрати в нових документах',
+        description: 'An inactive warehouse cannot be selected in new documents',
       },
     },
     {
       name: 'sortOrder',
-      label: 'Порядок',
+      label: 'Sort order',
       type: 'number',
       defaultValue: 0,
     },
