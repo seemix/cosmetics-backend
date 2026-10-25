@@ -30,7 +30,7 @@ export const getBestSellers: Endpoint = {
     })
 
     // Проганяємо через хелпер: автоматично розрахує знижку та прибере wholesalePrice для звичайних юзерів
-    const response = formatPaginatedProducts(result, req)
+    const response = await formatPaginatedProducts(result, req)
 
     return Response.json(response)
   },

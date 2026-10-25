@@ -82,7 +82,7 @@ export const searchProducts: Endpoint = {
     })
 
     // 3. Форматування результату через єдиний хелпер
-    const response = formatPaginatedProducts(result, req)
+    const response = await formatPaginatedProducts(result, req)
 
     return Response.json(response)
   },

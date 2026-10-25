@@ -258,6 +258,7 @@ exports[`I2: публічні ендпоінти не залежать від м
     "createdAt": "<createdAt>",
     "gallery": [],
     "id": "<id>",
+    "inStock": true,
     "retailPrice": 100,
     "slug": "<slug>",
     "subtitle": "Підзаголовок",

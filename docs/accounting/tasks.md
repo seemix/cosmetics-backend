@@ -196,7 +196,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   `createOrder` без адреси як і раніше 400; тип `Order` перегенеровано.
   Складність: S. Модель: Sonnet.
 
-- [ ] **S2.7. `inStock` у відповідях товарів.** — залежить від В4
+- [x] **S2.7. `inStock` у відповідях товарів.** — залежить від В4
   Мета: фронтенд бачить наявність (лише додавання поля).
   Файли: `Products/services/productsByRelation.service.ts` (`transformProduct`),
   ендпоінти `getSingleProduct`, `searchProducts`, `getBestSellers`.

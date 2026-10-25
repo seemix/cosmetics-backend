@@ -14,11 +14,34 @@ type Filter = {
   brand?: false
 }
 
+/** Id товарів із залишком > 0 на складі сайту; `null`, якщо облік складу ще не ввімкнено. Один запит на сторінку. */
+export async function loadInStock(req: PayloadRequest, products: Array<{ id: number | string }>) {
+  const settings = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
+  const warehouse = settings.defaultWebWarehouse
+  if (!settings.stockControlEnabled || !warehouse || products.length === 0) return null
+
+  const balances = await req.payload.find({
+    collection: 'stock-balances',
+    where: {
+      product: { in: products.map((product) => product.id) },
+      warehouse: { equals: typeof warehouse === 'object' ? warehouse.id : warehouse },
+      qty: { greater_than: 0 },
+    },
+    pagination: false,
+    depth: 0,
+    select: { product: true },
+    req,
+  })
+
+  return new Set(balances.docs.map((balance) => String(balance.product)))
+}
+
 // 1. Експортуємо transformProduct
-export function transformProduct(product: any, req: PayloadRequest) {
+export function transformProduct(product: any, req: PayloadRequest, inStock: Set<string> | null = null) {
   const transformed: any = {
     ...product,
     gallery: Array.isArray(product.gallery) ? product.gallery : [],
+    inStock: inStock ? inStock.has(String(product.id)) : true,
   }
 
   const { discountPrice } = calculateProductPrice({
@@ -40,9 +63,11 @@ export function transformProduct(product: any, req: PayloadRequest) {
 }
 
 // 2. Експортуємо formatPaginatedProducts
-export function formatPaginatedProducts(productsRes: any, req: PayloadRequest) {
+export async function formatPaginatedProducts(productsRes: any, req: PayloadRequest) {
+  const inStock = await loadInStock(req, productsRes.docs)
+
   return {
-    products: productsRes.docs.map((doc: any) => transformProduct(doc, req)),
+    products: productsRes.docs.map((doc: any) => transformProduct(doc, req, inStock)),
     pagination: {
       page: productsRes?.page || 1,
       limit: productsRes.limit || 12,
@@ -173,7 +198,7 @@ export async function getProductsByRelation(
     extension.brand = safeBrand
   }
 
-  const paginatedData = formatPaginatedProducts(paginatedResMock, req)
+  const paginatedData = await formatPaginatedProducts(paginatedResMock, req)
 
   if (config.relationField === 'brand') {
     paginatedData.products = paginatedData.products.map((p: any) => {

@@ -1,4 +1,4 @@
-import { transformProduct } from '@/collections/Products/services/productsByRelation.service'
+import { loadInStock, transformProduct } from '@/collections/Products/services/productsByRelation.service'
 import { Endpoint, PayloadRequest } from 'payload'
 
 export const getSingleProduct: Endpoint = {
@@ -41,7 +41,7 @@ export const getSingleProduct: Endpoint = {
       return Response.json({ message: 'Product not found' }, { status: 404 })
     }
 
-    const formattedProduct = transformProduct(product, req)
+    const formattedProduct = transformProduct(product, req, await loadInStock(req, [product]))
 
     return Response.json(formattedProduct)
   },
