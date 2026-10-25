@@ -1,22 +1,23 @@
 import type { CollectionConfig } from 'payload'
 
 import { validateBani } from '@/fields/money'
+import { collectionLabels, description, label, localized } from '@/i18n'
 
 import { codeOnlyAccess, validateInteger } from './shared'
 
 /** Кеш середньої собівартості: один документ на товар, див. docs/accounting/design.md, розд. 2.3. */
 export const ProductCosts: CollectionConfig = {
   slug: 'product-costs',
-  labels: { singular: 'Product cost', plural: 'Product costs' },
+  labels: collectionLabels('custom:collection:productCosts:singular', 'custom:collection:productCosts:plural'),
   access: codeOnlyAccess,
   admin: {
     defaultColumns: ['product', 'qty', 'valueBani', 'avgCostBani'],
-    group: 'Stock',
+    group: localized('custom:group:stock'),
   },
   fields: [
     {
       name: 'product',
-      label: 'Product',
+      label: label('custom:term:product'),
       type: 'relationship',
       relationTo: 'products',
       required: true,
@@ -25,28 +26,28 @@ export const ProductCosts: CollectionConfig = {
     },
     {
       name: 'qty',
-      label: 'Quantity',
+      label: label('custom:term:quantity'),
       type: 'number',
       required: true,
       min: 0,
       validate: validateInteger,
-      admin: { description: 'Total across all warehouses' },
+      admin: { description: description('custom:desc:totalAllWarehouses') },
     },
     {
       name: 'valueBani',
-      label: 'Stock value, bani',
+      label: label('custom:field:valueBani'),
       type: 'number',
       required: true,
       min: 0,
       validate: validateBani,
-      admin: { description: 'If quantity is 0, value is 0 too' },
+      admin: { description: description('custom:desc:zeroValue') },
     },
     {
       name: 'avgCostBani',
-      label: 'Average cost, bani',
+      label: label('custom:field:avgCostBani'),
       type: 'number',
       virtual: true,
-      admin: { readOnly: true, description: 'valueBani / qty, fractional, display only' },
+      admin: { readOnly: true, description: description('custom:desc:avgCostFormula') },
       hooks: {
         afterRead: [
           ({ siblingData }) => {
@@ -59,9 +60,9 @@ export const ProductCosts: CollectionConfig = {
     },
     {
       name: 'lastPurchaseUnitCostBani',
-      label: 'Last purchase unit cost, bani',
+      label: label('custom:field:lastPurchaseUnitCostBani'),
       type: 'number',
-      admin: { description: 'For reference' },
+      admin: { description: description('custom:desc:forReference') },
     },
   ],
 }

@@ -1,27 +1,29 @@
 import type { CollectionConfig } from 'payload'
 
+import { collectionLabels, description, label, localized } from '@/i18n'
+
 import { codeOnlyAccess, validateInteger } from './shared'
 
 /** Кеш залишків: один документ на товар × склад, див. docs/accounting/design.md, розд. 2.3. */
 export const StockBalances: CollectionConfig = {
   slug: 'stock-balances',
-  labels: { singular: 'Stock balance', plural: 'Stock balances' },
+  labels: collectionLabels('custom:collection:stockBalances:singular', 'custom:collection:stockBalances:plural'),
   access: codeOnlyAccess,
   admin: {
     defaultColumns: ['product', 'warehouse', 'qty', 'updatedAt'],
-    group: 'Stock',
+    group: localized('custom:group:stock'),
   },
   indexes: [{ fields: ['product', 'variant', 'warehouse'], unique: true }],
   fields: [
-    { name: 'product', label: 'Product', type: 'relationship', relationTo: 'products', required: true },
+    { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
     {
       name: 'variant',
-      label: 'Variant',
+      label: label('custom:field:variant'),
       type: 'relationship',
       relationTo: 'variants',
-      admin: { description: 'Reserved, always empty' },
+      admin: { description: description('custom:desc:reservedEmpty') },
     },
-    { name: 'warehouse', label: 'Warehouse', type: 'relationship', relationTo: 'warehouses', required: true },
-    { name: 'qty', label: 'Quantity', type: 'number', required: true, min: 0, validate: validateInteger },
+    { name: 'warehouse', label: label('custom:term:warehouse'), type: 'relationship', relationTo: 'warehouses', required: true },
+    { name: 'qty', label: label('custom:term:quantity'), type: 'number', required: true, min: 0, validate: validateInteger },
   ],
 }

@@ -2,6 +2,7 @@ import type { CollectionConfig, NumberField, Validate } from 'payload'
 import { number } from 'payload/shared'
 
 import { adminOnly } from '@/access/adminOnly'
+import { customT } from '@/i18n'
 
 /**
  * Журнал і кеш залишків змінює лише код сервісу (Local API з `overrideAccess`).
@@ -19,7 +20,7 @@ type IntegerValidate = Validate<number, unknown, unknown, NumberField>
 /** Кількість у штуках: ціле число плюс стандартні required/min/max поля `number`. */
 export const validateInteger: IntegerValidate = (value, options) => {
   if (typeof value === 'number' && !Number.isInteger(value)) {
-    return 'Value must be an integer'
+    return customT(options.req.t)('custom:validation:integer')
   }
 
   return number(value, options)

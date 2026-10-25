@@ -1,6 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
 import { validateBani } from '@/fields/money'
+import { collectionLabels, description, label, localized } from '@/i18n'
+import type { CustomTranslationsKeys } from '@/i18n'
 
 import { codeOnlyAccess, validateInteger } from './shared'
 
@@ -16,14 +18,26 @@ const MOVE_TYPES = [
   'reversal',
 ] as const
 
+const MOVE_TYPE_LABELS: Record<(typeof MOVE_TYPES)[number], CustomTranslationsKeys> = {
+  opening: 'custom:moveType:opening',
+  purchase: 'custom:moveType:purchase',
+  sale: 'custom:moveType:sale',
+  sale_cancel: 'custom:moveType:saleCancel',
+  transfer_out: 'custom:moveType:transferOut',
+  transfer_in: 'custom:moveType:transferIn',
+  writeoff: 'custom:moveType:writeoff',
+  inventory: 'custom:moveType:inventory',
+  reversal: 'custom:moveType:reversal',
+}
+
 /** Журнал руху запасів: лише доповнюється кодом сервісу, див. docs/accounting/design.md, розд. 2.3. */
 export const StockMoves: CollectionConfig = {
   slug: 'stock-moves',
-  labels: { singular: 'Stock move', plural: 'Stock moves' },
+  labels: collectionLabels('custom:collection:stockMoves:singular', 'custom:collection:stockMoves:plural'),
   access: codeOnlyAccess,
   admin: {
     defaultColumns: ['date', 'product', 'warehouse', 'moveType', 'qtyDelta', 'valueDeltaBani', 'docNumber'],
-    group: 'Stock',
+    group: localized('custom:group:stock'),
   },
   defaultSort: '-date',
   indexes: [
@@ -32,48 +46,48 @@ export const StockMoves: CollectionConfig = {
     { fields: ['date', 'moveType'] },
   ],
   fields: [
-    { name: 'date', label: 'Date', type: 'date', required: true, index: true },
-    { name: 'product', label: 'Product', type: 'relationship', relationTo: 'products', required: true },
+    { name: 'date', label: label('custom:term:date'), type: 'date', required: true, index: true },
+    { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
     {
       name: 'variant',
-      label: 'Variant',
+      label: label('custom:field:variant'),
       type: 'relationship',
       relationTo: 'variants',
-      admin: { description: 'Reserved, always empty' },
+      admin: { description: description('custom:desc:reservedEmpty') },
     },
-    { name: 'warehouse', label: 'Warehouse', type: 'relationship', relationTo: 'warehouses', required: true },
+    { name: 'warehouse', label: label('custom:term:warehouse'), type: 'relationship', relationTo: 'warehouses', required: true },
     {
       name: 'qtyDelta',
-      label: 'Quantity change',
+      label: label('custom:field:qtyDelta'),
       type: 'number',
       required: true,
       validate: validateInteger,
-      admin: { description: '+ receipt, − issue' },
+      admin: { description: description('custom:desc:qtyDelta') },
     },
     {
       name: 'valueDeltaBani',
-      label: 'Value change, bani',
+      label: label('custom:field:valueDeltaBani'),
       type: 'number',
       required: true,
       validate: validateBani,
-      admin: { description: 'At average cost; 0 for transfers' },
+      admin: { description: description('custom:desc:valueDelta') },
     },
     {
       name: 'unitCostBani',
-      label: 'Average cost at the time of the move, bani',
+      label: label('custom:field:unitCostBani'),
       type: 'number',
-      admin: { description: 'Fractional value, for reference' },
+      admin: { description: description('custom:desc:unitCostFractional') },
     },
     {
       name: 'moveType',
-      label: 'Type',
+      label: label('custom:term:kind'),
       type: 'select',
       required: true,
-      options: MOVE_TYPES.map((value) => ({ label: value, value })),
+      options: MOVE_TYPES.map((value) => ({ label: label(MOVE_TYPE_LABELS[value]), value })),
     },
-    { name: 'docCollection', label: 'Document collection', type: 'text', required: true },
-    { name: 'docId', label: 'Document ID', type: 'text', required: true },
-    { name: 'docNumber', label: 'Document number', type: 'text' },
-    { name: 'reversalOf', label: 'Reversal of', type: 'relationship', relationTo: 'stock-moves' },
+    { name: 'docCollection', label: label('custom:field:docCollection'), type: 'text', required: true },
+    { name: 'docId', label: label('custom:field:docId'), type: 'text', required: true },
+    { name: 'docNumber', label: label('custom:field:docNumber'), type: 'text' },
+    { name: 'reversalOf', label: label('custom:field:reversalOf'), type: 'relationship', relationTo: 'stock-moves' },
   ],
 }
