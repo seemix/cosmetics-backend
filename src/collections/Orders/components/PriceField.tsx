@@ -1,8 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { NumberField, useField, useFormFields } from '@payloadcms/ui'
+import { NumberField, useField, useFormFields, useTranslation } from '@payloadcms/ui'
 import type { NumberFieldClientComponent } from 'payload'
+
+import type { CustomTranslationsKeys } from '@/i18n'
+import { customT } from '@/i18n/labels'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -55,7 +58,8 @@ export const PriceField: NumberFieldClientComponent = (props) => {
   const productId = getRelationshipID(productValue)
   const customerID = getRelationshipID(customerValue)
 
-  const [error, setError] = useState<string | null>(null)
+  const { t } = useTranslation()
+  const [error, setError] = useState<CustomTranslationsKeys | null>(null)
   const previous = useRef({ productId, customerID })
 
   useEffect(() => {
@@ -119,7 +123,7 @@ export const PriceField: NumberFieldClientComponent = (props) => {
         if (controller.signal.aborted) {
           return
         }
-        setError('Error getting price, check API')
+        setError('custom:orderForm:priceError')
       }
     }
 
@@ -135,7 +139,7 @@ export const PriceField: NumberFieldClientComponent = (props) => {
       <NumberField {...props} />
       {error && (
         <p role="alert" style={{ color: 'var(--theme-error-500)' }}>
-          {error}
+          {customT(t)(error)}
         </p>
       )}
     </>

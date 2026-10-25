@@ -338,5 +338,19 @@ export const en = {
     global: {
       accountingSettings: 'Accounting settings',
     },
+    stockPanel: {
+      title: 'Stock',
+      saveFirst: 'Save the product to see its stock.',
+      loading: 'Loading…',
+      noAccess: 'No access to stock data',
+      loadFailed: 'Failed to load stock',
+      empty: 'No stock records yet.',
+      avgCost: 'Average cost',
+      stockValue: 'Stock value',
+      lastPurchaseCost: 'Last purchase cost',
+    },
+    orderForm: {
+      priceError: 'Error getting price, check API',
+    },
   },
 }

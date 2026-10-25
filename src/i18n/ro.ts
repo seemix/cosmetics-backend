@@ -336,5 +336,19 @@ export const ro: CustomTranslationsObject = {
     global: {
       accountingSettings: 'Setări contabile',
     },
+    stockPanel: {
+      title: 'Stoc',
+      saveFirst: 'Salvați produsul pentru a vedea stocul.',
+      loading: 'Se încarcă…',
+      noAccess: 'Fără acces la datele despre stoc',
+      loadFailed: 'Nu s-a putut încărca stocul',
+      empty: 'Nu există încă înregistrări de stoc.',
+      avgCost: 'Cost mediu',
+      stockValue: 'Valoarea stocului',
+      lastPurchaseCost: 'Costul ultimei achiziții',
+    },
+    orderForm: {
+      priceError: 'Eroare la obținerea prețului, verificați API',
+    },
   },
 }

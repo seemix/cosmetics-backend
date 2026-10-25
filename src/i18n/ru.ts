@@ -336,5 +336,19 @@ export const ru: CustomTranslationsObject = {
     global: {
       accountingSettings: 'Настройки учёта',
     },
+    stockPanel: {
+      title: 'Остатки',
+      saveFirst: 'Сохраните товар, чтобы увидеть остатки.',
+      loading: 'Загрузка…',
+      noAccess: 'Нет доступа к данным об остатках',
+      loadFailed: 'Не удалось загрузить остатки',
+      empty: 'Записей об остатках пока нет.',
+      avgCost: 'Средняя себестоимость',
+      stockValue: 'Стоимость остатка',
+      lastPurchaseCost: 'Себестоимость последней закупки',
+    },
+    orderForm: {
+      priceError: 'Не удалось получить цену, проверьте API',
+    },
   },
 }
