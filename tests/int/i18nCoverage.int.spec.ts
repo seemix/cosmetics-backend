@@ -1,5 +1,3 @@
-import { appendFileSync } from 'fs'
-
 import { initI18n } from '@payloadcms/translations'
 import { getPayload, type Payload } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -12,15 +10,6 @@ import { en as pluginEn } from '@payloadcms/plugin-ecommerce/translations'
 let payload: Payload
 
 const languages = ['en', 'ru', 'ro'] as const
-
-/**
- * Власність плагіна ecommerce (колекції без власного файлу в `src/collections` і поля плагіна):
- * їхні назви перекладає сам плагін. Тут перевіряються лише наші конфіги.
- */
-const pluginCollections = new Set(['variants', 'variantTypes', 'variantOptions', 'addresses', 'transactions'])
-
-/** Колекції, які ще не перекладені (список зменшується з кожним комітом I2 і наприкінці порожній). */
-const pending = new Set<string>(process.env.I18N_ALL ? [] : ['accounting-settings'])
 
 type Problem = string
 
@@ -94,10 +83,6 @@ const walk = async (fields: AnyField[], where: string, problems: Problem[]) => {
   }
 }
 
-const report = (problems: Problem[]) => {
-  if (process.env.I18N_REPORT) appendFileSync(process.env.I18N_REPORT, `${problems.join('\n')}\n`)
-}
-
 const adminOf = (entity: { admin?: Record<string, unknown> }) => entity.admin ?? {}
 
 describe('I2: усі label мають переклад (en, ru, ro)', () => {
@@ -109,8 +94,8 @@ describe('I2: усі label мають переклад (en, ru, ro)', () => {
     const problems: Problem[] = []
 
     for (const collection of payload.config.collections) {
-      if (pluginCollections.has(collection.slug) || collection.slug.startsWith('payload-')) continue
-      if (pending.has(collection.slug) || adminOf(collection).hidden) continue
+      if (collection.slug.startsWith('payload-')) continue
+      if (adminOf(collection).hidden) continue
       const where = `collections.${collection.slug}`
 
       await check(`${where}.labels.singular`, collection.labels.singular, problems)
@@ -121,7 +106,6 @@ describe('I2: усі label мають переклад (en, ru, ro)', () => {
       await walk(collection.fields as AnyField[], where, problems)
     }
 
-    report(problems)
     expect(problems).toEqual([])
   })
 
@@ -136,7 +120,6 @@ describe('I2: усі label мають переклад (en, ru, ro)', () => {
     const problems: Problem[] = []
 
     for (const global of payload.config.globals) {
-      if (pending.has(global.slug)) continue
       const where = `globals.${global.slug}`
       await check(`${where}.label`, global.label, problems)
       const { group, description } = adminOf(global)
@@ -145,7 +128,6 @@ describe('I2: усі label мають переклад (en, ru, ro)', () => {
       await walk(global.fields as AnyField[], where, problems)
     }
 
-    report(problems)
     expect(problems).toEqual([])
   })
 })

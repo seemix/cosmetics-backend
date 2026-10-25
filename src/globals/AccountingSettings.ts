@@ -1,43 +1,43 @@
 import type { GlobalConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { description, label, localized } from '@/i18n'
 
 const activeWarehouse = { isActive: { equals: true } }
 
 export const AccountingSettings: GlobalConfig = {
   slug: 'accounting-settings',
-  label: 'Accounting settings',
+  label: label('custom:global:accountingSettings'),
   access: {
     read: adminOnly,
     update: adminOnly,
   },
   admin: {
-    group: 'Stock',
+    group: localized('custom:group:stock'),
   },
   fields: [
     {
       name: 'stockControlEnabled',
-      label: 'Stock control enabled',
+      label: label('custom:field:stockControlEnabled'),
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description:
-          'Orders deduct stock. Enable only after the opening balances are posted (docs/accounting/design.md, section 10).',
+        description: description('custom:desc:stockControl'),
       },
     },
     {
       name: 'accountingStartAt',
-      label: 'Accounting started at',
+      label: label('custom:field:accountingStartAt'),
       type: 'date',
       admin: {
         readOnly: true,
         date: { pickerAppearance: 'dayAndTime' },
-        description: 'Set together with enabling stock control',
+        description: description('custom:desc:accountingStart'),
       },
     },
     {
       name: 'defaultWebWarehouse',
-      label: 'Warehouse for web orders',
+      label: label('custom:field:defaultWebWarehouse'),
       type: 'relationship',
       relationTo: 'warehouses',
       required: true,
@@ -45,23 +45,23 @@ export const AccountingSettings: GlobalConfig = {
     },
     {
       name: 'defaultAdminWarehouse',
-      label: 'Default warehouse in the admin panel',
+      label: label('custom:field:defaultAdminWarehouse'),
       type: 'relationship',
       relationTo: 'warehouses',
       filterOptions: activeWarehouse,
     },
     {
       name: 'lockedUntil',
-      label: 'Period locked until',
+      label: label('custom:field:lockedUntil'),
       type: 'date',
       admin: {
         date: { pickerAppearance: 'dayAndTime' },
-        description: 'Posting and reversal dated on or before this are forbidden',
+        description: description('custom:desc:lockedUntil'),
       },
     },
     {
       name: 'assignOrderToCreatorIfNoManager',
-      label: 'Assign the order to its creator if the customer has no manager',
+      label: label('custom:field:assignOrderToCreator'),
       type: 'checkbox',
       defaultValue: false,
     },

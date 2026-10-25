@@ -179,6 +179,17 @@ export const en = {
       fromWarehouse: 'From warehouse',
       toWarehouse: 'To warehouse',
       stockLines: 'Stock lines',
+      stockControlEnabled: 'Stock control enabled',
+      accountingStartAt: 'Accounting started at',
+      defaultWebWarehouse: 'Warehouse for web orders',
+      defaultAdminWarehouse: 'Default warehouse in the admin panel',
+      lockedUntil: 'Period locked until',
+      assignOrderToCreator: 'Assign the order to its creator if the customer has no manager',
+      variantOptions: 'Variant options',
+      label: 'Label',
+      options: 'Options',
+      variantType: 'Variant type',
+      value: 'Value',
     },
     collection: {
       brands: {
@@ -288,6 +299,12 @@ export const en = {
       countedMinusExpected: 'Counted minus expected',
       surplusUnitCost: 'Inventory: required for a surplus of a product with no stock cost',
       valueOfChange: 'Calculated at posting, negative for a loss',
+      stockControl: 'Orders deduct stock. Enable only after the opening balances are posted (docs/accounting/design.md, section 10).',
+      accountingStart: 'Set together with enabling stock control',
+      lockedUntil: 'Posting and reversal dated on or before this are forbidden',
+      adminOnlyTitle: 'Used for administrative purposes, not shown to customers. This is populated by default.',
+      pricesByCurrency: 'Prices for this product in different currencies.',
+      valueFromLabel: 'Should be defaulted or dynamic based on label',
     },
     option: {
       localeRu: 'Russian',
@@ -317,6 +334,9 @@ export const en = {
       writeoff: 'Write-off',
       inventory: 'Stock count',
       reversal: 'Reversal',
+    },
+    global: {
+      accountingSettings: 'Accounting settings',
     },
   },
 }

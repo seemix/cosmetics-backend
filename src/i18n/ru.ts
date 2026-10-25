@@ -177,6 +177,17 @@ export const ru: CustomTranslationsObject = {
       fromWarehouse: 'Со склада',
       toWarehouse: 'На склад',
       stockLines: 'Строки остатков',
+      stockControlEnabled: 'Складской учёт включён',
+      accountingStartAt: 'Учёт начат',
+      defaultWebWarehouse: 'Склад для заказов с сайта',
+      defaultAdminWarehouse: 'Склад по умолчанию в админке',
+      lockedUntil: 'Период закрыт до',
+      assignOrderToCreator: 'Назначать заказ его автору, если у клиента нет менеджера',
+      variantOptions: 'Опции варианта',
+      label: 'Метка',
+      options: 'Опции',
+      variantType: 'Тип варианта',
+      value: 'Значение',
     },
     collection: {
       brands: {
@@ -286,6 +297,12 @@ export const ru: CustomTranslationsObject = {
       countedMinusExpected: 'Фактическое минус учётное',
       surplusUnitCost: 'Инвентаризация: обязательно для излишка товара без себестоимости',
       valueOfChange: 'Рассчитывается при проведении, для потери отрицательна',
+      stockControl: 'Заказы списывают остатки. Включайте только после проведения начальных остатков (docs/accounting/design.md, раздел 10).',
+      accountingStart: 'Устанавливается вместе с включением складского учёта',
+      lockedUntil: 'Проведение и сторно с этой датой и ранее запрещены',
+      adminOnlyTitle: 'Служебное поле, клиентам не показывается. Заполняется по умолчанию.',
+      pricesByCurrency: 'Цены этого товара в разных валютах.',
+      valueFromLabel: 'По умолчанию или вычисляется из метки',
     },
     option: {
       localeRu: 'Русский',
@@ -315,6 +332,9 @@ export const ru: CustomTranslationsObject = {
       writeoff: 'Списание',
       inventory: 'Инвентаризация',
       reversal: 'Сторно',
+    },
+    global: {
+      accountingSettings: 'Настройки учёта',
     },
   },
 }

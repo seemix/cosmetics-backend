@@ -177,6 +177,17 @@ export const ro: CustomTranslationsObject = {
       fromWarehouse: 'Din depozit',
       toWarehouse: 'În depozit',
       stockLines: 'Linii de stoc',
+      stockControlEnabled: 'Evidența stocurilor activată',
+      accountingStartAt: 'Evidența a început la',
+      defaultWebWarehouse: 'Depozit pentru comenzile de pe site',
+      defaultAdminWarehouse: 'Depozit implicit în panoul de administrare',
+      lockedUntil: 'Perioada închisă până la',
+      assignOrderToCreator: 'Atribuie comanda autorului ei dacă clientul nu are manager',
+      variantOptions: 'Opțiunile variantei',
+      label: 'Etichetă',
+      options: 'Opțiuni',
+      variantType: 'Tip de variantă',
+      value: 'Valoare',
     },
     collection: {
       brands: {
@@ -286,6 +297,12 @@ export const ro: CustomTranslationsObject = {
       countedMinusExpected: 'Numărat minus scriptic',
       surplusUnitCost: 'Inventariere: obligatoriu pentru surplusul unui produs fără cost în stoc',
       valueOfChange: 'Calculat la operare, negativ pentru pierdere',
+      stockControl: 'Comenzile scad stocul. Activați doar după operarea soldurilor inițiale (docs/accounting/design.md, secțiunea 10).',
+      accountingStart: 'Se setează odată cu activarea evidenței stocurilor',
+      lockedUntil: 'Operarea și stornarea cu această dată sau anterioare sunt interzise',
+      adminOnlyTitle: 'Folosit în scopuri administrative, nu este afișat clienților. Se completează implicit.',
+      pricesByCurrency: 'Prețurile acestui produs în diferite valute.',
+      valueFromLabel: 'Implicit sau calculat pe baza etichetei',
     },
     option: {
       localeRu: 'Rusă',
@@ -315,6 +332,9 @@ export const ro: CustomTranslationsObject = {
       writeoff: 'Casare',
       inventory: 'Inventariere',
       reversal: 'Stornare',
+    },
+    global: {
+      accountingSettings: 'Setări contabile',
     },
   },
 }

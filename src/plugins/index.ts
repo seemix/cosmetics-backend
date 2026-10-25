@@ -16,6 +16,12 @@ import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { CartsCollection } from '@/collections/Carts'
 import { OrdersCollection } from '@/collections/Orders'
+import {
+  TransactionsCollection,
+  VariantOptionsCollection,
+  VariantsCollection,
+  VariantTypesCollection,
+} from '@/collections/pluginCollections'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
@@ -99,6 +105,11 @@ export const plugins: Plugin[] = [
     // },
     products: {
       productsCollectionOverride: ProductsCollection,
+      variants: {
+        variantsCollectionOverride: VariantsCollection,
+        variantTypesCollectionOverride: VariantTypesCollection,
+        variantOptionsCollectionOverride: VariantOptionsCollection,
+      },
     },
     carts: {
       cartsCollectionOverride: CartsCollection,
@@ -106,6 +117,8 @@ export const plugins: Plugin[] = [
     orders: {
       ordersCollectionOverride: OrdersCollection,
     },
-    //transactions: false
+    transactions: {
+      transactionsCollectionOverride: TransactionsCollection,
+    },
   }),
 ]
