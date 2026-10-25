@@ -1,12 +1,14 @@
 import type { NumberField, Validate } from 'payload'
 import { number } from 'payload/shared'
 
+import { customT } from '@/i18n/labels'
+
 type BaniValidate = Validate<number, unknown, unknown, NumberField>
 
 /** Сума в цілих банях: ціле число плюс стандартні required/min/max поля `number`. */
 export const validateBani: BaniValidate = (value, options) => {
   if (typeof value === 'number' && !Number.isInteger(value)) {
-    return 'Amount must be a whole number of bani'
+    return customT(options.req.t)('custom:validation:wholeBani')
   }
 
   return number(value, options)

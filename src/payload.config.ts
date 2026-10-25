@@ -41,6 +41,10 @@ import { stockCacheCheck, stockCacheRebuild } from '@/endpoints/stockCacheCheck'
 import { getProductStock } from '@/endpoints/getProductStock'
 import sharp from 'sharp'
 import payloadSidebar from 'payload-sidebar-plugin'
+import { en } from '@payloadcms/translations/languages/en'
+import { ro } from '@payloadcms/translations/languages/ro'
+import { ru } from '@payloadcms/translations/languages/ru'
+import { customTranslations } from '@/i18n'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -57,6 +61,12 @@ export default buildConfig({
     process.env.BACKEND_URL || 'https://admin.nextlevelshop.md',
   ],
   sharp,
+  // Мова ІНТЕРФЕЙСУ адмінки (перемикається в профілі). Мови контенту товарів нижче в localization.
+  i18n: {
+    supportedLanguages: { en, ru, ro },
+    fallbackLanguage: 'en',
+    translations: customTranslations,
+  },
   localization: {
     locales: [{ label: 'Русский', code: 'ru' }, { label: 'Română', code: 'ro' }],
     defaultLocale: 'ru',
