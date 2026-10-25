@@ -37,6 +37,7 @@ import { OpeningBalances } from './collections/OpeningBalances'
 import { AccountingSettings } from './globals/AccountingSettings'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
+import { stockCacheCheck, stockCacheRebuild } from '@/endpoints/stockCacheCheck'
 import sharp from 'sharp'
 import payloadSidebar from 'payload-sidebar-plugin'
 
@@ -143,7 +144,7 @@ export default buildConfig({
         apiKey: process.env.RESEND_API_KEY,
       })
     : undefined,
-  endpoints: [getMenu],
+  endpoints: [getMenu, stockCacheCheck, stockCacheRebuild],
   //globals: [Header, Footer],
   globals: [AccountingSettings],
   plugins: [
