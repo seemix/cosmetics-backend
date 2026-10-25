@@ -13,6 +13,7 @@ import {
   revertCashMoves,
   type CashOperationType,
 } from '@/services/finance/cashLedger.service'
+import { assertCanAcceptPayment, changeOrderPaid } from '@/services/finance/orderPayments.service'
 
 type Relation = string | { id: string }
 
@@ -55,7 +56,12 @@ const FIELDS_BY_TYPE: Record<string, CashOperationType[]> = {
   purchase: ['supplier_payment'],
   category: ['expense'],
   manager: ['expense'],
+  order: ['customer_receipt', 'customer_refund'],
+  customer: ['customer_receipt', 'customer_refund'],
 }
+
+/** Зміна `paidBani` замовлення при проведенні: надходження збільшує, повернення зменшує (розд. 6.2). */
+const PAYMENT_SIGN: Partial<Record<CashOperationType, 1 | -1>> = { customer_receipt: 1, customer_refund: -1 }
 
 const docRef = ({ id, data, originalDoc }: DocumentTransitionArgs) => ({
   collection: 'cash-operations',
@@ -64,13 +70,31 @@ const docRef = ({ id, data, originalDoc }: DocumentTransitionArgs) => ({
 })
 
 /**
+ * Оплата замовлення в транзакції проведення: `paidBani` і `paymentState` атомарно, `status` не
+ * змінюється (В6). `direction = -1` для сторно. Не тип оплати замовлення ⇒ нічого.
+ */
+const changePayment = async ({ req, data, originalDoc }: DocumentTransitionArgs, direction: 1 | -1) => {
+  const type = (data.type ?? originalDoc.type) as CashOperationType
+  const sign = PAYMENT_SIGN[type]
+  if (!sign) return
+
+  const order = String(idOf((data.order ?? originalDoc.order) as Relation))
+  const deltaBani = sign * direction * Number(data.amountBani ?? originalDoc.amountBani)
+
+  if (type === 'customer_receipt' && direction === 1) await assertCanAcceptPayment(req, order)
+  await changeOrderPaid(req, { order, deltaBani })
+}
+
+/**
  * Проведення: рухи `cash-moves` датою `operationDate` і умовний `$inc` балансу; переказ змінює
- * обидві каси або жодну (розд. 6.2).
+ * обидві каси або жодну; оплата покупця змінює `paidBani` замовлення (розд. 6.2).
+ * Замовлення оновлюється першим: переплата повідомляється раніше за нестачу в касі.
  */
 const postOperation = async (args: DocumentTransitionArgs) => {
   const { req, data, originalDoc } = args
   const value = (field: string) => (data[field] ?? originalDoc[field]) as Relation | null | undefined
 
+  await changePayment(args, 1)
   await applyCashMoves(req, {
     doc: docRef(args),
     date: new Date(String(data.operationDate ?? originalDoc.operationDate)),
@@ -83,9 +107,15 @@ const postOperation = async (args: DocumentTransitionArgs) => {
   })
 }
 
-/** Сторно: дзеркальні рухи датою сторно; якщо з каси-отримувача вже витрачено, помилка нестачі. */
+/**
+ * Сторно: дзеркальні рухи датою сторно; якщо з каси-отримувача вже витрачено, помилка нестачі.
+ * Оплата замовлення повертається назад: сторно надходження вимагає `paidBani ≥ amount`, сторно
+ * повернення заборонене для скасованого замовлення й не дає переплати.
+ */
 const reverseOperation = async (args: DocumentTransitionArgs) => {
   const { req, id, date } = args
+
+  await changePayment(args, -1)
 
   const { docs: moves } = await req.payload.find({
     collection: 'cash-moves',
@@ -127,6 +157,15 @@ const validateOperation: CollectionBeforeChangeHook = async ({ data, originalDoc
 
   if (type === 'supplier_payment' && !idOf(value('supplier'))) fail(req, 'custom:error:supplierPaymentSupplierRequired')
 
+  if (PAYMENT_SIGN[type]) {
+    const order = idOf(value('order'))
+    if (!order) fail(req, 'custom:error:paymentOrderRequired')
+
+    // Покупець лише копіюється із замовлення; у гостьового замовлення порожній.
+    const { customer } = await req.payload.findByID({ collection: 'orders', id: String(order), depth: 0, req })
+    data.customer = idOf(customer)
+  }
+
   if (type === 'expense') {
     const category = idOf(value('category'))
     if (!category) fail(req, 'custom:error:expenseCategoryRequired')
@@ -144,8 +183,9 @@ const validateOperation: CollectionBeforeChangeHook = async ({ data, originalDoc
 }
 
 const onlyFor = (type: CashOperationType) => (data: Record<string, unknown>) => data?.type === type
+const onlyForPayments = (data: Record<string, unknown>) => Boolean(PAYMENT_SIGN[data?.type as CashOperationType])
 
-/** Касові операції: витрата, переказ, оплата постачальнику; див. docs/accounting/design.md, розд. 2.4, 6.2. */
+/** Касові операції: витрата, переказ, оплата постачальнику, надходження й повернення покупця; див. docs/accounting/design.md, розд. 2.4, 6.2. */
 export const CashOperations: CollectionConfig = {
   slug: 'cash-operations',
   labels: collectionLabels('custom:collection:cashOperations:singular', 'custom:collection:cashOperations:plural'),
@@ -162,7 +202,7 @@ export const CashOperations: CollectionConfig = {
     group: localized('custom:group:finance'),
   },
   defaultSort: '-createdAt',
-  indexes: [{ fields: ['type', 'status', 'operationDate'] }, { fields: ['manager', 'category'] }],
+  indexes: [{ fields: ['type', 'status', 'operationDate'] }, { fields: ['order'] }, { fields: ['manager', 'category'] }],
   hooks: {
     beforeValidate: lifecycle.hooks.beforeValidate,
     // Спершу типові правила, потім статуси: проведення бачить очищені поля.
@@ -181,6 +221,8 @@ export const CashOperations: CollectionConfig = {
         { label: label('custom:option:opExpense'), value: 'expense' },
         { label: label('custom:option:opTransfer'), value: 'transfer' },
         { label: label('custom:option:opSupplierPayment'), value: 'supplier_payment' },
+        { label: label('custom:option:opCustomerReceipt'), value: 'customer_receipt' },
+        { label: label('custom:option:opCustomerRefund'), value: 'customer_refund' },
       ],
     },
     {
@@ -205,6 +247,25 @@ export const CashOperations: CollectionConfig = {
       ],
     },
     moneyField({ name: 'amountBani', label: label('custom:term:amount'), required: true, min: 1 }),
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'order',
+          label: label('custom:field:order'),
+          type: 'relationship',
+          relationTo: 'orders',
+          admin: { condition: onlyForPayments },
+        },
+        {
+          name: 'customer',
+          label: label('custom:field:customer'),
+          type: 'relationship',
+          relationTo: 'users',
+          admin: { readOnly: true, condition: onlyForPayments },
+        },
+      ],
+    },
     {
       name: 'supplier',
       label: label('custom:term:supplier'),

@@ -940,10 +940,12 @@ export interface CashOperation {
   reversedBy?: (string | null) | User;
   reversalReason?: string | null;
   comment?: string | null;
-  type: 'expense' | 'transfer' | 'supplier_payment';
+  type: 'expense' | 'transfer' | 'supplier_payment' | 'customer_receipt' | 'customer_refund';
   account: string | CashAccount;
   toAccount?: (string | null) | CashAccount;
   amountBani: number;
+  order?: (string | null) | Order;
+  customer?: (string | null) | User;
   supplier?: (string | null) | Supplier;
   purchase?: (string | null) | Purchase;
   category?: (string | null) | ExpenseCategory;
@@ -1782,6 +1784,8 @@ export interface CashOperationsSelect<T extends boolean = true> {
   account?: T;
   toAccount?: T;
   amountBani?: T;
+  order?: T;
+  customer?: T;
   supplier?: T;
   purchase?: T;
   category?: T;

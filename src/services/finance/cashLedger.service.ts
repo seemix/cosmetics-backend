@@ -142,11 +142,12 @@ export const revertCashMoves = async (
   return result
 }
 
-export type CashOperationType = 'expense' | 'supplier_payment' | 'transfer'
+export type CashOperationType = 'customer_receipt' | 'customer_refund' | 'expense' | 'supplier_payment' | 'transfer'
 
 /**
- * Рядки руху коштів касової операції (розд. 6.2): витрата й оплата постачальнику зменшують
- * касу, переказ зменшує `account` і збільшує `toAccount` у тому самому проведенні.
+ * Рядки руху коштів касової операції (розд. 6.2): надходження від покупця збільшує касу;
+ * повернення покупцю, витрата й оплата постачальнику зменшують; переказ зменшує `account`
+ * і збільшує `toAccount` у тому самому проведенні.
  */
 export const cashOperationLines = ({
   type,
@@ -159,6 +160,8 @@ export const cashOperationLines = ({
   toAccount?: string | null
   amountBani: number
 }): CashLine[] => {
+  if (type === 'customer_receipt') return [{ account, deltaBani: amountBani }]
+
   const outgoing = { account, deltaBani: -amountBani }
 
   if (type !== 'transfer') return [outgoing]
