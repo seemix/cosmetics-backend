@@ -49,5 +49,23 @@ export const ru: CustomTranslationsObject = {
       cancelledIsFinal: 'Отменённый заказ нельзя вернуть в работу, создайте новый заказ',
       postedOrderDeleteForbidden: 'Проведённый заказ нельзя удалить, отмените его',
     },
+    field: {
+      title: 'Название',
+      slug: 'Слаг',
+      logo: 'Логотип',
+      bigImage: 'Большое изображение',
+      description: 'Описание',
+      parentCategory: 'Родительская категория',
+    },
+    collection: {
+      brands: {
+        singular: 'Бренд',
+        plural: 'Бренды',
+      },
+      categories: {
+        singular: 'Категория',
+        plural: 'Категории',
+      },
+    },
   },
 }

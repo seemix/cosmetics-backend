@@ -1,20 +1,23 @@
-import { slugField } from 'payload'
 import type { CollectionConfig } from 'payload'
 
 import { publicAccess } from '@/access/publicAccess'
+import { localizedSlugField } from '@/fields/slug'
+import { collectionLabels, label, localized } from '@/i18n'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
+  labels: collectionLabels('custom:collection:categories:singular', 'custom:collection:categories:plural'),
   access: {
     read: publicAccess,
   },
   admin: {
     useAsTitle: 'title',
-    group: 'Ecommerce',
+    group: localized('custom:group:ecommerce'),
   },
   fields: [
     {
       name: 'title',
+      label: label('custom:field:title'),
       type: 'text',
       required: true,
       localized: true,
@@ -24,9 +27,9 @@ export const Categories: CollectionConfig = {
       type: 'relationship',
       relationTo: 'categories',
       required: false,
-      label: 'Parent Category',
+      label: label('custom:field:parentCategory'),
     },
-    slugField({
+    localizedSlugField({
       // position: undefined,
       localized: false,
     }),

@@ -51,5 +51,23 @@ export const en = {
       cancelledIsFinal: 'A cancelled order cannot be reopened, create a new order instead',
       postedOrderDeleteForbidden: 'A posted order cannot be deleted, cancel it instead',
     },
+    field: {
+      title: 'Title',
+      slug: 'Slug',
+      logo: 'Logo',
+      bigImage: 'Large image',
+      description: 'Description',
+      parentCategory: 'Parent category',
+    },
+    collection: {
+      brands: {
+        singular: 'Brand',
+        plural: 'Brands',
+      },
+      categories: {
+        singular: 'Category',
+        plural: 'Categories',
+      },
+    },
   },
 }

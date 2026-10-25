@@ -1,38 +1,45 @@
-import { CollectionConfig, slugField } from 'payload'
+import { CollectionConfig } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { publicAccess } from '@/access/publicAccess'
 import { getBrandInfo } from '@/collections/Brands/endpoints/getBrandInfo'
+import { localizedSlugField } from '@/fields/slug'
+import { collectionLabels, label, localized } from '@/i18n'
 
 export const Brands: CollectionConfig = {
   slug: 'brands',
+  labels: collectionLabels('custom:collection:brands:singular', 'custom:collection:brands:plural'),
   access: {
     read: publicAccess,
   },
   admin: {
-    group: 'Ecommerce',
+    group: localized('custom:group:ecommerce'),
     useAsTitle: 'title',
   },
   fields: [
     {
       name: 'title',
+      label: label('custom:field:title'),
       type: 'text',
       localized: false,
     },
-    slugField({
+    localizedSlugField({
       localized: false,
     }),
     {
       name: 'logo',
+      label: label('custom:field:logo'),
       type: 'upload',
       relationTo: 'media',
     },
     {
       name: 'bigImage',
+      label: label('custom:field:bigImage'),
       type: 'upload',
       relationTo: 'media',
     },
     {
       name: 'description',
+      label: label('custom:field:description'),
       type: 'richText',
       editor: lexicalEditor(),
       localized: true,

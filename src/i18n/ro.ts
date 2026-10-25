@@ -49,5 +49,23 @@ export const ro: CustomTranslationsObject = {
       cancelledIsFinal: 'Comanda anulată nu poate fi redeschisă, creați o comandă nouă',
       postedOrderDeleteForbidden: 'Comanda operată nu poate fi ștearsă, anulați-o',
     },
+    field: {
+      title: 'Titlu',
+      slug: 'Slug',
+      logo: 'Logo',
+      bigImage: 'Imagine mare',
+      description: 'Descriere',
+      parentCategory: 'Categorie părinte',
+    },
+    collection: {
+      brands: {
+        singular: 'Brand',
+        plural: 'Branduri',
+      },
+      categories: {
+        singular: 'Categorie',
+        plural: 'Categorii',
+      },
+    },
   },
 }
