@@ -2,6 +2,7 @@ import { APIError, type CollectionBeforeChangeHook, type CollectionConfig } from
 
 import { adminOnly } from '@/access/adminOnly'
 import { validateInteger } from '@/collections/Stock/shared'
+import { collectionLabels, customT, label, localized } from '@/i18n'
 import { documentLifecycle, type DocumentTransitionArgs } from '@/services/documents/documentLifecycle'
 import { revert, transfer } from '@/services/stock/stockLedger.service'
 
@@ -57,14 +58,14 @@ const lifecycle = documentLifecycle({
 })
 
 /** Склади різні, рядки непорожні: перевіряється у чернетці й ще раз при проведенні. */
-const validateTransfer: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+const validateTransfer: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
   if ((originalDoc?.status ?? 'draft') !== 'draft') return data
 
   const from = data.fromWarehouse ?? originalDoc?.fromWarehouse
   const to = data.toWarehouse ?? originalDoc?.toWarehouse
 
   if (from && to && String(idOf(from)) === String(idOf(to))) {
-    throw new APIError('Source and destination warehouses must differ', 400, undefined, true)
+    throw new APIError(customT(req.t)('custom:error:transferSameWarehouse'), 400, undefined, true)
   }
 
   return data
@@ -73,7 +74,7 @@ const validateTransfer: CollectionBeforeChangeHook = ({ data, originalDoc }) => 
 /** Переміщення між складами, див. docs/accounting/design.md, розд. 2.2, 3.2. */
 export const StockTransfers: CollectionConfig = {
   slug: 'stock-transfers',
-  labels: { singular: 'Stock transfer', plural: 'Stock transfers' },
+  labels: collectionLabels('custom:collection:stockTransfers:singular', 'custom:collection:stockTransfers:plural'),
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -84,7 +85,7 @@ export const StockTransfers: CollectionConfig = {
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'fromWarehouse', 'toWarehouse', 'postedAt'],
     listSearchableFields: ['number'],
-    group: 'Stock',
+    group: localized('custom:group:stock'),
   },
   defaultSort: '-createdAt',
   indexes: [{ fields: ['status', 'postedAt'] }],
@@ -100,7 +101,7 @@ export const StockTransfers: CollectionConfig = {
       fields: [
         {
           name: 'fromWarehouse',
-          label: 'From warehouse',
+          label: label('custom:field:fromWarehouse'),
           type: 'relationship',
           relationTo: 'warehouses',
           required: true,
@@ -108,7 +109,7 @@ export const StockTransfers: CollectionConfig = {
         },
         {
           name: 'toWarehouse',
-          label: 'To warehouse',
+          label: label('custom:field:toWarehouse'),
           type: 'relationship',
           relationTo: 'warehouses',
           required: true,
@@ -118,7 +119,7 @@ export const StockTransfers: CollectionConfig = {
     },
     {
       name: 'lines',
-      label: 'Lines',
+      label: label('custom:field:lines'),
       type: 'array',
       required: true,
       minRows: 1,
@@ -126,8 +127,8 @@ export const StockTransfers: CollectionConfig = {
         {
           type: 'row',
           fields: [
-            { name: 'product', label: 'Product', type: 'relationship', relationTo: 'products', required: true },
-            { name: 'quantity', label: 'Quantity', type: 'number', required: true, min: 1, validate: validateInteger },
+            { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
+            { name: 'quantity', label: label('custom:term:quantity'), type: 'number', required: true, min: 1, validate: validateInteger },
           ],
         },
       ],

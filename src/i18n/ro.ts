@@ -70,6 +70,7 @@ export const ro: CustomTranslationsObject = {
       writeoffQuantity: 'Cantitatea de casat trebuie să fie un număr întreg mai mare ca 0',
       countedQuantity: 'Cantitatea numărată trebuie să fie un număr întreg, 0 sau mai mare',
       unitCostPositive: 'Costul unitar trebuie să fie mai mare ca 0',
+      transferSameWarehouse: 'Depozitul sursă și cel destinație trebuie să fie diferite',
     },
     field: {
       title: 'Titlu',
@@ -171,6 +172,8 @@ export const ro: CustomTranslationsObject = {
       diffQty: 'Diferență',
       unitCost: 'Cost unitar',
       valueOfChange: 'Valoarea modificării',
+      fromWarehouse: 'Din depozit',
+      toWarehouse: 'În depozit',
     },
     collection: {
       brands: {
@@ -240,6 +243,10 @@ export const ro: CustomTranslationsObject = {
       stockAdjustments: {
         singular: 'Ajustare de stoc',
         plural: 'Ajustări de stoc',
+      },
+      stockTransfers: {
+        singular: 'Transfer de stoc',
+        plural: 'Transferuri de stoc',
       },
     },
     tab: {

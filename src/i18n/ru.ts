@@ -70,6 +70,7 @@ export const ru: CustomTranslationsObject = {
       writeoffQuantity: 'Количество списания должно быть целым числом больше 0',
       countedQuantity: 'Фактическое количество должно быть целым числом, 0 или больше',
       unitCostPositive: 'Себестоимость единицы должна быть больше 0',
+      transferSameWarehouse: 'Склад-источник и склад-получатель должны различаться',
     },
     field: {
       title: 'Название',
@@ -171,6 +172,8 @@ export const ru: CustomTranslationsObject = {
       diffQty: 'Разница',
       unitCost: 'Себестоимость единицы',
       valueOfChange: 'Стоимость изменения',
+      fromWarehouse: 'Со склада',
+      toWarehouse: 'На склад',
     },
     collection: {
       brands: {
@@ -240,6 +243,10 @@ export const ru: CustomTranslationsObject = {
       stockAdjustments: {
         singular: 'Корректировка запасов',
         plural: 'Корректировки запасов',
+      },
+      stockTransfers: {
+        singular: 'Перемещение запасов',
+        plural: 'Перемещения запасов',
       },
     },
     tab: {

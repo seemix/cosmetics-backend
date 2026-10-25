@@ -72,6 +72,7 @@ export const en = {
       writeoffQuantity: 'Write-off quantity must be a whole number greater than 0',
       countedQuantity: 'Counted quantity must be a whole number, 0 or more',
       unitCostPositive: 'Unit cost must be greater than 0',
+      transferSameWarehouse: 'Source and destination warehouses must differ',
     },
     field: {
       title: 'Title',
@@ -173,6 +174,8 @@ export const en = {
       diffQty: 'Difference',
       unitCost: 'Unit cost',
       valueOfChange: 'Value of the change',
+      fromWarehouse: 'From warehouse',
+      toWarehouse: 'To warehouse',
     },
     collection: {
       brands: {
@@ -242,6 +245,10 @@ export const en = {
       stockAdjustments: {
         singular: 'Stock adjustment',
         plural: 'Stock adjustments',
+      },
+      stockTransfers: {
+        singular: 'Stock transfer',
+        plural: 'Stock transfers',
       },
     },
     tab: {
