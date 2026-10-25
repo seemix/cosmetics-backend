@@ -3,6 +3,7 @@ import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type 
 import { adminOnly } from '@/access/adminOnly'
 import { validateInteger } from '@/collections/Stock/shared'
 import { moneyField } from '@/fields/money'
+import { collectionLabels, customT, description, label, localized, type CustomTranslationsKeys } from '@/i18n'
 import { documentLifecycle, type DocumentTransitionArgs } from '@/services/documents/documentLifecycle'
 import { issue, receive, revert } from '@/services/stock/stockLedger.service'
 
@@ -20,8 +21,8 @@ type LineData = {
 
 const idOf = (value: Relation) => (typeof value === 'object' ? value.id : value)
 
-const fail = (message: string): never => {
-  throw new APIError(message, 400, undefined, true)
+const fail = (req: PayloadRequest, key: CustomTranslationsKeys, variables?: Record<string, string>): never => {
+  throw new APIError(customT(req.t)(key, variables), 400, undefined, true)
 }
 
 const docRef = ({ id, data, originalDoc }: DocumentTransitionArgs) => ({
@@ -72,7 +73,7 @@ const postAdjustment = async (args: DocumentTransitionArgs) => {
   const warehouse = idOf((data.warehouse ?? originalDoc.warehouse) as Relation)
   const doc = docRef(args)
 
-  if (lines.length === 0) fail('An adjustment without lines cannot be posted')
+  if (lines.length === 0) fail(req, 'custom:error:adjustmentNoLines')
 
   if (kind === 'writeoff') {
     const moves = await issue(req, {
@@ -104,7 +105,7 @@ const postAdjustment = async (args: DocumentTransitionArgs) => {
       } else if (line.unitCostBani && line.unitCostBani > 0) {
         surplusValue = diffQty * line.unitCostBani
       } else {
-        fail(`Unit cost is required for the surplus of product ${product}: it has no stock cost yet`)
+        fail(req, 'custom:error:surplusCostRequired', { product })
       }
     }
 
@@ -174,28 +175,28 @@ const lifecycle = documentLifecycle({
 const isNonNegativeInteger = (value: unknown): value is number => Number.isInteger(value) && (value as number) >= 0
 
 /** Правила рядків для чернетки й моменту проведення; проведений документ уже незмінний. */
-const validateAdjustment: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+const validateAdjustment: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
   if ((originalDoc?.status ?? 'draft') !== 'draft') return data
 
   const kind = (data.kind ?? originalDoc?.kind) as Kind | undefined
   const lines = (data.lines ?? originalDoc?.lines ?? []) as LineData[]
   const products = lines.map((line) => String(idOf(line.product)))
 
-  if (new Set(products).size !== products.length) fail('A product can appear only once in an adjustment')
+  if (new Set(products).size !== products.length) fail(req, 'custom:error:adjustmentDuplicateProduct')
 
   if (kind === 'writeoff') {
-    if (!(data.reason ?? originalDoc?.reason)) fail('Reason is required for a write-off')
+    if (!(data.reason ?? originalDoc?.reason)) fail(req, 'custom:error:writeoffReasonRequired')
     if (lines.some((line) => !Number.isInteger(line.quantity) || (line.quantity as number) <= 0)) {
-      fail('Write-off quantity must be a whole number greater than 0')
+      fail(req, 'custom:error:writeoffQuantity')
     }
   }
 
   if (kind === 'inventory') {
     if (lines.some((line) => !isNonNegativeInteger(line.countedQty))) {
-      fail('Counted quantity must be a whole number, 0 or more')
+      fail(req, 'custom:error:countedQuantity')
     }
     if (lines.some((line) => line.unitCostBani != null && !(line.unitCostBani > 0))) {
-      fail('Unit cost must be greater than 0')
+      fail(req, 'custom:error:unitCostPositive')
     }
   }
 
@@ -207,7 +208,7 @@ const kindIs = (kind: Kind) => (data: Record<string, unknown>) => data?.kind ===
 /** Списання та інвентаризація, див. docs/accounting/design.md, розд. 2.2, 3.2. */
 export const StockAdjustments: CollectionConfig = {
   slug: 'stock-adjustments',
-  labels: { singular: 'Stock adjustment', plural: 'Stock adjustments' },
+  labels: collectionLabels('custom:collection:stockAdjustments:singular', 'custom:collection:stockAdjustments:plural'),
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -218,7 +219,7 @@ export const StockAdjustments: CollectionConfig = {
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'kind', 'warehouse', 'postedAt'],
     listSearchableFields: ['number'],
-    group: 'Stock',
+    group: localized('custom:group:stock'),
   },
   defaultSort: '-createdAt',
   indexes: [{ fields: ['status', 'postedAt'] }],
@@ -231,17 +232,17 @@ export const StockAdjustments: CollectionConfig = {
     ...lifecycle.fields,
     {
       name: 'kind',
-      label: 'Kind',
+      label: label('custom:term:kind'),
       type: 'select',
       required: true,
       options: [
-        { label: 'Write-off', value: 'writeoff' },
-        { label: 'Inventory', value: 'inventory' },
+        { label: label('custom:option:kindWriteoff'), value: 'writeoff' },
+        { label: label('custom:option:kindInventory'), value: 'inventory' },
       ],
     },
     {
       name: 'warehouse',
-      label: 'Warehouse',
+      label: label('custom:term:warehouse'),
       type: 'relationship',
       relationTo: 'warehouses',
       required: true,
@@ -249,28 +250,28 @@ export const StockAdjustments: CollectionConfig = {
     },
     {
       name: 'reason',
-      label: 'Reason',
+      label: label('custom:term:reason'),
       type: 'select',
       options: [
-        { label: 'Damage', value: 'damage' },
-        { label: 'Expired', value: 'expired' },
-        { label: 'Tester', value: 'tester' },
-        { label: 'Internal use', value: 'internal' },
-        { label: 'Other', value: 'other' },
+        { label: label('custom:option:reasonDamage'), value: 'damage' },
+        { label: label('custom:option:reasonExpired'), value: 'expired' },
+        { label: label('custom:option:reasonTester'), value: 'tester' },
+        { label: label('custom:option:reasonInternal'), value: 'internal' },
+        { label: label('custom:option:reasonOther'), value: 'other' },
       ],
-      admin: { condition: kindIs('writeoff'), description: 'Required for a write-off' },
+      admin: { condition: kindIs('writeoff'), description: description('custom:desc:reasonRequiredWriteoff') },
     },
     {
       name: 'lines',
-      label: 'Lines',
+      label: label('custom:field:lines'),
       type: 'array',
       required: true,
       minRows: 1,
       fields: [
-        { name: 'product', label: 'Product', type: 'relationship', relationTo: 'products', required: true },
+        { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
         {
           name: 'quantity',
-          label: 'Quantity to write off',
+          label: label('custom:field:quantityToWriteOff'),
           type: 'number',
           min: 1,
           validate: validateInteger,
@@ -281,23 +282,23 @@ export const StockAdjustments: CollectionConfig = {
           fields: [
             {
               name: 'countedQty',
-              label: 'Counted quantity',
+              label: label('custom:field:countedQty'),
               type: 'number',
               min: 0,
               validate: validateInteger,
-              admin: { description: 'Inventory: actual quantity on the shelf' },
+              admin: { description: description('custom:desc:countedQty') },
             },
             {
               name: 'expectedQty',
-              label: 'Expected quantity',
+              label: label('custom:field:expectedQty'),
               type: 'number',
-              admin: { readOnly: true, description: 'Stock at the moment of posting' },
+              admin: { readOnly: true, description: description('custom:desc:expectedQty') },
             },
             {
               name: 'diffQty',
-              label: 'Difference',
+              label: label('custom:field:diffQty'),
               type: 'number',
-              admin: { readOnly: true, description: 'Counted minus expected' },
+              admin: { readOnly: true, description: description('custom:desc:countedMinusExpected') },
             },
           ],
         },
@@ -306,14 +307,14 @@ export const StockAdjustments: CollectionConfig = {
           fields: [
             moneyField({
               name: 'unitCostBani',
-              label: 'Unit cost',
+              label: label('custom:field:unitCost'),
               min: 1,
-              admin: { description: 'Inventory: required for a surplus of a product with no stock cost' },
+              admin: { description: description('custom:desc:surplusUnitCost') },
             }),
             moneyField({
               name: 'valueBani',
-              label: 'Value of the change',
-              admin: { readOnly: true, description: 'Calculated at posting, negative for a loss' },
+              label: label('custom:field:valueOfChange'),
+              admin: { readOnly: true, description: description('custom:desc:valueOfChange') },
             }),
           ],
         },
