@@ -33,6 +33,11 @@ const sameItems = (next: unknown, prev: unknown): boolean => {
 export const guardPostedOrder: CollectionBeforeChangeHook = ({ data, originalDoc, operation, req }) => {
   if (operation !== 'update' || !data || !originalDoc) return data
 
+  // Скасування кінцеве (розд. 9.1): повернений залишок назад не списується.
+  if (originalDoc.status === 'cancelled' && 'status' in data && data.status && data.status !== 'cancelled') {
+    throw new APIError(customT(req.t)('custom:error:cancelledOrderFinal'), 409, undefined, true)
+  }
+
   const changed =
     ('items' in data && data.items !== undefined && !sameItems(data.items, originalDoc.items)) ||
     ('total' in data && data.total !== undefined && cents(data.total) !== cents(originalDoc.total)) ||

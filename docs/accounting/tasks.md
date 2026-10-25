@@ -180,7 +180,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   Узгодити з фронтендом формат 409 до вмикання.
   Складність: M. Модель: Opus.
 
-- [ ] **S2.5. Скасування замовлення.**
+- [x] **S2.5. Скасування замовлення.**
   Мета: `cancelOrderStock` і заборона виходу з `cancelled` (розд. 9.1).
   Файли: `Orders/hooks/cancelOrderStock.ts`, `guardPostedOrder.ts`, `Orders/index.ts`,
   `beforeDelete` для проведених.

@@ -10,6 +10,7 @@ import {
   cleanupStock,
   costOf,
   createAdmin,
+  deleteDocumentsDirectly,
   movesOfDoc,
   qtyAt,
   stockUp,
@@ -94,7 +95,8 @@ describe('S2.3/S2.4: списання при створенні замовлен
     // Спершу прапорець окремо: решта тестів не повинна працювати з увімкненим обліком.
     await setStockControl(previousSettings.stockControlEnabled === true)
     await payload.updateGlobal({ slug: 'accounting-settings', data: previousSettings as never }).catch(() => {})
-    for (const id of orders) await payload.delete({ collection: 'orders', id }).catch(() => {})
+    // Проведені замовлення хук видалення не дає прибрати.
+    await deleteDocumentsDirectly(payload, 'orders', orders)
     await cleanupStock(payload, products, warehouses)
     await data.cleanup()
     vi.restoreAllMocks()

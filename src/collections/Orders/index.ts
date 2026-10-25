@@ -9,6 +9,8 @@ import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrde
 import { assignAccountingFields } from '@/collections/Orders/hooks/assignAccountingFields'
 import { deductOrderStock } from '@/collections/Orders/hooks/deductOrderStock'
 import { writeOrderStockMoves } from '@/collections/Orders/hooks/writeOrderStockMoves'
+import { cancelOrderStock, prepareOrderCancel } from '@/collections/Orders/hooks/cancelOrderStock'
+import { forbidDeletePosted } from '@/collections/Orders/hooks/forbidDeletePosted'
 import { guardPostedOrder } from '@/collections/Orders/hooks/guardPostedOrder'
 import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
@@ -253,10 +255,12 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     beforeChange: [
       setOrderNumber,
       guardPostedOrder,
+      prepareOrderCancel,
       populatePricesAndTotal,
       assignAccountingFields,
       deductOrderStock,
     ],
-    afterChange: [writeOrderStockMoves, sendNewOrderNotification],
+    afterChange: [writeOrderStockMoves, cancelOrderStock, sendNewOrderNotification],
+    beforeDelete: [forbidDeletePosted],
   },
 })
