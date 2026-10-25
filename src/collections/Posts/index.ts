@@ -1,28 +1,33 @@
-import { CollectionConfig, slugField } from 'payload'
+import { CollectionConfig } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { publicAccess } from '@/access/publicAccess'
 import { getPosts } from '@/collections/Posts/endpoints/getPosts'
 import { getSinglePost } from '@/collections/Posts/endpoints/getSinglePost'
+import { localizedSlugField } from '@/fields/slug'
+import { collectionLabels, label, localized } from '@/i18n'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
+  labels: collectionLabels('custom:collection:posts:singular', 'custom:collection:posts:plural'),
   access: {
     read: publicAccess,
   },
   admin: {
-    group: 'Content',
+    group: localized('custom:group:content'),
     useAsTitle: 'title',
   },
   fields: [
     {
       name: 'title',
+      label: label('custom:field:title'),
       type: 'text',
       localized: true,
       required: true,
     },
-    slugField(),
+    localizedSlugField(),
     {
       name: 'slide',
+      label: label('custom:field:slide'),
       type: 'upload',
       relationTo: 'media',
       required: true,
@@ -30,6 +35,7 @@ export const Posts: CollectionConfig = {
     },
     {
       name: 'square-slide',
+      label: label('custom:field:squareSlide'),
       type: 'upload',
       relationTo: 'media',
       required: true,
@@ -37,6 +43,7 @@ export const Posts: CollectionConfig = {
     },
     {
       name: 'customLink',
+      label: label('custom:field:customLink'),
       type: 'text',
       localized: false,
       required: false,
@@ -44,6 +51,7 @@ export const Posts: CollectionConfig = {
     },
     {
       name: 'excerpt',
+      label: label('custom:field:excerpt'),
       type: 'textarea',
       localized: true,
       required: false,
@@ -53,6 +61,7 @@ export const Posts: CollectionConfig = {
     },
     {
       name: 'content',
+      label: label('custom:field:content'),
       type: 'richText',
       editor: lexicalEditor(),
       localized: true,

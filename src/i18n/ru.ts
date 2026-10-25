@@ -56,6 +56,13 @@ export const ru: CustomTranslationsObject = {
       bigImage: 'Большое изображение',
       description: 'Описание',
       parentCategory: 'Родительская категория',
+      alt: 'Альтернативный текст',
+      caption: 'Подпись',
+      content: 'Содержимое',
+      slide: 'Слайд',
+      squareSlide: 'Квадратный слайд',
+      customLink: 'Своя ссылка',
+      excerpt: 'Краткое описание',
     },
     collection: {
       brands: {
@@ -65,6 +72,18 @@ export const ru: CustomTranslationsObject = {
       categories: {
         singular: 'Категория',
         plural: 'Категории',
+      },
+      media: {
+        singular: 'Медиа',
+        plural: 'Медиа',
+      },
+      pages: {
+        singular: 'Страница',
+        plural: 'Страницы',
+      },
+      posts: {
+        singular: 'Публикация',
+        plural: 'Публикации',
       },
     },
   },

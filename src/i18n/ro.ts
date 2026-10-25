@@ -56,6 +56,13 @@ export const ro: CustomTranslationsObject = {
       bigImage: 'Imagine mare',
       description: 'Descriere',
       parentCategory: 'Categorie părinte',
+      alt: 'Text alternativ',
+      caption: 'Legendă',
+      content: 'Conținut',
+      slide: 'Slide',
+      squareSlide: 'Slide pătrat',
+      customLink: 'Link personalizat',
+      excerpt: 'Rezumat',
     },
     collection: {
       brands: {
@@ -65,6 +72,18 @@ export const ro: CustomTranslationsObject = {
       categories: {
         singular: 'Categorie',
         plural: 'Categorii',
+      },
+      media: {
+        singular: 'Media',
+        plural: 'Media',
+      },
+      pages: {
+        singular: 'Pagină',
+        plural: 'Pagini',
+      },
+      posts: {
+        singular: 'Articol',
+        plural: 'Articole',
       },
     },
   },

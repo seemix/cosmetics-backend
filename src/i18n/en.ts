@@ -58,6 +58,13 @@ export const en = {
       bigImage: 'Large image',
       description: 'Description',
       parentCategory: 'Parent category',
+      alt: 'Alt text',
+      caption: 'Caption',
+      content: 'Content',
+      slide: 'Slide',
+      squareSlide: 'Square slide',
+      customLink: 'Custom link',
+      excerpt: 'Excerpt',
     },
     collection: {
       brands: {
@@ -67,6 +74,18 @@ export const en = {
       categories: {
         singular: 'Category',
         plural: 'Categories',
+      },
+      media: {
+        singular: 'Media',
+        plural: 'Media',
+      },
+      pages: {
+        singular: 'Page',
+        plural: 'Pages',
+      },
+      posts: {
+        singular: 'Post',
+        plural: 'Posts',
       },
     },
   },

@@ -4,15 +4,17 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { publicAccess } from '@/access/publicAccess'
 import { generateBlurHash } from '@/hooks/generateBlurHash'
+import { collectionLabels, label, localized } from '@/i18n'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export const Media: CollectionConfig = {
   admin: {
-    group: 'Content',
+    group: localized('custom:group:content'),
   },
   slug: 'media',
+  labels: collectionLabels('custom:collection:media:singular', 'custom:collection:media:plural'),
   access: {
     read: publicAccess,
   },
@@ -20,11 +22,13 @@ export const Media: CollectionConfig = {
   fields: [
     {
       name: 'alt',
+      label: label('custom:field:alt'),
       type: 'text',
       required: true,
     },
     {
       name: 'caption',
+      label: label('custom:field:caption'),
       type: 'text',
     },
     {
