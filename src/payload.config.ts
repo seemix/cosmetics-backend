@@ -44,11 +44,17 @@ import payloadSidebar from 'payload-sidebar-plugin'
 import { en } from '@payloadcms/translations/languages/en'
 import { ro } from '@payloadcms/translations/languages/ro'
 import { ru } from '@payloadcms/translations/languages/ru'
-import { customTranslations } from '@/i18n'
+import { customTranslations, localized } from '@/i18n'
 
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+// Порядок груп бічного меню: плагін порівнює за підписом групи, тож задаємо його для кожної мови.
+const sidebarGroupOrder: Record<string, number> = {}
+;(['ecommerce', 'stock', 'purchasing', 'users', 'content'] as const).forEach((group, index) => {
+  for (const text of Object.values(localized(`custom:group:${group}`))) sidebarGroupOrder[text] = index + 1
+})
 
 export default buildConfig({
 
@@ -161,6 +167,7 @@ export default buildConfig({
   plugins: [
     ...plugins,
     payloadSidebar({
+      groupOrder: sidebarGroupOrder,
       icons: {
         posts: 'file-code',
         brands: 'award',
