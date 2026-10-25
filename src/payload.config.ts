@@ -25,6 +25,8 @@ import { Brands } from '@/collections/Brands'
 import { PromoCodes } from './collections/PromoCodes'
 import { Users } from '@/collections/Users'
 import { Posts } from './collections/Posts'
+import { Warehouses } from './collections/Warehouses'
+import { AccountingSettings } from './globals/AccountingSettings'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
 import sharp from 'sharp'
@@ -85,7 +87,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes],
+  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
@@ -135,6 +137,7 @@ export default buildConfig({
     : undefined,
   endpoints: [getMenu],
   //globals: [Header, Footer],
+  globals: [AccountingSettings],
   plugins: [
     ...plugins,
     payloadSidebar({
@@ -147,6 +150,8 @@ export default buildConfig({
         products: 'package',
         orders: 'clipboard-list',
         users: 'users',
+        warehouses: 'warehouse',
+        'accounting-settings': 'settings',
       },
     }),
     // storage-adapter-placeholder

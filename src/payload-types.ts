@@ -74,6 +74,7 @@ export interface Config {
     brands: Brand;
     media: Media;
     'promo-codes': PromoCode;
+    warehouses: Warehouse;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -110,6 +111,7 @@ export interface Config {
     brands: BrandsSelect<false> | BrandsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
+    warehouses: WarehousesSelect<false> | WarehousesSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -129,8 +131,12 @@ export interface Config {
     defaultIDType: string;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'ro') | ('ru' | 'ro')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'accounting-settings': AccountingSetting;
+  };
+  globalsSelect: {
+    'accounting-settings': AccountingSettingsSelect<false> | AccountingSettingsSelect<true>;
+  };
   locale: 'ru' | 'ro';
   user: User & {
     collection: 'users';
@@ -635,6 +641,25 @@ export interface PromoCode {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "warehouses".
+ */
+export interface Warehouse {
+  id: string;
+  name: string;
+  /**
+   * Стабільний ключ для налаштувань: main, shop
+   */
+  code: string;
+  /**
+   * Неактивний склад не можна обрати в нових документах
+   */
+  isActive?: boolean | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
@@ -914,6 +939,10 @@ export interface PayloadLockedDocument {
         value: string | PromoCode;
       } | null)
     | ({
+        relationTo: 'warehouses';
+        value: string | Warehouse;
+      } | null)
+    | ({
         relationTo: 'forms';
         value: string | Form;
       } | null)
@@ -1140,6 +1169,18 @@ export interface PromoCodesSelect<T extends boolean = true> {
   brands?: T;
   expirationDate?: T;
   isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "warehouses_select".
+ */
+export interface WarehousesSelect<T extends boolean = true> {
+  name?: T;
+  code?: T;
+  isActive?: T;
+  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1527,6 +1568,45 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "accounting-settings".
+ */
+export interface AccountingSetting {
+  id: string;
+  /**
+   * Замовлення списують залишок. Вмикати лише після проведення початкових залишків (docs/accounting/design.md, розд. 10).
+   */
+  stockControlEnabled?: boolean | null;
+  /**
+   * Ставиться разом із вмиканням обліку
+   */
+  accountingStartAt?: string | null;
+  defaultWebWarehouse: string | Warehouse;
+  defaultAdminWarehouse?: (string | null) | Warehouse;
+  /**
+   * Проведення й сторно з датою не пізніше цієї заборонені
+   */
+  lockedUntil?: string | null;
+  assignOrderToCreatorIfNoManager?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "accounting-settings_select".
+ */
+export interface AccountingSettingsSelect<T extends boolean = true> {
+  stockControlEnabled?: T;
+  accountingStartAt?: T;
+  defaultWebWarehouse?: T;
+  defaultAdminWarehouse?: T;
+  lockedUntil?: T;
+  assignOrderToCreatorIfNoManager?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
