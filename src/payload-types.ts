@@ -79,6 +79,7 @@ export interface Config {
     'stock-moves': StockMove;
     'stock-balances': StockBalance;
     'product-costs': ProductCost;
+    purchases: Purchase;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -120,6 +121,7 @@ export interface Config {
     'stock-moves': StockMovesSelect<false> | StockMovesSelect<true>;
     'stock-balances': StockBalancesSelect<false> | StockBalancesSelect<true>;
     'product-costs': ProductCostsSelect<false> | ProductCostsSelect<true>;
+    purchases: PurchasesSelect<false> | PurchasesSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -655,11 +657,11 @@ export interface Warehouse {
   id: string;
   name: string;
   /**
-   * Стабільний ключ для налаштувань: main, shop
+   * Stable key used in settings: main, shop
    */
   code: string;
   /**
-   * Неактивний склад не можна обрати в нових документах
+   * An inactive warehouse cannot be selected in new documents
    */
   isActive?: boolean | null;
   sortOrder?: number | null;
@@ -679,11 +681,11 @@ export interface Supplier {
   contactPerson?: string | null;
   bankDetails?: string | null;
   /**
-   * Може бути отримувачем коштів за логістику в накладній
+   * Can be the payee of logistics costs in a purchase
    */
   isCarrier?: boolean | null;
   /**
-   * Неактивного постачальника не можна обрати в нових документах
+   * An inactive supplier cannot be selected in new documents
    */
   isActive?: boolean | null;
   notes?: string | null;
@@ -699,20 +701,20 @@ export interface StockMove {
   date: string;
   product: string | Product;
   /**
-   * Резерв, завжди порожнє
+   * Reserved, always empty
    */
   variant?: (string | null) | Variant;
   warehouse: string | Warehouse;
   /**
-   * + прихід, − витрата
+   * + receipt, − issue
    */
   qtyDelta: number;
   /**
-   * За середньою; для переміщень 0
+   * At average cost; 0 for transfers
    */
   valueDeltaBani: number;
   /**
-   * Дробове значення, довідково
+   * Fractional value, for reference
    */
   unitCostBani?: number | null;
   moveType:
@@ -740,7 +742,7 @@ export interface StockBalance {
   id: string;
   product: string | Product;
   /**
-   * Резерв, завжди порожнє
+   * Reserved, always empty
    */
   variant?: (string | null) | Variant;
   warehouse: string | Warehouse;
@@ -756,21 +758,91 @@ export interface ProductCost {
   id: string;
   product: string | Product;
   /**
-   * Сума по всіх складах
+   * Total across all warehouses
    */
   qty: number;
   /**
-   * Якщо кількість 0, то й вартість 0
+   * If quantity is 0, value is 0 too
    */
   valueBani: number;
   /**
-   * valueBani / qty, дробове, лише показ
+   * valueBani / qty, fractional, display only
    */
   avgCostBani?: number | null;
   /**
-   * Довідково
+   * For reference
    */
   lastPurchaseUnitCostBani?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "purchases".
+ */
+export interface Purchase {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  documentDate: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  /**
+   * Required when reversing
+   */
+  reversalReason?: string | null;
+  comment?: string | null;
+  supplier: string | Supplier;
+  supplierInvoiceNo?: string | null;
+  warehouse: string | Warehouse;
+  allocationBase: 'amount' | 'quantity';
+  lines: {
+    product: string | Product;
+    quantity: number;
+    unitPriceBani: number;
+    /**
+     * Calculated
+     */
+    amountBani?: number | null;
+    /**
+     * Calculated
+     */
+    allocatedBani?: number | null;
+    /**
+     * Calculated
+     */
+    landedBani?: number | null;
+    /**
+     * Fractional, display only
+     */
+    landedUnitCost?: number | null;
+    id?: string | null;
+  }[];
+  /**
+   * Logistics, customs, packaging
+   */
+  extraCosts?:
+    | {
+        description: string;
+        amountBani: number;
+        payee: string | Supplier;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Calculated
+   */
+  goodsTotalBani?: number | null;
+  /**
+   * Calculated
+   */
+  extraTotalBani?: number | null;
+  /**
+   * Calculated
+   */
+  landedTotalBani?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1075,6 +1147,10 @@ export interface PayloadLockedDocument {
         value: string | ProductCost;
       } | null)
     | ({
+        relationTo: 'purchases';
+        value: string | Purchase;
+      } | null)
+    | ({
         relationTo: 'forms';
         value: string | Form;
       } | null)
@@ -1375,6 +1451,50 @@ export interface ProductCostsSelect<T extends boolean = true> {
   valueBani?: T;
   avgCostBani?: T;
   lastPurchaseUnitCostBani?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "purchases_select".
+ */
+export interface PurchasesSelect<T extends boolean = true> {
+  number?: T;
+  status?: T;
+  documentDate?: T;
+  postedAt?: T;
+  postedBy?: T;
+  reversedAt?: T;
+  reversedBy?: T;
+  reversalReason?: T;
+  comment?: T;
+  supplier?: T;
+  supplierInvoiceNo?: T;
+  warehouse?: T;
+  allocationBase?: T;
+  lines?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        unitPriceBani?: T;
+        amountBani?: T;
+        allocatedBani?: T;
+        landedBani?: T;
+        landedUnitCost?: T;
+        id?: T;
+      };
+  extraCosts?:
+    | T
+    | {
+        description?: T;
+        amountBani?: T;
+        payee?: T;
+        id?: T;
+      };
+  goodsTotalBani?: T;
+  extraTotalBani?: T;
+  landedTotalBani?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1770,17 +1890,17 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface AccountingSetting {
   id: string;
   /**
-   * Замовлення списують залишок. Вмикати лише після проведення початкових залишків (docs/accounting/design.md, розд. 10).
+   * Orders deduct stock. Enable only after the opening balances are posted (docs/accounting/design.md, section 10).
    */
   stockControlEnabled?: boolean | null;
   /**
-   * Ставиться разом із вмиканням обліку
+   * Set together with enabling stock control
    */
   accountingStartAt?: string | null;
   defaultWebWarehouse: string | Warehouse;
   defaultAdminWarehouse?: (string | null) | Warehouse;
   /**
-   * Проведення й сторно з датою не пізніше цієї заборонені
+   * Posting and reversal dated on or before this are forbidden
    */
   lockedUntil?: string | null;
   assignOrderToCreatorIfNoManager?: boolean | null;
