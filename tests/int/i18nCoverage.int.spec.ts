@@ -20,7 +20,7 @@ const languages = ['en', 'ru', 'ro'] as const
 const pluginCollections = new Set(['variants', 'variantTypes', 'variantOptions', 'addresses', 'transactions'])
 
 /** Колекції, які ще не перекладені (список зменшується з кожним комітом I2 і наприкінці порожній). */
-const pending = new Set<string>(process.env.I18N_ALL ? [] : ['promo-codes', 'warehouses', 'suppliers', 'stock-moves', 'stock-balances', 'product-costs', 'purchases', 'stock-transfers', 'stock-adjustments', 'opening-balances', 'carts', 'orders', 'accounting-settings'])
+const pending = new Set<string>(process.env.I18N_ALL ? [] : ['warehouses', 'suppliers', 'stock-moves', 'stock-balances', 'product-costs', 'purchases', 'stock-transfers', 'stock-adjustments', 'opening-balances', 'orders', 'accounting-settings'])
 
 type Problem = string
 
@@ -77,7 +77,8 @@ const walk = async (fields: AnyField[], where: string, problems: Problem[]) => {
     if (field.type === 'collapsible') await check(`${path}.label`, field.label, problems)
     if (field.admin?.description !== undefined) await check(`${path}.admin.description`, field.admin.description, problems)
 
-    for (const [index, option] of (field.options ?? []).entries()) {
+    // Коди валют (`currency`) не перекладаються.
+    for (const [index, option] of field.name === 'currency' ? [] : (field.options ?? []).entries()) {
       const label = typeof option === 'object' && option !== null ? (option as { label?: unknown }).label : option
       await check(`${path}.options[${index}].label`, label, problems)
     }

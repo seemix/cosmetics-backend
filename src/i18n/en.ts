@@ -94,6 +94,13 @@ export const en = {
       cart: 'Cart',
       addresses: 'Addresses',
       favorites: 'Favorites',
+      price: 'Price',
+      subtotal: 'Subtotal',
+      code: 'Code',
+      wholesale: 'Wholesale',
+      brands: 'Brands',
+      expirationDate: 'Expiration date',
+      isActive: 'Active',
     },
     collection: {
       brands: {
@@ -124,6 +131,14 @@ export const en = {
         singular: 'User',
         plural: 'Users',
       },
+      carts: {
+        singular: 'Cart',
+        plural: 'Carts',
+      },
+      promoCodes: {
+        singular: 'Promo code',
+        plural: 'Promo codes',
+      },
     },
     tab: {
       content: 'Content',
@@ -131,6 +146,8 @@ export const en = {
     },
     desc: {
       personalDiscounts: 'Personal discounts',
+      allBrands: 'Not selected: all brands',
+      permanent: 'Leave empty if permanent',
     },
     option: {
       localeRu: 'Russian',

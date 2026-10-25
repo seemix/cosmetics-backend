@@ -92,6 +92,13 @@ export const ro: CustomTranslationsObject = {
       cart: 'Coș',
       addresses: 'Adrese',
       favorites: 'Favorite',
+      price: 'Preț',
+      subtotal: 'Subtotal',
+      code: 'Cod',
+      wholesale: 'En-gros',
+      brands: 'Branduri',
+      expirationDate: 'Data expirării',
+      isActive: 'Activ',
     },
     collection: {
       brands: {
@@ -122,6 +129,14 @@ export const ro: CustomTranslationsObject = {
         singular: 'Utilizator',
         plural: 'Utilizatori',
       },
+      carts: {
+        singular: 'Coș',
+        plural: 'Coșuri',
+      },
+      promoCodes: {
+        singular: 'Cod promoțional',
+        plural: 'Coduri promoționale',
+      },
     },
     tab: {
       content: 'Conținut',
@@ -129,6 +144,8 @@ export const ro: CustomTranslationsObject = {
     },
     desc: {
       personalDiscounts: 'Reduceri personale',
+      allBrands: 'Neselectat: toate brandurile',
+      permanent: 'Lăsați gol dacă este permanent',
     },
     option: {
       localeRu: 'Rusă',

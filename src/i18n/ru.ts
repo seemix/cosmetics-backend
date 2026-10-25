@@ -92,6 +92,13 @@ export const ru: CustomTranslationsObject = {
       cart: 'Корзина',
       addresses: 'Адреса',
       favorites: 'Избранное',
+      price: 'Цена',
+      subtotal: 'Подытог',
+      code: 'Код',
+      wholesale: 'Оптовый',
+      brands: 'Бренды',
+      expirationDate: 'Дата окончания',
+      isActive: 'Активен',
     },
     collection: {
       brands: {
@@ -122,6 +129,14 @@ export const ru: CustomTranslationsObject = {
         singular: 'Пользователь',
         plural: 'Пользователи',
       },
+      carts: {
+        singular: 'Корзина',
+        plural: 'Корзины',
+      },
+      promoCodes: {
+        singular: 'Промокод',
+        plural: 'Промокоды',
+      },
     },
     tab: {
       content: 'Содержимое',
@@ -129,6 +144,8 @@ export const ru: CustomTranslationsObject = {
     },
     desc: {
       personalDiscounts: 'Персональные скидки',
+      allBrands: 'Не выбрано: все бренды',
+      permanent: 'Оставьте пустым, если бессрочный',
     },
     option: {
       localeRu: 'Русский',

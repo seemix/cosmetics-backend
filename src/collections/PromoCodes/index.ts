@@ -2,10 +2,13 @@ import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 
+import { collectionLabels, description, label, localized } from '@/i18n'
+
 import { generatePromo } from './services/generatePromo'
 
 export const PromoCodes: CollectionConfig = {
   slug: 'promo-codes',
+  labels: collectionLabels('custom:collection:promoCodes:singular', 'custom:collection:promoCodes:plural'),
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -14,7 +17,7 @@ export const PromoCodes: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'code',
-    group: 'Ecommerce',
+    group: localized('custom:group:ecommerce'),
     components: {
 
     }
@@ -22,6 +25,7 @@ export const PromoCodes: CollectionConfig = {
   fields: [
     {
       name: 'code',
+      label: label('custom:field:code'),
       type: 'text',
       required: true,
       unique: true,
@@ -30,35 +34,39 @@ export const PromoCodes: CollectionConfig = {
     },
     {
       name: 'wholesale',
+      label: label('custom:field:wholesale'),
       type: 'checkbox',
       defaultValue: false
     },
     {
       name: 'discountPercent',
-      label: 'Discount %',
+      label: label('custom:field:discountPercent'),
       type: 'number',
       required: true,
       defaultValue: 10,
     },
     {
       name: 'brands',
+      label: label('custom:field:brands'),
       type: 'relationship',
       relationTo: 'brands',
       hasMany: true,
       required: false,
       admin: {
-        description: '(Not selected: ALL brands)',
+        description: description('custom:desc:allBrands'),
       },
     },
     {
       name: 'expirationDate',
+      label: label('custom:field:expirationDate'),
       type: 'date',
       admin: {
-        description: '(Empty if permanent)',
+        description: description('custom:desc:permanent'),
       },
     },
     {
       name: 'isActive',
+      label: label('custom:field:isActive'),
       type: 'checkbox',
       defaultValue: true,
     },
