@@ -26,6 +26,7 @@ import { PromoCodes } from './collections/PromoCodes'
 import { Users } from '@/collections/Users'
 import { Posts } from './collections/Posts'
 import { Warehouses } from './collections/Warehouses'
+import { Suppliers } from './collections/Suppliers'
 import { AccountingSettings } from './globals/AccountingSettings'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
@@ -87,7 +88,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses],
+  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
@@ -151,6 +152,7 @@ export default buildConfig({
         orders: 'clipboard-list',
         users: 'users',
         warehouses: 'warehouse',
+        suppliers: 'truck',
         'accounting-settings': 'settings',
       },
     }),

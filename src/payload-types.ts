@@ -75,6 +75,7 @@ export interface Config {
     media: Media;
     'promo-codes': PromoCode;
     warehouses: Warehouse;
+    suppliers: Supplier;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -112,6 +113,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
     warehouses: WarehousesSelect<false> | WarehousesSelect<true>;
+    suppliers: SuppliersSelect<false> | SuppliersSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -660,6 +662,30 @@ export interface Warehouse {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers".
+ */
+export interface Supplier {
+  id: string;
+  name: string;
+  idno?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  contactPerson?: string | null;
+  bankDetails?: string | null;
+  /**
+   * Може бути отримувачем коштів за логістику в накладній
+   */
+  isCarrier?: boolean | null;
+  /**
+   * Неактивного постачальника не можна обрати в нових документах
+   */
+  isActive?: boolean | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
@@ -943,6 +969,10 @@ export interface PayloadLockedDocument {
         value: string | Warehouse;
       } | null)
     | ({
+        relationTo: 'suppliers';
+        value: string | Supplier;
+      } | null)
+    | ({
         relationTo: 'forms';
         value: string | Form;
       } | null)
@@ -1181,6 +1211,23 @@ export interface WarehousesSelect<T extends boolean = true> {
   code?: T;
   isActive?: T;
   sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers_select".
+ */
+export interface SuppliersSelect<T extends boolean = true> {
+  name?: T;
+  idno?: T;
+  phone?: T;
+  email?: T;
+  contactPerson?: T;
+  bankDetails?: T;
+  isCarrier?: T;
+  isActive?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
