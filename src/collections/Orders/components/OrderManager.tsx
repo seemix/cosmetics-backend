@@ -12,6 +12,7 @@ type OrderItem = {
 type OrderData = {
   items?: unknown
   total?: unknown
+  discount?: unknown
 }
 
 function toNumber(value: unknown): number {
@@ -43,12 +44,15 @@ export const OrderManager: React.FC = () => {
       ? data.items.filter(isOrderItem)
       : []
 
-    const calculatedTotal = items.reduce((sum, item) => {
+    const subtotal = items.reduce((sum, item) => {
       const quantity = toNumber(item.quantity)
       const price = toNumber(item.price)
 
       return sum + quantity * price
     }, 0)
+
+    // Як у populatePricesAndTotal: сума позицій мінус знижка, не менше 0.
+    const calculatedTotal = Math.max(0, subtotal - toNumber(data?.discount))
 
     const currentTotal = toNumber(data?.total)
 

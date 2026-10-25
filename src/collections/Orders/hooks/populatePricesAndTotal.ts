@@ -1,6 +1,11 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
-export const populatePricesAndTotal: CollectionBeforeChangeHook = async ({ data, req }) => {
+export const populatePricesAndTotal: CollectionBeforeChangeHook = async ({ data, operation, req }) => {
+  // Ціни й сума фіксуються при створенні; на update їх стереже guardPostedOrder (F6).
+  if (operation !== 'create') {
+    return data
+  }
+
   // Перевіряємо, чи є в замовленні клієнт (customer) та товари (items)
   if (!data || !data.items || !Array.isArray(data.items)) {
     return data

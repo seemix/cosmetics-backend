@@ -4,6 +4,7 @@ import { createOrder } from '@/collections/Orders/endpoints/createOrder'
 import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
 import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
+import { guardPostedOrder } from '@/collections/Orders/hooks/guardPostedOrder'
 import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
 import { collectionLabels, label, localized } from '@/i18n'
 
@@ -158,7 +159,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   hooks: {
     // Додаємо хук перед збереженням замовлення.
     // Важливо: setOrderNumber має виконуватись або до, або після, порядок можна скоригувати за потреби.
-    beforeChange: [setOrderNumber, populatePricesAndTotal],
+    beforeChange: [setOrderNumber, guardPostedOrder, populatePricesAndTotal],
     afterChange: [sendNewOrderNotification],
   },
 })
