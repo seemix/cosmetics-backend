@@ -1,0 +1,292 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > addCartItem без користувача 1`] = `
+{
+  "body": {
+    "message": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > addCartItem некоректне тіло 1`] = `
+{
+  "body": {
+    "message": "Invalid request body",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > clearCart без користувача 1`] = `
+{
+  "body": {
+    "message": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > getCartByUser без користувача 1`] = `
+{
+  "body": {
+    "cart": null,
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > getGuestCart без items 1`] = `
+{
+  "body": {
+    "error": "Items array is required",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > mergeCart без користувача 1`] = `
+{
+  "body": {
+    "error": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > removeCartItem без користувача 1`] = `
+{
+  "body": {
+    "message": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > removeCartItem некоректне тіло 1`] = `
+{
+  "body": {
+    "message": "Invalid request body",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > updateCartItem без користувача 1`] = `
+{
+  "body": {
+    "error": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > updateCartItem некоректне тіло 1`] = `
+{
+  "body": {
+    "error": "Invalid body",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > validatePromo без коду 1`] = `
+{
+  "body": {
+    "error": "Promo code is required",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Carts > validatePromo невідомий код 1`] = `
+{
+  "body": {
+    "error": "Promo not found",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Orders > createOrder: без адреси 1`] = `
+{
+  "body": {
+    "error": "Shipping address is required",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Orders > createOrder: без позицій 1`] = `
+{
+  "body": {
+    "error": "Items are required",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Orders > createOrder: невідомий товар 1`] = `
+{
+  "body": {
+    "message": "Failed to create order",
+    "success": false,
+  },
+  "status": 500,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Orders > createOrder: некоректна позиція 1`] = `
+{
+  "body": {
+    "error": "Invalid item format",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Orders > createOrder: успішне замовлення 1`] = `
+{
+  "body": {
+    "order": {
+      "id": "<id>",
+      "items": [
+        {
+          "article": "<article>",
+          "price": 100,
+          "quantity": 2,
+          "title": "<title>",
+        },
+      ],
+      "orderNumber": "<orderNumber>",
+    },
+    "success": true,
+  },
+  "status": 201,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Orders > getMyOrders: без користувача 1`] = `
+{
+  "body": {
+    "message": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Users > addFavoritesItem без користувача 1`] = `
+{
+  "body": {
+    "message": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Users > removeFavoritesItem без користувача 1`] = `
+{
+  "body": {
+    "message": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Users > updateUserInfo без користувача 1`] = `
+{
+  "body": {
+    "message": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Контент і каталог > getBrandInfo без slug 1`] = `
+{
+  "body": "Not found",
+  "status": 404,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Контент і каталог > getPageBySlug без slug 1`] = `
+{
+  "body": "Not found",
+  "status": 404,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Контент і каталог > getSinglePost без slug 1`] = `
+{
+  "body": "Not found",
+  "status": 404,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Контент і каталог > getSingleProduct без identifier 1`] = `
+{
+  "body": {
+    "message": "Identifier is required",
+  },
+  "status": 400,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Контент і каталог > getSingleProduct: невідомий товар 1`] = `
+{
+  "body": {
+    "message": "Product not found",
+  },
+  "status": 404,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Контент і каталог > getSingleProduct: опублікований товар 1`] = `
+{
+  "body": {
+    "action": false,
+    "article": "<article>",
+    "bestSeller": false,
+    "brand": {
+      "createdAt": "<createdAt>",
+      "generateSlug": false,
+      "id": "<id>",
+      "slug": "<slug>",
+      "title": "<title>",
+      "updatedAt": "<updatedAt>",
+    },
+    "createdAt": "<createdAt>",
+    "gallery": [],
+    "id": "<id>",
+    "retailPrice": 100,
+    "slug": "<slug>",
+    "subtitle": "Підзаголовок",
+    "title": "<title>",
+    "unavailable": false,
+    "updatedAt": "<updatedAt>",
+    "variants": {
+      "docs": [],
+      "hasNextPage": false,
+    },
+  },
+  "status": 200,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Службові ендпоінти складу > getProductStock: без користувача 1`] = `
+{
+  "body": {
+    "message": "Unauthorized",
+  },
+  "status": 401,
+}
+`;
+
+exports[`I2: публічні ендпоінти не залежать від мови адмінки > Службові ендпоінти складу > getProductStock: не admin 1`] = `
+{
+  "body": {
+    "message": "Forbidden",
+  },
+  "status": 403,
+}
+`;
