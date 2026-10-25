@@ -71,6 +71,8 @@ export const ro: CustomTranslationsObject = {
       countedQuantity: 'Cantitatea numărată trebuie să fie un număr întreg, 0 sau mai mare',
       unitCostPositive: 'Costul unitar trebuie să fie mai mare ca 0',
       transferSameWarehouse: 'Depozitul sursă și cel destinație trebuie să fie diferite',
+      openingNoLines: 'Un sold inițial fără linii nu poate fi operat',
+      openingDuplicate: 'Un produs poate apărea o singură dată pe depozit',
     },
     field: {
       title: 'Titlu',
@@ -174,6 +176,7 @@ export const ro: CustomTranslationsObject = {
       valueOfChange: 'Valoarea modificării',
       fromWarehouse: 'Din depozit',
       toWarehouse: 'În depozit',
+      stockLines: 'Linii de stoc',
     },
     collection: {
       brands: {
@@ -248,6 +251,10 @@ export const ro: CustomTranslationsObject = {
         singular: 'Transfer de stoc',
         plural: 'Transferuri de stoc',
       },
+      openingBalances: {
+        singular: 'Sold inițial',
+        plural: 'Solduri inițiale',
+      },
     },
     tab: {
       content: 'Conținut',
@@ -296,6 +303,7 @@ export const ro: CustomTranslationsObject = {
       reasonTester: 'Tester',
       reasonInternal: 'Uz intern',
       reasonOther: 'Altele',
+      openingStock: 'Stocuri',
     },
     moveType: {
       opening: 'Sold inițial',

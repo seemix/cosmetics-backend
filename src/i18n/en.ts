@@ -73,6 +73,8 @@ export const en = {
       countedQuantity: 'Counted quantity must be a whole number, 0 or more',
       unitCostPositive: 'Unit cost must be greater than 0',
       transferSameWarehouse: 'Source and destination warehouses must differ',
+      openingNoLines: 'An opening balance without lines cannot be posted',
+      openingDuplicate: 'A product can appear only once per warehouse',
     },
     field: {
       title: 'Title',
@@ -176,6 +178,7 @@ export const en = {
       valueOfChange: 'Value of the change',
       fromWarehouse: 'From warehouse',
       toWarehouse: 'To warehouse',
+      stockLines: 'Stock lines',
     },
     collection: {
       brands: {
@@ -250,6 +253,10 @@ export const en = {
         singular: 'Stock transfer',
         plural: 'Stock transfers',
       },
+      openingBalances: {
+        singular: 'Opening balance',
+        plural: 'Opening balances',
+      },
     },
     tab: {
       content: 'Content',
@@ -298,6 +305,7 @@ export const en = {
       reasonTester: 'Tester',
       reasonInternal: 'Internal use',
       reasonOther: 'Other',
+      openingStock: 'Stock',
     },
     moveType: {
       opening: 'Opening balance',

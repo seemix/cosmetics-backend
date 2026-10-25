@@ -1,8 +1,9 @@
-import { APIError, type CollectionBeforeChangeHook, type CollectionConfig } from 'payload'
+import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type PayloadRequest } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { validateInteger } from '@/collections/Stock/shared'
 import { moneyField } from '@/fields/money'
+import { collectionLabels, customT, label, localized, type CustomTranslationsKeys } from '@/i18n'
 import { documentLifecycle, type DocumentTransitionArgs } from '@/services/documents/documentLifecycle'
 import { receive, revert } from '@/services/stock/stockLedger.service'
 
@@ -11,8 +12,8 @@ type StockLine = { warehouse: Relation; product: Relation; quantity: number; uni
 
 const idOf = (value: Relation) => (typeof value === 'object' ? value.id : value)
 
-const fail = (message: string): never => {
-  throw new APIError(message, 400, undefined, true)
+const fail = (req: PayloadRequest, key: CustomTranslationsKeys): never => {
+  throw new APIError(customT(req.t)(key), 400, undefined, true)
 }
 
 const docRef = ({ id, data, originalDoc }: DocumentTransitionArgs) => ({
@@ -26,7 +27,7 @@ const postOpening = async (args: DocumentTransitionArgs) => {
   const { req, data, originalDoc, date } = args
   const lines = (data.stockLines ?? originalDoc.stockLines ?? []) as StockLine[]
 
-  if (lines.length === 0) fail('An opening balance without lines cannot be posted')
+  if (lines.length === 0) fail(req, 'custom:error:openingNoLines')
 
   await receive(req, {
     doc: docRef(args),
@@ -68,13 +69,13 @@ const lifecycle = documentLifecycle({
 })
 
 /** Один рядок на пару товар × склад: дубль подвоїв би залишок. */
-const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
   if ((originalDoc?.status ?? 'draft') !== 'draft') return data
 
   const lines = (data.stockLines ?? originalDoc?.stockLines ?? []) as StockLine[]
   const keys = lines.map((line) => `${idOf(line.product)}:${idOf(line.warehouse)}`)
 
-  if (new Set(keys).size !== keys.length) fail('A product can appear only once per warehouse')
+  if (new Set(keys).size !== keys.length) fail(req, 'custom:error:openingDuplicate')
 
   return data
 }
@@ -82,7 +83,7 @@ const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
 /** Початкові залишки, див. docs/accounting/design.md, розд. 2.2, 10. Kinds cash/supplierDebt/customerDebt додаються в C1/C5. */
 export const OpeningBalances: CollectionConfig = {
   slug: 'opening-balances',
-  labels: { singular: 'Opening balance', plural: 'Opening balances' },
+  labels: collectionLabels('custom:collection:openingBalances:singular', 'custom:collection:openingBalances:plural'),
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -93,7 +94,7 @@ export const OpeningBalances: CollectionConfig = {
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'kind', 'postedAt'],
     listSearchableFields: ['number'],
-    group: 'Stock',
+    group: localized('custom:group:stock'),
   },
   defaultSort: '-createdAt',
   indexes: [{ fields: ['status', 'postedAt'] }],
@@ -106,15 +107,15 @@ export const OpeningBalances: CollectionConfig = {
     ...lifecycle.fields,
     {
       name: 'kind',
-      label: 'Kind',
+      label: label('custom:term:kind'),
       type: 'select',
       required: true,
       defaultValue: 'stock',
-      options: [{ label: 'Stock', value: 'stock' }],
+      options: [{ label: label('custom:option:openingStock'), value: 'stock' }],
     },
     {
       name: 'stockLines',
-      label: 'Stock lines',
+      label: label('custom:field:stockLines'),
       type: 'array',
       required: true,
       minRows: 1,
@@ -125,20 +126,20 @@ export const OpeningBalances: CollectionConfig = {
           fields: [
             {
               name: 'warehouse',
-              label: 'Warehouse',
+              label: label('custom:term:warehouse'),
               type: 'relationship',
               relationTo: 'warehouses',
               required: true,
               filterOptions: { isActive: { equals: true } },
             },
-            { name: 'product', label: 'Product', type: 'relationship', relationTo: 'products', required: true },
+            { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
           ],
         },
         {
           type: 'row',
           fields: [
-            { name: 'quantity', label: 'Quantity', type: 'number', required: true, min: 1, validate: validateInteger },
-            moneyField({ name: 'unitCostBani', label: 'Unit cost', required: true, min: 1 }),
+            { name: 'quantity', label: label('custom:term:quantity'), type: 'number', required: true, min: 1, validate: validateInteger },
+            moneyField({ name: 'unitCostBani', label: label('custom:field:unitCost'), required: true, min: 1 }),
           ],
         },
       ],

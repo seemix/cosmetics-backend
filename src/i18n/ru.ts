@@ -71,6 +71,8 @@ export const ru: CustomTranslationsObject = {
       countedQuantity: 'Фактическое количество должно быть целым числом, 0 или больше',
       unitCostPositive: 'Себестоимость единицы должна быть больше 0',
       transferSameWarehouse: 'Склад-источник и склад-получатель должны различаться',
+      openingNoLines: 'Начальный остаток без строк нельзя провести',
+      openingDuplicate: 'Товар может встречаться только один раз на склад',
     },
     field: {
       title: 'Название',
@@ -174,6 +176,7 @@ export const ru: CustomTranslationsObject = {
       valueOfChange: 'Стоимость изменения',
       fromWarehouse: 'Со склада',
       toWarehouse: 'На склад',
+      stockLines: 'Строки остатков',
     },
     collection: {
       brands: {
@@ -248,6 +251,10 @@ export const ru: CustomTranslationsObject = {
         singular: 'Перемещение запасов',
         plural: 'Перемещения запасов',
       },
+      openingBalances: {
+        singular: 'Начальный остаток',
+        plural: 'Начальные остатки',
+      },
     },
     tab: {
       content: 'Содержимое',
@@ -296,6 +303,7 @@ export const ru: CustomTranslationsObject = {
       reasonTester: 'Тестер',
       reasonInternal: 'Внутреннее использование',
       reasonOther: 'Другое',
+      openingStock: 'Товарные остатки',
     },
     moveType: {
       opening: 'Начальный остаток',
