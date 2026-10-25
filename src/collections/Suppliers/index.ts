@@ -1,13 +1,14 @@
 import type { CollectionConfig, Where } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { collectionLabels, description, label, localized } from '@/i18n'
 
 /** `filterOptions` для relationship-полів на `suppliers` у документах: лише активні постачальники. */
 export const activeSuppliersOnly: Where = { isActive: { equals: true } }
 
 export const Suppliers: CollectionConfig = {
   slug: 'suppliers',
-  labels: { singular: 'Supplier', plural: 'Suppliers' },
+  labels: collectionLabels('custom:collection:suppliers:singular', 'custom:collection:suppliers:plural'),
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -18,56 +19,56 @@ export const Suppliers: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'phone', 'isCarrier', 'isActive'],
     listSearchableFields: ['name', 'idno', 'phone'],
-    group: 'Purchasing',
+    group: localized('custom:group:purchasing'),
   },
   defaultSort: 'name',
   fields: [
     {
       name: 'name',
-      label: 'Name',
+      label: label('custom:term:name'),
       type: 'text',
       required: true,
       index: true,
     },
     {
       name: 'idno',
-      label: 'Tax ID',
+      label: label('custom:field:taxId'),
       type: 'text',
     },
     {
       type: 'row',
       fields: [
-        { name: 'phone', label: 'Phone', type: 'text' },
-        { name: 'email', label: 'Email', type: 'text' },
-        { name: 'contactPerson', label: 'Contact person', type: 'text' },
+        { name: 'phone', label: label('custom:field:phone'), type: 'text' },
+        { name: 'email', label: label('custom:field:email'), type: 'text' },
+        { name: 'contactPerson', label: label('custom:field:contactPerson'), type: 'text' },
       ],
     },
     {
       name: 'bankDetails',
-      label: 'Bank details',
+      label: label('custom:field:bankDetails'),
       type: 'textarea',
     },
     {
       name: 'isCarrier',
-      label: 'Carrier',
+      label: label('custom:field:isCarrier'),
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description: 'Can be the payee of logistics costs in a purchase',
+        description: description('custom:desc:carrierPayee'),
       },
     },
     {
       name: 'isActive',
-      label: 'Active',
+      label: label('custom:field:isActive'),
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        description: 'An inactive supplier cannot be selected in new documents',
+        description: description('custom:desc:inactiveSupplier'),
       },
     },
     {
       name: 'notes',
-      label: 'Notes',
+      label: label('custom:field:notes'),
       type: 'textarea',
     },
   ],

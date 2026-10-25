@@ -1,10 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { collectionLabels, description, label, localized } from '@/i18n'
 
 export const Warehouses: CollectionConfig = {
   slug: 'warehouses',
-  labels: { singular: 'Warehouse', plural: 'Warehouses' },
+  labels: collectionLabels('custom:collection:warehouses:singular', 'custom:collection:warehouses:plural'),
   access: {
     read: adminOnly,
     create: adminOnly,
@@ -14,39 +15,39 @@ export const Warehouses: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'code', 'isActive', 'sortOrder'],
-    group: 'Stock',
+    group: localized('custom:group:stock'),
   },
   defaultSort: 'sortOrder',
   fields: [
     {
       name: 'name',
-      label: 'Name',
+      label: label('custom:term:name'),
       type: 'text',
       required: true,
     },
     {
       name: 'code',
-      label: 'Code',
+      label: label('custom:field:code'),
       type: 'text',
       required: true,
       unique: true,
       index: true,
       admin: {
-        description: 'Stable key used in settings: main, shop',
+        description: description('custom:desc:warehouseCode'),
       },
     },
     {
       name: 'isActive',
-      label: 'Active',
+      label: label('custom:field:isActive'),
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        description: 'An inactive warehouse cannot be selected in new documents',
+        description: description('custom:desc:inactiveWarehouse'),
       },
     },
     {
       name: 'sortOrder',
-      label: 'Sort order',
+      label: label('custom:field:sortOrder'),
       type: 'number',
       defaultValue: 0,
     },

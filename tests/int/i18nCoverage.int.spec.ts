@@ -20,7 +20,7 @@ const languages = ['en', 'ru', 'ro'] as const
 const pluginCollections = new Set(['variants', 'variantTypes', 'variantOptions', 'addresses', 'transactions'])
 
 /** Колекції, які ще не перекладені (список зменшується з кожним комітом I2 і наприкінці порожній). */
-const pending = new Set<string>(process.env.I18N_ALL ? [] : ['warehouses', 'suppliers', 'stock-moves', 'stock-balances', 'product-costs', 'purchases', 'stock-transfers', 'stock-adjustments', 'opening-balances', 'accounting-settings'])
+const pending = new Set<string>(process.env.I18N_ALL ? [] : ['stock-moves', 'stock-balances', 'product-costs', 'purchases', 'stock-transfers', 'stock-adjustments', 'opening-balances', 'accounting-settings'])
 
 type Problem = string
 

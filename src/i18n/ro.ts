@@ -27,6 +27,7 @@ export const ro: CustomTranslationsObject = {
       total: 'Total',
       unitPrice: 'Preț unitar',
       warehouse: 'Depozit',
+      name: 'Denumire',
     },
     action: {
       post: 'Operare',
@@ -114,6 +115,12 @@ export const ro: CustomTranslationsObject = {
       address: 'Adresă',
       promoCodeApplied: 'Cod promoțional aplicat',
       discount: 'Reducere',
+      taxId: 'Cod fiscal (IDNO)',
+      contactPerson: 'Persoană de contact',
+      bankDetails: 'Date bancare',
+      isCarrier: 'Transportator',
+      notes: 'Note',
+      sortOrder: 'Ordine de sortare',
     },
     collection: {
       brands: {
@@ -156,6 +163,14 @@ export const ro: CustomTranslationsObject = {
         singular: 'Comandă',
         plural: 'Comenzi',
       },
+      suppliers: {
+        singular: 'Furnizor',
+        plural: 'Furnizori',
+      },
+      warehouses: {
+        singular: 'Depozit',
+        plural: 'Depozite',
+      },
     },
     tab: {
       content: 'Conținut',
@@ -165,6 +180,10 @@ export const ro: CustomTranslationsObject = {
       personalDiscounts: 'Reduceri personale',
       allBrands: 'Neselectat: toate brandurile',
       permanent: 'Lăsați gol dacă este permanent',
+      carrierPayee: 'Poate fi beneficiarul costurilor de logistică dintr-o achiziție',
+      inactiveSupplier: 'Un furnizor inactiv nu poate fi selectat în documente noi',
+      inactiveWarehouse: 'Un depozit inactiv nu poate fi selectat în documente noi',
+      warehouseCode: 'Cheie stabilă folosită în setări: main, shop',
     },
     option: {
       localeRu: 'Rusă',

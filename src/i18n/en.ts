@@ -29,6 +29,7 @@ export const en = {
       total: 'Total',
       unitPrice: 'Unit price',
       warehouse: 'Warehouse',
+      name: 'Name',
     },
     action: {
       post: 'Posting',
@@ -116,6 +117,12 @@ export const en = {
       address: 'Address',
       promoCodeApplied: 'Promo code applied',
       discount: 'Discount',
+      taxId: 'Tax ID (IDNO)',
+      contactPerson: 'Contact person',
+      bankDetails: 'Bank details',
+      isCarrier: 'Carrier',
+      notes: 'Notes',
+      sortOrder: 'Sort order',
     },
     collection: {
       brands: {
@@ -158,6 +165,14 @@ export const en = {
         singular: 'Order',
         plural: 'Orders',
       },
+      suppliers: {
+        singular: 'Supplier',
+        plural: 'Suppliers',
+      },
+      warehouses: {
+        singular: 'Warehouse',
+        plural: 'Warehouses',
+      },
     },
     tab: {
       content: 'Content',
@@ -167,6 +182,10 @@ export const en = {
       personalDiscounts: 'Personal discounts',
       allBrands: 'Not selected: all brands',
       permanent: 'Leave empty if permanent',
+      carrierPayee: 'Can be the payee of logistics costs in a purchase',
+      inactiveSupplier: 'An inactive supplier cannot be selected in new documents',
+      inactiveWarehouse: 'An inactive warehouse cannot be selected in new documents',
+      warehouseCode: 'Stable key used in settings: main, shop',
     },
     option: {
       localeRu: 'Russian',

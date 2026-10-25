@@ -27,6 +27,7 @@ export const ru: CustomTranslationsObject = {
       total: 'Итого',
       unitPrice: 'Цена за единицу',
       warehouse: 'Склад',
+      name: 'Название',
     },
     action: {
       post: 'Проведение',
@@ -114,6 +115,12 @@ export const ru: CustomTranslationsObject = {
       address: 'Адрес',
       promoCodeApplied: 'Применённый промокод',
       discount: 'Скидка',
+      taxId: 'Налоговый номер (IDNO)',
+      contactPerson: 'Контактное лицо',
+      bankDetails: 'Банковские реквизиты',
+      isCarrier: 'Перевозчик',
+      notes: 'Заметки',
+      sortOrder: 'Порядок сортировки',
     },
     collection: {
       brands: {
@@ -156,6 +163,14 @@ export const ru: CustomTranslationsObject = {
         singular: 'Заказ',
         plural: 'Заказы',
       },
+      suppliers: {
+        singular: 'Поставщик',
+        plural: 'Поставщики',
+      },
+      warehouses: {
+        singular: 'Склад',
+        plural: 'Склады',
+      },
     },
     tab: {
       content: 'Содержимое',
@@ -165,6 +180,10 @@ export const ru: CustomTranslationsObject = {
       personalDiscounts: 'Персональные скидки',
       allBrands: 'Не выбрано: все бренды',
       permanent: 'Оставьте пустым, если бессрочный',
+      carrierPayee: 'Может быть получателем платежа за логистику в закупке',
+      inactiveSupplier: 'Неактивного поставщика нельзя выбрать в новых документах',
+      inactiveWarehouse: 'Неактивный склад нельзя выбрать в новых документах',
+      warehouseCode: 'Постоянный ключ для настроек: main, shop',
     },
     option: {
       localeRu: 'Русский',
