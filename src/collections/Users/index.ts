@@ -165,6 +165,10 @@ export const Users: CollectionConfig = {
           label: label('custom:option:roleCustomer'),
           value: 'customer',
         },
+        {
+          label: label('custom:option:roleManager'),
+          value: 'manager',
+        },
       ],
     },
     {

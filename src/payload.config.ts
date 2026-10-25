@@ -29,6 +29,7 @@ import { Warehouses } from './collections/Warehouses'
 import { Suppliers } from './collections/Suppliers'
 import { CashAccounts } from './collections/Finance/CashAccounts'
 import { CashMoves } from './collections/Finance/CashMoves'
+import { CashOperations } from './collections/Finance/CashOperations'
 import { ExpenseCategories } from './collections/Finance/ExpenseCategories'
 import { StockMoves } from './collections/Stock/StockMoves'
 import { StockBalances } from './collections/Stock/StockBalances'
@@ -116,7 +117,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases, StockTransfers, StockAdjustments, OpeningBalances, CashAccounts, ExpenseCategories, CashMoves],
+  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases, StockTransfers, StockAdjustments, OpeningBalances, CashAccounts, ExpenseCategories, CashMoves, CashOperations],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
@@ -192,6 +193,7 @@ export default buildConfig({
         'cash-accounts': 'wallet',
         'expense-categories': 'list-checks',
         'cash-moves': 'banknote',
+        'cash-operations': 'credit-card',
         'accounting-settings': 'sliders-horizontal',
       },
     }),

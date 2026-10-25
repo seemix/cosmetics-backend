@@ -2,7 +2,7 @@ import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type 
 
 import { adminOnly } from '@/access/adminOnly'
 import { activeCashAccountsOnly } from '@/collections/Finance/CashAccounts'
-import { applyCashMoves, revertCashMoves } from '@/collections/Finance/cashLedger'
+import { applyCashMoves, revertCashMoves } from '@/services/finance/cashLedger.service'
 import { validateInteger } from '@/collections/Stock/shared'
 import { moneyField } from '@/fields/money'
 import { collectionLabels, customT, label, localized, type CustomTranslationsKeys } from '@/i18n'

@@ -3,6 +3,7 @@ import { APIError, type PayloadRequest } from 'payload'
 import type { CashMove } from '@/payload-types'
 import { customT } from '@/i18n'
 import { requireSession } from '@/services/stock/session'
+import { InsufficientCashError } from './errors'
 import { formatMDL } from '@/utilities/money'
 
 /**
@@ -50,10 +51,10 @@ const assertDelta = (deltaBani: number) => {
  * Зміна балансу каси. Витрата з каси з `allowNegative = false` проходить лише умовним `$inc`
  * (`balanceBani >= -delta`), тож паралельні операції не можуть увести баланс у мінус.
  */
-const changeBalance = async (req: PayloadRequest, account: string, deltaBani: number, date: Date) => {
+const changeBalance = async (req: PayloadRequest, account: string, deltaBani: number) => {
   const session = await requireSession(req)
   const _id = toObjectId(req, account)
-  const update = { $inc: { balanceBani: deltaBani }, $set: { updatedAt: date } }
+  const update = { $inc: { balanceBani: deltaBani }, $set: { updatedAt: new Date() } }
 
   const result = await accounts(req).updateOne(
     deltaBani < 0 ? { _id, $or: [{ allowNegative: true }, { balanceBani: { $gte: -deltaBani } }] } : { _id },
@@ -65,15 +66,14 @@ const changeBalance = async (req: PayloadRequest, account: string, deltaBani: nu
   const current = await accounts(req).findOne<AccountDoc>({ _id }, { session })
   if (!current) throw new Error(`Cash account ${account} not found`)
 
-  throw new APIError(
+  const available = current.balanceBani ?? 0
+  throw new InsufficientCashError(
     customT(req.t)('custom:error:insufficientCash', {
       account: current.name ?? account,
       requested: formatMDL(-deltaBani),
-      available: formatMDL(current.balanceBani ?? 0),
+      available: formatMDL(available),
     }),
-    409,
-    { code: 'INSUFFICIENT_CASH', account, requested: -deltaBani, available: current.balanceBani ?? 0 },
-    true,
+    { account, requested: -deltaBani, available },
   )
 }
 
@@ -103,7 +103,7 @@ export const applyCashMoves = async (
 
   // Спершу витрати: нестача в касі не лишає частково проведених надходжень.
   const outgoingFirst = [...sorted].sort((a, b) => Number(a.deltaBani > 0) - Number(b.deltaBani > 0))
-  for (const line of outgoingFirst) await changeBalance(req, line.account, line.deltaBani, date)
+  for (const line of outgoingFirst) await changeBalance(req, line.account, line.deltaBani)
 
   const moves: CashMove[] = []
   for (const line of sorted) moves.push(await writeMove(req, doc, date, line))
@@ -132,7 +132,7 @@ export const revertCashMoves = async (
 
   const lines = moves.map((move) => ({ move, account: idOf(move.account), deltaBani: -move.deltaBani }))
   const outgoingFirst = [...byAccount(lines)].sort((a, b) => Number(a.deltaBani > 0) - Number(b.deltaBani > 0))
-  for (const line of outgoingFirst) await changeBalance(req, line.account, line.deltaBani, date)
+  for (const line of outgoingFirst) await changeBalance(req, line.account, line.deltaBani)
 
   const result: CashMove[] = []
   for (const { move, account, deltaBani } of lines) {
@@ -140,4 +140,29 @@ export const revertCashMoves = async (
   }
 
   return result
+}
+
+export type CashOperationType = 'expense' | 'supplier_payment' | 'transfer'
+
+/**
+ * Рядки руху коштів касової операції (розд. 6.2): витрата й оплата постачальнику зменшують
+ * касу, переказ зменшує `account` і збільшує `toAccount` у тому самому проведенні.
+ */
+export const cashOperationLines = ({
+  type,
+  account,
+  toAccount,
+  amountBani,
+}: {
+  type: CashOperationType
+  account: string
+  toAccount?: string | null
+  amountBani: number
+}): CashLine[] => {
+  const outgoing = { account, deltaBani: -amountBani }
+
+  if (type !== 'transfer') return [outgoing]
+  if (!toAccount || toAccount === account) throw new Error('Transfer requires a different destination account')
+
+  return [outgoing, { account: toAccount, deltaBani: amountBani }]
 }

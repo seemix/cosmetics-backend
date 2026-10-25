@@ -86,6 +86,7 @@ export interface Config {
     'cash-accounts': CashAccount;
     'expense-categories': ExpenseCategory;
     'cash-moves': CashMove;
+    'cash-operations': CashOperation;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -134,6 +135,7 @@ export interface Config {
     'cash-accounts': CashAccountsSelect<false> | CashAccountsSelect<true>;
     'expense-categories': ExpenseCategoriesSelect<false> | ExpenseCategoriesSelect<true>;
     'cash-moves': CashMovesSelect<false> | CashMovesSelect<true>;
+    'cash-operations': CashOperationsSelect<false> | CashOperationsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -222,7 +224,7 @@ export interface User {
         id?: string | null;
       }[]
     | null;
-  roles?: ('admin' | 'customer')[] | null;
+  roles?: ('admin' | 'customer' | 'manager')[] | null;
   orders?: {
     docs?: (string | Order)[];
     hasNextPage?: boolean;
@@ -925,6 +927,32 @@ export interface CashMove {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-operations".
+ */
+export interface CashOperation {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  operationDate: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  reversalReason?: string | null;
+  comment?: string | null;
+  type: 'expense' | 'transfer' | 'supplier_payment';
+  account: string | CashAccount;
+  toAccount?: (string | null) | CashAccount;
+  amountBani: number;
+  supplier?: (string | null) | Supplier;
+  purchase?: (string | null) | Purchase;
+  category?: (string | null) | ExpenseCategory;
+  manager?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
@@ -1250,6 +1278,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'cash-moves';
         value: string | CashMove;
+      } | null)
+    | ({
+        relationTo: 'cash-operations';
+        value: string | CashOperation;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1729,6 +1761,31 @@ export interface CashMovesSelect<T extends boolean = true> {
   docId?: T;
   docNumber?: T;
   reversalOf?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-operations_select".
+ */
+export interface CashOperationsSelect<T extends boolean = true> {
+  number?: T;
+  status?: T;
+  operationDate?: T;
+  postedAt?: T;
+  postedBy?: T;
+  reversedAt?: T;
+  reversedBy?: T;
+  reversalReason?: T;
+  comment?: T;
+  type?: T;
+  account?: T;
+  toAccount?: T;
+  amountBani?: T;
+  supplier?: T;
+  purchase?: T;
+  category?: T;
+  manager?: T;
   updatedAt?: T;
   createdAt?: T;
 }

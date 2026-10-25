@@ -1,7 +1,7 @@
 import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { applyCashMoves } from '@/collections/Finance/cashLedger'
+import { applyCashMoves } from '@/services/finance/cashLedger.service'
 import config from '@/payload.config'
 import { down, up } from '@/migrations/20261026_100000_seed_cash_accounts'
 import type { User } from '@/payload-types'
