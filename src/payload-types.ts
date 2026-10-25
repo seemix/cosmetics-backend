@@ -80,6 +80,7 @@ export interface Config {
     'stock-balances': StockBalance;
     'product-costs': ProductCost;
     purchases: Purchase;
+    'stock-transfers': StockTransfer;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -122,6 +123,7 @@ export interface Config {
     'stock-balances': StockBalancesSelect<false> | StockBalancesSelect<true>;
     'product-costs': ProductCostsSelect<false> | ProductCostsSelect<true>;
     purchases: PurchasesSelect<false> | PurchasesSelect<true>;
+    'stock-transfers': StockTransfersSelect<false> | StockTransfersSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -848,6 +850,34 @@ export interface Purchase {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-transfers".
+ */
+export interface StockTransfer {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  documentDate: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  /**
+   * Required when reversing
+   */
+  reversalReason?: string | null;
+  comment?: string | null;
+  fromWarehouse: string | Warehouse;
+  toWarehouse: string | Warehouse;
+  lines: {
+    product: string | Product;
+    quantity: number;
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
@@ -1149,6 +1179,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'purchases';
         value: string | Purchase;
+      } | null)
+    | ({
+        relationTo: 'stock-transfers';
+        value: string | StockTransfer;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1495,6 +1529,32 @@ export interface PurchasesSelect<T extends boolean = true> {
   goodsTotalBani?: T;
   extraTotalBani?: T;
   landedTotalBani?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-transfers_select".
+ */
+export interface StockTransfersSelect<T extends boolean = true> {
+  number?: T;
+  status?: T;
+  documentDate?: T;
+  postedAt?: T;
+  postedBy?: T;
+  reversedAt?: T;
+  reversedBy?: T;
+  reversalReason?: T;
+  comment?: T;
+  fromWarehouse?: T;
+  toWarehouse?: T;
+  lines?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

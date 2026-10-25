@@ -31,6 +31,7 @@ import { StockMoves } from './collections/Stock/StockMoves'
 import { StockBalances } from './collections/Stock/StockBalances'
 import { ProductCosts } from './collections/Stock/ProductCosts'
 import { Purchases } from './collections/Purchases'
+import { StockTransfers } from './collections/StockTransfers'
 import { AccountingSettings } from './globals/AccountingSettings'
 import { plugins } from './plugins'
 import { getMenu } from '@/endpoints/getMenu'
@@ -92,7 +93,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases],
+  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases, StockTransfers],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
@@ -161,6 +162,7 @@ export default buildConfig({
         'stock-balances': 'boxes',
         'product-costs': 'coins',
         purchases: 'receipt',
+        'stock-transfers': 'arrow-left-right',
         'accounting-settings': 'settings',
       },
     }),
