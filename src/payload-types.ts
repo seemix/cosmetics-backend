@@ -209,9 +209,6 @@ export interface User {
   locale?: ('ru' | 'ro') | null;
   city?: string | null;
   street?: string | null;
-  /**
-   * Personal discounts
-   */
   brandDiscounts?:
     | {
         brand: string | Brand;
@@ -341,16 +338,27 @@ export interface Order {
   status?: ('pending' | 'paid' | 'shipped' | 'cancelled') | null;
   paymentType?: ('cash' | 'transfer') | null;
   SRL?: string | null;
-  shippingAddress: {
-    name: string;
-    phone: string;
-    email: string;
-    city: string;
-    address: string;
+  shippingAddress?: {
+    name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    city?: string | null;
+    address?: string | null;
   };
   comment?: string | null;
   promoCodeApplied?: string | null;
   discount?: number | null;
+  source?: ('web' | 'admin') | null;
+  warehouse?: (string | null) | Warehouse;
+  createdBy?: (string | null) | User;
+  paidBani?: number | null;
+  paymentState?: ('unpaid' | 'partial' | 'paid') | null;
+  accounting?: {
+    stockPostedAt?: string | null;
+    cogsBani?: number | null;
+    revenueBani?: number | null;
+    cancelledAt?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -441,9 +449,6 @@ export interface VariantOption {
   _variantOptions_options_order?: string | null;
   variantType: string | VariantType;
   label: string;
-  /**
-   * should be defaulted or dynamic based on label
-   */
   value: string;
   updatedAt: string;
   createdAt: string;
@@ -455,9 +460,6 @@ export interface VariantOption {
  */
 export interface Variant {
   id: string;
-  /**
-   * Used for administrative purposes, not shown to customers. This is populated by default.
-   */
   title?: string | null;
   product: string | Product;
   options: (string | VariantOption)[];
@@ -482,6 +484,19 @@ export interface Category {
    */
   generateSlug?: boolean | null;
   slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "warehouses".
+ */
+export interface Warehouse {
+  id: string;
+  name: string;
+  code: string;
+  isActive?: boolean | null;
+  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -643,34 +658,9 @@ export interface PromoCode {
   code: string;
   wholesale?: boolean | null;
   discountPercent: number;
-  /**
-   * (Not selected: ALL brands)
-   */
   brands?: (string | Brand)[] | null;
-  /**
-   * (Empty if permanent)
-   */
   expirationDate?: string | null;
   isActive?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "warehouses".
- */
-export interface Warehouse {
-  id: string;
-  name: string;
-  /**
-   * Stable key used in settings: main, shop
-   */
-  code: string;
-  /**
-   * An inactive warehouse cannot be selected in new documents
-   */
-  isActive?: boolean | null;
-  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -686,13 +676,7 @@ export interface Supplier {
   email?: string | null;
   contactPerson?: string | null;
   bankDetails?: string | null;
-  /**
-   * Can be the payee of logistics costs in a purchase
-   */
   isCarrier?: boolean | null;
-  /**
-   * An inactive supplier cannot be selected in new documents
-   */
   isActive?: boolean | null;
   notes?: string | null;
   updatedAt: string;
@@ -706,22 +690,10 @@ export interface StockMove {
   id: string;
   date: string;
   product: string | Product;
-  /**
-   * Reserved, always empty
-   */
   variant?: (string | null) | Variant;
   warehouse: string | Warehouse;
-  /**
-   * + receipt, − issue
-   */
   qtyDelta: number;
-  /**
-   * At average cost; 0 for transfers
-   */
   valueDeltaBani: number;
-  /**
-   * Fractional value, for reference
-   */
   unitCostBani?: number | null;
   moveType:
     | 'opening'
@@ -747,9 +719,6 @@ export interface StockMove {
 export interface StockBalance {
   id: string;
   product: string | Product;
-  /**
-   * Reserved, always empty
-   */
   variant?: (string | null) | Variant;
   warehouse: string | Warehouse;
   qty: number;
@@ -763,21 +732,9 @@ export interface StockBalance {
 export interface ProductCost {
   id: string;
   product: string | Product;
-  /**
-   * Total across all warehouses
-   */
   qty: number;
-  /**
-   * If quantity is 0, value is 0 too
-   */
   valueBani: number;
-  /**
-   * valueBani / qty, fractional, display only
-   */
   avgCostBani?: number | null;
-  /**
-   * For reference
-   */
   lastPurchaseUnitCostBani?: number | null;
   updatedAt: string;
   createdAt: string;
@@ -795,9 +752,6 @@ export interface Purchase {
   postedBy?: (string | null) | User;
   reversedAt?: string | null;
   reversedBy?: (string | null) | User;
-  /**
-   * Required when reversing
-   */
   reversalReason?: string | null;
   comment?: string | null;
   supplier: string | Supplier;
@@ -808,27 +762,12 @@ export interface Purchase {
     product: string | Product;
     quantity: number;
     unitPriceBani: number;
-    /**
-     * Calculated
-     */
     amountBani?: number | null;
-    /**
-     * Calculated
-     */
     allocatedBani?: number | null;
-    /**
-     * Calculated
-     */
     landedBani?: number | null;
-    /**
-     * Fractional, display only
-     */
     landedUnitCost?: number | null;
     id?: string | null;
   }[];
-  /**
-   * Logistics, customs, packaging
-   */
   extraCosts?:
     | {
         description: string;
@@ -837,17 +776,8 @@ export interface Purchase {
         id?: string | null;
       }[]
     | null;
-  /**
-   * Calculated
-   */
   goodsTotalBani?: number | null;
-  /**
-   * Calculated
-   */
   extraTotalBani?: number | null;
-  /**
-   * Calculated
-   */
   landedTotalBani?: number | null;
   updatedAt: string;
   createdAt: string;
@@ -865,9 +795,6 @@ export interface StockTransfer {
   postedBy?: (string | null) | User;
   reversedAt?: string | null;
   reversedBy?: (string | null) | User;
-  /**
-   * Required when reversing
-   */
   reversalReason?: string | null;
   comment?: string | null;
   fromWarehouse: string | Warehouse;
@@ -893,39 +820,18 @@ export interface StockAdjustment {
   postedBy?: (string | null) | User;
   reversedAt?: string | null;
   reversedBy?: (string | null) | User;
-  /**
-   * Required when reversing
-   */
   reversalReason?: string | null;
   comment?: string | null;
   kind: 'writeoff' | 'inventory';
   warehouse: string | Warehouse;
-  /**
-   * Required for a write-off
-   */
   reason?: ('damage' | 'expired' | 'tester' | 'internal' | 'other') | null;
   lines: {
     product: string | Product;
     quantity?: number | null;
-    /**
-     * Inventory: actual quantity on the shelf
-     */
     countedQty?: number | null;
-    /**
-     * Stock at the moment of posting
-     */
     expectedQty?: number | null;
-    /**
-     * Counted minus expected
-     */
     diffQty?: number | null;
-    /**
-     * Inventory: required for a surplus of a product with no stock cost
-     */
     unitCostBani?: number | null;
-    /**
-     * Calculated at posting, negative for a loss
-     */
     valueBani?: number | null;
     id?: string | null;
   }[];
@@ -945,9 +851,6 @@ export interface OpeningBalance {
   postedBy?: (string | null) | User;
   reversedAt?: string | null;
   reversedBy?: (string | null) | User;
-  /**
-   * Required when reversing
-   */
   reversalReason?: string | null;
   comment?: string | null;
   kind: 'stock';
@@ -2016,6 +1919,19 @@ export interface OrdersSelect<T extends boolean = true> {
   comment?: T;
   promoCodeApplied?: T;
   discount?: T;
+  source?: T;
+  warehouse?: T;
+  createdBy?: T;
+  paidBani?: T;
+  paymentState?: T;
+  accounting?:
+    | T
+    | {
+        stockPostedAt?: T;
+        cogsBani?: T;
+        revenueBani?: T;
+        cancelledAt?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2103,19 +2019,10 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface AccountingSetting {
   id: string;
-  /**
-   * Orders deduct stock. Enable only after the opening balances are posted (docs/accounting/design.md, section 10).
-   */
   stockControlEnabled?: boolean | null;
-  /**
-   * Set together with enabling stock control
-   */
   accountingStartAt?: string | null;
   defaultWebWarehouse: string | Warehouse;
   defaultAdminWarehouse?: (string | null) | Warehouse;
-  /**
-   * Posting and reversal dated on or before this are forbidden
-   */
   lockedUntil?: string | null;
   assignOrderToCreatorIfNoManager?: boolean | null;
   updatedAt?: string | null;

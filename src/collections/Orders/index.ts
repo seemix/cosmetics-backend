@@ -1,12 +1,39 @@
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
+import type { FieldAccess, TextFieldValidation } from 'payload'
+import { email, text } from 'payload/shared'
 
 import { createOrder } from '@/collections/Orders/endpoints/createOrder'
 import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
 import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
+import { assignAccountingFields } from '@/collections/Orders/hooks/assignAccountingFields'
 import { guardPostedOrder } from '@/collections/Orders/hooks/guardPostedOrder'
 import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
+import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
+import { checkRole } from '@/access/utilities'
 import { collectionLabels, label, localized } from '@/i18n'
+
+/** Склад, джерело й автор задаються при створенні й далі не змінюються (REST; хук тримає те саме для Local API). */
+const adminCreateOnly = { read: adminOnlyFieldAccess, create: adminOnlyFieldAccess, update: () => false }
+
+/** Лише admin або власник замовлення: `paidBani`, `paymentState`. */
+const adminOrOwnerRead: FieldAccess = ({ req: { user }, doc }) => {
+  if (!user) return false
+  if (checkRole(['admin'], user)) return true
+  const customer = doc?.customer
+  return String(typeof customer === 'object' && customer ? customer.id : customer) === String(user.id)
+}
+
+/** Адреса обов'язкова лише для замовлень сайту; з адмінки (продаж у магазині) вона опційна. */
+const isWebOrder = (options: { data?: unknown; req?: { context?: Record<string, unknown> } }) =>
+  (options.data as { source?: string } | undefined)?.source === 'web' ||
+  options.req?.context?.orderSource === 'web'
+
+const addressText: TextFieldValidation = (value, options) =>
+  text(value, { ...options, required: isWebOrder(options) })
+
+const addressEmail = (value: string | null | undefined, options: Parameters<typeof email>[1]) =>
+  email(value, { ...options, required: isWebOrder(options) })
 
 export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -144,22 +171,84 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       label: label('custom:field:shippingAddress'),
       type: 'group',
       fields: [
-        { name: 'name', label: label('custom:field:fullName'), type: 'text', required: true },
-        { name: 'phone', label: label('custom:field:phone'), type: 'text', required: true },
-        { name: 'email', label: label('custom:field:email'), type: 'email', required: true },
-        { name: 'city', label: label('custom:field:city'), type: 'text', required: true },
-        { name: 'address', label: label('custom:field:address'), type: 'text', required: true },
+        { name: 'name', label: label('custom:field:fullName'), type: 'text', validate: addressText },
+        { name: 'phone', label: label('custom:field:phone'), type: 'text', validate: addressText },
+        { name: 'email', label: label('custom:field:email'), type: 'email', validate: addressEmail },
+        { name: 'city', label: label('custom:field:city'), type: 'text', validate: addressText },
+        { name: 'address', label: label('custom:field:address'), type: 'text', validate: addressText },
       ],
     },
     { name: 'comment', label: label('custom:term:comment'), type: 'text' },
     { name: 'promoCodeApplied', label: label('custom:field:promoCodeApplied'), type: 'text' },
     { name: 'discount', label: label('custom:field:discount'), type: 'number' },
+    {
+      name: 'source',
+      label: label('custom:field:source'),
+      type: 'select',
+      options: [
+        { label: label('custom:option:sourceWeb'), value: 'web' },
+        { label: label('custom:option:sourceAdmin'), value: 'admin' },
+      ],
+      access: adminCreateOnly,
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
+      name: 'warehouse',
+      label: label('custom:term:warehouse'),
+      type: 'relationship',
+      relationTo: 'warehouses',
+      index: true,
+      access: adminCreateOnly,
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'createdBy',
+      label: label('custom:field:createdBy'),
+      type: 'relationship',
+      relationTo: 'users',
+      access: adminCreateOnly,
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
+      name: 'paidBani',
+      label: label('custom:field:paidBani'),
+      type: 'number',
+      defaultValue: 0,
+      access: { read: adminOrOwnerRead, create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
+      name: 'paymentState',
+      label: label('custom:field:paymentState'),
+      type: 'select',
+      defaultValue: 'unpaid',
+      options: [
+        { label: label('custom:option:paymentUnpaid'), value: 'unpaid' },
+        { label: label('custom:option:paymentPartial'), value: 'partial' },
+        { label: label('custom:option:paymentPaid'), value: 'paid' },
+      ],
+      access: { read: adminOrOwnerRead, create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
+      name: 'accounting',
+      label: label('custom:field:accounting'),
+      type: 'group',
+      access: { read: adminOnlyFieldAccess, create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
+      admin: { readOnly: true },
+      fields: [
+        { name: 'stockPostedAt', label: label('custom:field:stockPostedAt'), type: 'date', index: true },
+        { name: 'cogsBani', label: label('custom:field:cogsBani'), type: 'number' },
+        { name: 'revenueBani', label: label('custom:field:revenueBani'), type: 'number' },
+        { name: 'cancelledAt', label: label('custom:field:cancelledAt'), type: 'date' },
+      ],
+    },
   ],
   endpoints: [createOrder, getMyOrders],
   hooks: {
     // Додаємо хук перед збереженням замовлення.
     // Важливо: setOrderNumber має виконуватись або до, або після, порядок можна скоригувати за потреби.
-    beforeChange: [setOrderNumber, guardPostedOrder, populatePricesAndTotal],
+    beforeChange: [setOrderNumber, guardPostedOrder, populatePricesAndTotal, assignAccountingFields],
     afterChange: [sendNewOrderNotification],
   },
 })

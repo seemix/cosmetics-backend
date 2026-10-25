@@ -131,6 +131,7 @@ export const createOrder: Endpoint = {
           comment,
         },
         locale: (req.locale as 'ru' | 'ro') || 'ro',
+        context: { orderSource: 'web' },
         req,
       })
 

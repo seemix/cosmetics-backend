@@ -153,7 +153,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   Увага: змінює поведінку адмінки (зараз позиції можна редагувати). Узгодити з власником.
   Складність: S. Модель: Opus.
 
-- [ ] **S2.2. Облікові поля замовлення.**
+- [x] **S2.2. Облікові поля замовлення.**
   Мета: `source`, `warehouse`, `createdBy`, група `accounting`, `paidBani`, `paymentState` (розд. 2.5).
   Файли: `src/collections/Orders/index.ts`, `Orders/hooks/assignAccountingFields.ts`,
   `Orders/endpoints/createOrder.ts` (лише `context: { orderSource: 'web' }`).
@@ -189,7 +189,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   заборонене; тест «продаж 3, скасування» = приклад розд. 5.3.
   Складність: M. Модель: Opus. Залежить від В5.
 
-- [ ] **S2.6. Замовлення в адмінці для магазину.**
+- [x] **S2.6. Замовлення в адмінці для магазину.**
   Мета: продаж у «Магазині» без адреси (розд. 9.3).
   Файли: `Orders/index.ts` (умовне `required` для `shippingAddress.*`).
   Готово: адмін створює замовлення без адреси й клієнта зі складом «Магазин»; публічний
