@@ -167,7 +167,7 @@ export const fixStockCache = (req: PayloadRequest): Promise<StockCacheDiscrepanc
   })
 
 /** D7: ендпоінт сам перевіряє роль, а не покладається на `overrideAccess`. */
-const requireAdmin = (req: PayloadRequest): Response | null => {
+export const requireAdmin = (req: PayloadRequest): Response | null => {
   if (!req.user) return Response.json({ message: 'Unauthorized' }, { status: 401 })
   if (!checkRole(['admin'], req.user)) return Response.json({ message: 'Forbidden' }, { status: 403 })
 

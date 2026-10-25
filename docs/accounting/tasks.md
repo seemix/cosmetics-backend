@@ -251,7 +251,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   тест на частково оплачене замовлення.
   Складність: S. Модель: Sonnet.
 
-- [ ] **C6. Перевірка кешу кас.**
+- [x] **C6. Перевірка кешу кас.**
   Мета: як A13 для `cash-moves` ↔ `balanceBani`.
   Файли: `src/endpoints/cashCacheCheck.ts` або розширення A13.
   Складність: XS. Модель: Sonnet.
