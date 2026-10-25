@@ -77,6 +77,21 @@ export const ru: CustomTranslationsObject = {
       variantOption: 'Опция варианта',
       relatedProducts: 'Похожие товары',
       categories: 'Категории',
+      name: 'Имя',
+      surname: 'Фамилия',
+      email: 'Email',
+      phone: 'Телефон',
+      wholesaleCustomer: 'Оптовый клиент',
+      locale: 'Язык',
+      city: 'Город',
+      street: 'Улица',
+      brandDiscounts: 'Скидки на бренды',
+      discountPercent: 'Скидка, %',
+      roles: 'Роли',
+      orders: 'Заказы',
+      cart: 'Корзина',
+      addresses: 'Адреса',
+      favorites: 'Избранное',
     },
     collection: {
       brands: {
@@ -103,10 +118,23 @@ export const ru: CustomTranslationsObject = {
         singular: 'Товар',
         plural: 'Товары',
       },
+      users: {
+        singular: 'Пользователь',
+        plural: 'Пользователи',
+      },
     },
     tab: {
       content: 'Содержимое',
       productDetails: 'Детали товара',
+    },
+    desc: {
+      personalDiscounts: 'Персональные скидки',
+    },
+    option: {
+      localeRu: 'Русский',
+      localeRo: 'Румынский',
+      roleAdmin: 'Администратор',
+      roleCustomer: 'Клиент',
     },
   },
 }

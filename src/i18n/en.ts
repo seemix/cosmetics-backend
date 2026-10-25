@@ -79,6 +79,21 @@ export const en = {
       variantOption: 'Variant option',
       relatedProducts: 'Related products',
       categories: 'Categories',
+      name: 'Name',
+      surname: 'Surname',
+      email: 'Email',
+      phone: 'Phone',
+      wholesaleCustomer: 'Wholesale customer',
+      locale: 'Language',
+      city: 'City',
+      street: 'Street',
+      brandDiscounts: 'Brand discounts',
+      discountPercent: 'Discount, %',
+      roles: 'Roles',
+      orders: 'Orders',
+      cart: 'Cart',
+      addresses: 'Addresses',
+      favorites: 'Favorites',
     },
     collection: {
       brands: {
@@ -105,10 +120,23 @@ export const en = {
         singular: 'Product',
         plural: 'Products',
       },
+      users: {
+        singular: 'User',
+        plural: 'Users',
+      },
     },
     tab: {
       content: 'Content',
       productDetails: 'Product details',
+    },
+    desc: {
+      personalDiscounts: 'Personal discounts',
+    },
+    option: {
+      localeRu: 'Russian',
+      localeRo: 'Romanian',
+      roleAdmin: 'Administrator',
+      roleCustomer: 'Customer',
     },
   },
 }

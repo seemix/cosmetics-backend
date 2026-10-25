@@ -5,6 +5,7 @@ import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { adminOrSelf } from '@/access/adminOrSelf'
 import { publicAccess } from '@/access/publicAccess'
 import { checkRole } from '@/access/utilities'
+import { collectionLabels, description, label, localized } from '@/i18n'
 
 import { addFavoritesItem } from '@/collections/Users/endpoints/addFavoritesItem'
 import { getMyFavorites } from '@/collections/Users/endpoints/getMyFavorites'
@@ -20,6 +21,7 @@ import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 
 export const Users: CollectionConfig = {
   slug: 'users',
+  labels: collectionLabels('custom:collection:users:singular', 'custom:collection:users:plural'),
   access: {
     admin: ({ req: { user } }) => checkRole(['admin'], user),
     create: publicAccess,
@@ -29,7 +31,7 @@ export const Users: CollectionConfig = {
 
   },
   admin: {
-    group: 'Users',
+    group: localized('custom:group:users'),
     defaultColumns: ['name', 'email', 'roles'],
     useAsTitle: 'name',
   },
@@ -67,10 +69,12 @@ export const Users: CollectionConfig = {
   fields: [
     {
       name: 'name',
+      label: label('custom:field:name'),
       type: 'text',
     },
     {
       name: 'email',
+      label: label('custom:field:email'),
       type: 'email',
       unique: true,
       required: true,
@@ -78,48 +82,59 @@ export const Users: CollectionConfig = {
     {
       name: 'wholesale',
       type: 'checkbox',
-      label: 'WholeSale',
+      label: label('custom:field:wholesaleCustomer'),
       defaultValue: false,
     },
     {
       name: 'surname',
+      label: label('custom:field:surname'),
       type: 'text',
       required: true,
     },
     {
       name: 'phone',
+      label: label('custom:field:phone'),
       type: 'text',
       required: true,
     },
     {
       name: 'locale',
+      label: label('custom:field:locale'),
       type: 'select',
-      options: ['ru', 'ro'],
+      options: [
+        { label: label('custom:option:localeRu'), value: 'ru' },
+        { label: label('custom:option:localeRo'), value: 'ro' },
+      ],
       defaultValue: 'ru',
     },
     {
       name: 'city',
+      label: label('custom:field:city'),
       type: 'text',
     },
     {
       name: 'street',
+      label: label('custom:field:street'),
       type: 'text',
     },
     {
       name: 'brandDiscounts',
+      label: label('custom:field:brandDiscounts'),
       type: 'array',
       admin: {
-        description: 'Personal discounts',
+        description: description('custom:desc:personalDiscounts'),
       },
       fields: [
         {
           name: 'brand',
+          label: label('custom:field:brand'),
           type: 'relationship',
           relationTo: 'brands',
           required: true,
         },
         {
           name: 'discountPercent',
+          label: label('custom:field:discountPercent'),
           type: 'number',
           required: true,
           min: 5,
@@ -129,6 +144,7 @@ export const Users: CollectionConfig = {
     },
     {
       name: 'roles',
+      label: label('custom:field:roles'),
       type: 'select',
       access: {
         create: adminOnlyFieldAccess,
@@ -142,17 +158,18 @@ export const Users: CollectionConfig = {
       },
       options: [
         {
-          label: 'admin',
+          label: label('custom:option:roleAdmin'),
           value: 'admin',
         },
         {
-          label: 'customer',
+          label: label('custom:option:roleCustomer'),
           value: 'customer',
         },
       ],
     },
     {
       name: 'orders',
+      label: label('custom:field:orders'),
       type: 'join',
       collection: 'orders',
       on: 'customer',
@@ -163,6 +180,7 @@ export const Users: CollectionConfig = {
     },
     {
       name: 'cart',
+      label: label('custom:field:cart'),
       type: 'join',
       collection: 'carts',
       on: 'customer',
@@ -173,6 +191,7 @@ export const Users: CollectionConfig = {
     },
     {
       name: 'addresses',
+      label: label('custom:field:addresses'),
       type: 'join',
       collection: 'addresses',
       on: 'customer',
@@ -184,6 +203,7 @@ export const Users: CollectionConfig = {
     },
     {
       name: 'favorites',
+      label: label('custom:field:favorites'),
       type: 'relationship',
       relationTo: 'products',
       hasMany: true,

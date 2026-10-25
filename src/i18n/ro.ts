@@ -77,6 +77,21 @@ export const ro: CustomTranslationsObject = {
       variantOption: 'Opțiune de variantă',
       relatedProducts: 'Produse similare',
       categories: 'Categorii',
+      name: 'Prenume',
+      surname: 'Nume de familie',
+      email: 'Email',
+      phone: 'Telefon',
+      wholesaleCustomer: 'Client en-gros',
+      locale: 'Limbă',
+      city: 'Oraș',
+      street: 'Stradă',
+      brandDiscounts: 'Reduceri pe branduri',
+      discountPercent: 'Reducere, %',
+      roles: 'Roluri',
+      orders: 'Comenzi',
+      cart: 'Coș',
+      addresses: 'Adrese',
+      favorites: 'Favorite',
     },
     collection: {
       brands: {
@@ -103,10 +118,23 @@ export const ro: CustomTranslationsObject = {
         singular: 'Produs',
         plural: 'Produse',
       },
+      users: {
+        singular: 'Utilizator',
+        plural: 'Utilizatori',
+      },
     },
     tab: {
       content: 'Conținut',
       productDetails: 'Detalii produs',
+    },
+    desc: {
+      personalDiscounts: 'Reduceri personale',
+    },
+    option: {
+      localeRu: 'Rusă',
+      localeRo: 'Română',
+      roleAdmin: 'Administrator',
+      roleCustomer: 'Client',
     },
   },
 }
