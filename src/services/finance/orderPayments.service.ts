@@ -12,6 +12,7 @@ import { formatMDL } from '@/utilities/money'
 
 /** Поля замовлення, потрібні для оплати; форма сирого документа MongoDB. */
 export type PaymentOrder = {
+  _id?: { toString(): string }
   status?: string | null
   total?: number | null
   paidBani?: number | null
@@ -40,18 +41,39 @@ export const getOrderRevenueBani = (order: PaymentOrder): number =>
     : Math.round((Number(order.total) || 0) * 100)
 
 /** Та сама база в update pipeline; `floor(x + 0.5)` = `Math.round` для невід'ємних сум. */
-const REVENUE_EXPR = {
+export const REVENUE_EXPR = {
   $ifNull: ['$accounting.revenueBani', { $floor: { $add: [{ $multiply: [{ $ifNull: ['$total', 0] }, 100] }, 0.5] } }],
 }
-const PAID_EXPR = { $ifNull: ['$paidBani', 0] }
+export const PAID_EXPR = { $ifNull: ['$paidBani', 0] }
+
+/**
+ * Сума, яку замовлення може сплатити (ліміт `paidBani`). Замовлення зі списаним складом: його
+ * виручка. Історичне (без `stockPostedAt`): сума його активного (проведеного) `customerDebt`,
+ * тобто 0, якщо такого немає, і тоді надходження не приймається (розд. 6.3, 10).
+ */
+export const getOrderPayableCapBani = async (order: PaymentOrder, req: PayloadRequest): Promise<number> => {
+  if (order.accounting?.stockPostedAt) return getOrderRevenueBani(order)
+
+  const session = await requireSession(req)
+  const [row] = await req.payload.db.collections['opening-balances']
+    .aggregate<{ total: number }>([
+      { $match: { kind: 'customerDebt', status: 'posted' } },
+      { $unwind: '$customerLines' },
+      { $match: { 'customerLines.order': toObjectId(req, String(order._id)) } },
+      { $group: { _id: null, total: { $sum: '$customerLines.amountBani' } } },
+    ])
+    .session(session)
+
+  return row?.total ?? 0
+}
 
 /**
  * Чи може замовлення прийняти надходження. Повертає ключ причини відмови або `null`.
- * C5 додасть сюди «або має проведений customerDebt» для історичних замовлень.
+ * Історичне замовлення (`capBani` = 0, бо немає проведеного customerDebt) не приймає оплату.
  */
-export const canAcceptPayment = (order: PaymentOrder): CustomTranslationsKeys | null => {
+export const canAcceptPayment = (order: PaymentOrder, capBani: number): CustomTranslationsKeys | null => {
   if (order.status === 'cancelled') return 'custom:error:paymentOrderCancelled'
-  if (!order.accounting?.stockPostedAt) return 'custom:error:paymentOrderNotPosted'
+  if (!order.accounting?.stockPostedAt && capBani <= 0) return 'custom:error:paymentOrderNotPosted'
   return null
 }
 
@@ -66,7 +88,7 @@ const loadOrder = async (req: PayloadRequest, id: string): Promise<PaymentOrder>
 /** Перевірка перед надходженням; читання в сесії транзакції `req`. */
 export const assertCanAcceptPayment = async (req: PayloadRequest, id: string) => {
   const order = await loadOrder(req, id)
-  const refusal = canAcceptPayment(order)
+  const refusal = canAcceptPayment(order, await getOrderPayableCapBani(order, req))
   if (refusal) fail(req, refusal, 409, { order: order.orderNumber ?? id })
 }
 
@@ -84,12 +106,16 @@ export const changeOrderPaid = async (req: PayloadRequest, { order, deltaBani }:
   const session = await requireSession(req)
   const _id = toObjectId(req, order)
   const nextPaid = { $add: [PAID_EXPR, deltaBani] }
+  const loaded = await loadOrder(req, order)
+  const cap = await getOrderPayableCapBani(loaded, req)
 
   const filter =
     deltaBani > 0
-      ? { _id, status: { $ne: 'cancelled' }, $expr: { $lte: [nextPaid, REVENUE_EXPR] } }
+      ? { _id, status: { $ne: 'cancelled' }, $expr: { $lte: [nextPaid, cap] } }
       : { _id, $expr: { $gte: [PAID_EXPR, -deltaBani] } }
 
+  // Історичне замовлення без customerDebt (лише повернення) рахує стан від виручки, як і раніше.
+  const stateCap = cap > 0 ? cap : getOrderRevenueBani(loaded)
   const result = await orders(req).updateOne(
     filter,
     [
@@ -100,7 +126,7 @@ export const changeOrderPaid = async (req: PayloadRequest, { order, deltaBani }:
             $switch: {
               branches: [
                 { case: { $lte: ['$paidBani', 0] }, then: 'unpaid' },
-                { case: { $lt: ['$paidBani', REVENUE_EXPR] }, then: 'partial' },
+                { case: { $lt: ['$paidBani', stateCap] }, then: 'partial' },
               ],
               default: 'paid',
             },
@@ -118,10 +144,11 @@ export const changeOrderPaid = async (req: PayloadRequest, { order, deltaBani }:
 
   if (deltaBani > 0) {
     if (current.status === 'cancelled') fail(req, 'custom:error:paymentOrderCancelled', 409, { order: number })
+    if (!current.accounting?.stockPostedAt && cap <= 0) fail(req, 'custom:error:paymentOrderNotPosted', 409, { order: number })
     fail(req, 'custom:error:paymentOverpaid', 409, {
       order: number,
       requested: formatMDL(deltaBani),
-      remaining: formatMDL(Math.max(getOrderRevenueBani(current) - paid, 0)),
+      remaining: formatMDL(Math.max(cap - paid, 0)),
     })
   }
 

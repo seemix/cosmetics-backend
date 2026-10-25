@@ -1,8 +1,10 @@
 import type { PayloadRequest } from 'payload'
 
+import { PAID_EXPR, REVENUE_EXPR } from './orderPayments.service'
+
 /**
  * Борги (docs/accounting/design.md, розд. 6.3). Усе рахується агрегаціями MongoDB без вибірки
- * документів у пам'ять; у сесії транзакції `req`, якщо вона відкрита.
+ * документів у пам'ять (крім списку боргів покупців, де кожне замовлення і є результатом); у сесії транзакції `req`, якщо вона відкрита.
  */
 
 /** Борг постачальнику: плюс = ми винні йому, мінус = аванс (переплата). Суми в цілих банях. */
@@ -148,3 +150,88 @@ export const getSupplierDebt = async (req: PayloadRequest, supplierId: string, a
 /** Борги всіх постачальників, що мають хоч один облікований рух на `asOf`. */
 export const listSupplierDebts = async (req: PayloadRequest, asOf = new Date()): Promise<SupplierDebt[]> =>
   [...(await collectParts(req, asOf)).values()].sort((a, b) => a.supplier.localeCompare(b.supplier))
+
+/** Борг покупця по замовленню. `customer` порожній для гостьового замовлення. */
+export type CustomerDebt = {
+  orderId: string
+  number: string | null
+  customer: string | null
+  /** Ліміт оплати: виручка замовлення або сума його активного customerDebt. */
+  capBani: number
+  paidBani: number
+  debtBani: number
+}
+
+type DebtRow = { _id: { toString(): string }; orderNumber?: string; customer?: { toString(): string }; capBani: number; paidBani: number }
+
+const toDebt = (row: DebtRow): CustomerDebt => ({
+  orderId: String(row._id),
+  number: row.orderNumber ?? null,
+  customer: row.customer ? String(row.customer) : null,
+  capBani: row.capBani,
+  paidBani: row.paidBani,
+  debtBani: row.capBani - row.paidBani,
+})
+
+/**
+ * Замовлення з боргом покупця: зі списаним складом (не скасовані) і історичні з активним
+ * customerDebt, де `capBani − paidBani > 0`. ЛИШЕ ПОТОЧНИЙ СТАН, без `asOf`: `paidBani` це кеш
+ * без історії, на минулу дату його не відновити (на відміну від боргів постачальникам).
+ */
+export const getCustomerDebts = async (
+  req: PayloadRequest,
+  { customer }: { customer?: string } = {},
+): Promise<CustomerDebt[]> => {
+  const session = await readSession(req)
+  const customerMatch = (field: string) => (customer ? [{ $match: { [field]: toObjectId(req, customer) } }] : [])
+  const projection = { orderNumber: 1, customer: 1, capBani: 1, paidBani: 1 }
+
+  const regular = await model(req, 'orders')
+    .aggregate<DebtRow>([
+      { $match: { status: { $ne: 'cancelled' }, 'accounting.stockPostedAt': { $ne: null } } },
+      ...customerMatch('customer'),
+      { $addFields: { capBani: REVENUE_EXPR, paidBani: PAID_EXPR } },
+      { $match: { $expr: { $gt: ['$capBani', '$paidBani'] } } },
+      { $project: projection },
+    ])
+    .session(session ?? null)
+
+  // Послідовно: паралельні операції в одній сесії транзакції MongoDB не підтримує.
+  const historical = await model(req, 'opening-balances')
+    .aggregate<DebtRow>([
+      { $match: { kind: 'customerDebt', status: 'posted' } },
+      { $unwind: '$customerLines' },
+      { $group: { _id: '$customerLines.order', capBani: { $sum: '$customerLines.amountBani' } } },
+      { $lookup: { from: model(req, 'orders').collection.collectionName, localField: '_id', foreignField: '_id', as: 'order' } },
+      { $unwind: '$order' },
+      { $match: { 'order.status': { $ne: 'cancelled' }, 'order.accounting.stockPostedAt': null } },
+      ...customerMatch('order.customer'),
+      { $addFields: { paidBani: { $ifNull: ['$order.paidBani', 0] }, orderNumber: '$order.orderNumber', customer: '$order.customer' } },
+      { $match: { $expr: { $gt: ['$capBani', '$paidBani'] } } },
+      { $project: projection },
+    ])
+    .session(session ?? null)
+
+  return [...regular, ...historical].map(toDebt)
+}
+
+/** Підсумок боргів покупців по клієнтах; гості (без `customer`) в одній групі з `customer: null`. */
+export type CustomerDebtTotal = { customer: string | null; orders: number; capBani: number; paidBani: number; debtBani: number }
+
+export const getCustomerDebtTotals = async (
+  req: PayloadRequest,
+  filters: { customer?: string } = {},
+): Promise<CustomerDebtTotal[]> => {
+  const totals = new Map<string | null, CustomerDebtTotal>()
+
+  for (const debt of await getCustomerDebts(req, filters)) {
+    const total = totals.get(debt.customer) ?? { customer: debt.customer, orders: 0, capBani: 0, paidBani: 0, debtBani: 0 }
+    total.orders += 1
+    total.capBani += debt.capBani
+    total.paidBani += debt.paidBani
+    total.debtBani += debt.debtBani
+    totals.set(debt.customer, total)
+  }
+
+  return [...totals.values()]
+}

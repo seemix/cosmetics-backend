@@ -10,3 +10,5 @@
 | `custom:term:overpayment` | Overpayment | Переплата | Plată în plus | RO: «Plată în plus» (дослівно «платіж понад»); альтернатива — «Supraplată» |
 | `custom:term:discrepancy` | Discrepancy | Расхождение | Discrepanță | RO: «Neconcordanță» — м'якший варіант для звітів про розбіжності кешу |
 | `custom:option:openingSupplierDebt` | Supplier debts | Долги поставщикам | Datorii față de furnizori | — |
+| `custom:option:openingCustomerDebt` | Customer debts | Долги покупателей | Datoriile clienților | Борг за історичними замовленнями (покупець ще не доплатив) |
+| `custom:error:customerDebtOrderNotHistorical` | historical orders | исторические заказы | comenzi istorice | «Історичне» = замовлення до вмикання обліку складу (без `stockPostedAt`) |
