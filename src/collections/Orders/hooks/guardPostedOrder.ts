@@ -42,7 +42,8 @@ export const guardPostedOrder: CollectionBeforeChangeHook = ({ data, originalDoc
     ('items' in data && data.items !== undefined && !sameItems(data.items, originalDoc.items)) ||
     ('total' in data && data.total !== undefined && cents(data.total) !== cents(originalDoc.total)) ||
     ('discount' in data && cents(data.discount) !== cents(originalDoc.discount)) ||
-    ('customer' in data && relationID(data.customer) !== relationID(originalDoc.customer))
+    ('customer' in data && relationID(data.customer) !== relationID(originalDoc.customer)) ||
+    ('manager' in data && relationID(data.manager) !== relationID(originalDoc.manager))
 
   if (changed) {
     throw new APIError(customT(req.t)('custom:error:postedOrderLocked'), 400, undefined, true)

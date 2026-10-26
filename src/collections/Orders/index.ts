@@ -20,7 +20,7 @@ import { adminOrCustomerOwner } from '@/access/adminOrCustomerOwner'
 import { adminOrManager } from '@/access/adminOrManager'
 import { adminOrManagerField } from '@/access/adminOrManagerField'
 import { checkRole } from '@/access/utilities'
-import { collectionLabels, label, localized } from '@/i18n'
+import { collectionLabels, description, label, localized } from '@/i18n'
 
 /**
  * Склад, джерело й автор задаються при створенні й далі не змінюються (REST; хук тримає те саме для Local API).
@@ -232,6 +232,14 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       admin: { readOnly: true, position: 'sidebar' },
     },
     {
+      name: 'manager',
+      label: label('custom:term:managerSnapshot'),
+      type: 'relationship',
+      relationTo: 'users',
+      access: adminCreateOnly,
+      admin: { readOnly: true, position: 'sidebar', description: description('custom:desc:managerSnapshot') },
+    },
+    {
       name: 'paidBani',
       label: label('custom:field:paidBani'),
       type: 'number',
@@ -266,6 +274,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       ],
     },
   ],
+  indexes: [{ fields: ['manager', 'createdAt'] }],
   endpoints: [createOrder, getMyOrders],
   hooks: {
     // Додаємо хук перед збереженням замовлення.

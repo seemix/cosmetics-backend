@@ -360,6 +360,7 @@ export interface Order {
   source?: ('web' | 'admin') | null;
   warehouse?: (string | null) | Warehouse;
   createdBy?: (string | null) | User;
+  manager?: (string | null) | User;
   paidBani?: number | null;
   paymentState?: ('unpaid' | 'partial' | 'paid') | null;
   accounting?: {
@@ -2130,6 +2131,7 @@ export interface OrdersSelect<T extends boolean = true> {
   source?: T;
   warehouse?: T;
   createdBy?: T;
+  manager?: T;
   paidBani?: T;
   paymentState?: T;
   accounting?:

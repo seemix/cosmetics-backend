@@ -1,5 +1,7 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
+import { resolveOrderManager } from '@/services/orders/resolveOrderManager'
+
 /** Ключ `req.context`, яким публічний `createOrder` позначає замовлення сайту. */
 export const ORDER_SOURCE_CONTEXT_KEY = 'orderSource'
 
@@ -12,7 +14,7 @@ const relationID = (value: unknown): string | number | undefined => {
 /**
  * Облікові поля замовлення (дизайн, розд. 2.5, 4.3).
  * Create: `source` за контекстом, склад (для сайту завжди з налаштувань, значення з тіла ігнорується),
- * автор і `accounting.revenueBani`. Update: `source`, `warehouse`, `createdBy` не змінюються.
+ * автор, знімок `manager` і `accounting.revenueBani`. Update: `source`, `warehouse`, `createdBy`, `manager` не змінюються.
  * Має йти після `populatePricesAndTotal`, бо виручка береться з готового `total`.
  */
 export const assignAccountingFields: CollectionBeforeChangeHook = async ({
@@ -28,6 +30,7 @@ export const assignAccountingFields: CollectionBeforeChangeHook = async ({
       data.source = originalDoc.source
       data.warehouse = relationID(originalDoc.warehouse)
       data.createdBy = relationID(originalDoc.createdBy)
+      data.manager = relationID(originalDoc.manager)
     }
     return data
   }
@@ -41,6 +44,14 @@ export const assignAccountingFields: CollectionBeforeChangeHook = async ({
     : (relationID(data.warehouse) ?? relationID(settings.defaultAdminWarehouse))
 
   data.createdBy = isWeb ? undefined : relationID(req.user?.id)
+  // Знімок менеджера (розд. 7.1): далі не змінюється; `createOrder` не передає творця.
+  data.manager =
+    (await resolveOrderManager({
+      customerId: data.customer,
+      creator: isWeb ? null : req.user,
+      settings,
+      req,
+    })) ?? undefined
 
   data.accounting = {
     ...data.accounting,
