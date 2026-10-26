@@ -305,9 +305,7 @@ export const ENDPOINTS: EndpointCase[] = [
     access: 'public',
     why: 'публічний пост',
     request: () => ({ method: 'GET', path: '/posts/no-such-post-r3' }),
-    // Неіснуючий slug: обробник віддає Response.json(undefined) і падає з 500 (FINDING-14); коректно було б 404.
     expect: everyone(404),
-    knownDeviation: { finding: 14, status: 500 },
   },
   {
     key: 'GET /brands/:slug',

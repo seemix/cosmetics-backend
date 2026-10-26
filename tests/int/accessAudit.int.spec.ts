@@ -1632,14 +1632,15 @@ describe('[FINDING-13] гігієна облікових записів', () => 
 
 describe('[FINDING-14] невідомий slug і службові шляхи дають 500 замість 404', () => {
   for (const path of ['/pages/no-such-page-r3', '/brands/no-such-brand-r3', '/posts/no-such-post-r3']) {
-    it.fails('GET ' + path + ' → 404', async () => {
+    it('GET ' + path + ' → 404', async () => {
       expect((await ctx.http('GET', path, 'guest')).status).toBe(404)
     })
   }
 
-  it.fails('GET /pages/versions і /orders/versions не дають 500', async () => {
-    expect((await ctx.http('GET', '/pages/versions', 'guest')).status).toBeLessThan(500)
-    expect((await ctx.http('GET', '/orders/versions', 'customer')).status).toBeLessThan(500)
+  it('GET /pages/versions (потрапляє в /:slug) тепер 404; /orders/versions лишається 500 ядра Payload без деталей (колекція без versions)', async () => {
+    expect((await ctx.http('GET', '/pages/versions', 'guest')).status).toBe(404)
+    const orders = await ctx.http('GET', '/orders/versions', 'customer')
+    expect(JSON.stringify(orders.body)).not.toMatch(/orders|stack|node_modules/i)
   })
 })
 

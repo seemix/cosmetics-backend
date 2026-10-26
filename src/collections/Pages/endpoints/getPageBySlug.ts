@@ -19,6 +19,7 @@ export const getPageBySlug = {
       },
       req,
     })
+    if (!page.docs[0]) return Response.json({ message: 'Not found' }, { status: 404 })
     return Response.json(page.docs[0])
   },
 }

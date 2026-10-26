@@ -16,6 +16,7 @@ export const getSinglePost: Endpoint = {
       },
       req,
     })
+    if (!post.docs[0]) return Response.json({ message: 'Not found' }, { status: 404 })
     return Response.json(post.docs[0])
   },
 }

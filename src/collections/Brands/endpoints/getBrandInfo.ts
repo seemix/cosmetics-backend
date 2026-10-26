@@ -16,6 +16,7 @@ export const getBrandInfo: Endpoint = {
       },
       req,
     })
+    if (!brand.docs[0]) return Response.json({ message: 'Not found' }, { status: 404 })
     return Response.json(brand.docs[0])
   },
 }
