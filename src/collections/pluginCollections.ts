@@ -27,13 +27,14 @@ const translateFields = (fields: Field[], texts: Texts): Field[] =>
   })
 
 const override =
-  (texts: Texts, access: { readVersions?: Access } = {}): CollectionOverride =>
+  (texts: Texts, access: { readVersions?: Access } = {}, hidden = false): CollectionOverride =>
   ({ defaultCollection }) => ({
     ...defaultCollection,
     access: { ...defaultCollection.access, ...access },
     // Група, як і раніше, лише там, де її задає плагін (це завжди `Ecommerce`).
     admin: {
       ...defaultCollection.admin,
+      ...(hidden ? { hidden: true } : {}),
       ...(defaultCollection.admin?.group ? { group: localized('custom:group:ecommerce') } : {}),
     },
     fields: translateFields(defaultCollection.fields, texts),
@@ -57,6 +58,9 @@ export const VariantOptionsCollection = override({
   descriptions: { value: 'custom:desc:valueFromLabel' },
 })
 
-export const TransactionsCollection = override({
-  labels: { cart: 'custom:field:cart' },
-})
+// Онлайн-оплат поки немає: рухи коштів ведуться через касу, тож розділ приховано з адмінки.
+export const TransactionsCollection = override(
+  { labels: { cart: 'custom:field:cart' } },
+  {},
+  true,
+)
