@@ -52,7 +52,8 @@ export const createOrder: Endpoint = {
       const discountPercent = promoData?.discountPercent ?? 0
 
       for (const item of items) {
-        if (!item.product || !item.quantity) {
+        // Кількість — ціле додатне: від'ємна чи дробова ламає суму (позиція «гасить» вартість іншої).
+        if (!item.product || !Number.isInteger(Number(item.quantity)) || Number(item.quantity) <= 0) {
           return Response.json({ error: 'Invalid item format' }, { status: 400 })
         }
 

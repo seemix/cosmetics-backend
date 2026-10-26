@@ -1548,15 +1548,15 @@ describe('[FINDING-8] createOrder не перевіряє кількість (в
     return response
   }
 
-  it.fails('від’ємна кількість відхиляється', async () => {
+  it('від’ємна кількість відхиляється', async () => {
     expect((await place([{ product: f.pub, quantity: -5 }])).status).toBe(400)
   })
 
-  it.fails('дробова кількість відхиляється', async () => {
+  it('дробова кількість відхиляється', async () => {
     expect((await place([{ product: f.pub, quantity: 0.5 }])).status).toBe(400)
   })
 
-  it.fails('від’ємна позиція не «гасить» вартість іншої: замовлення з нульовою сумою не створюється', async () => {
+  it('від’ємна позиція не «гасить» вартість іншої: замовлення з нульовою сумою не створюється', async () => {
     const response = await place([{ product: f.pub2, quantity: 1 }, { product: f.pub, quantity: -2 }])
     expect(response.status).toBe(400)
   })
