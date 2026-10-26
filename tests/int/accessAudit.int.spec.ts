@@ -1355,19 +1355,6 @@ const tempUser = async (roles: Array<'admin' | 'manager' | 'customer'> = ['custo
   return user
 }
 
-const lexicalText = {
-  root: { type: 'root', format: '', indent: 0, version: 1, direction: null, children: [{ type: 'paragraph', format: '', indent: 0, version: 1, direction: null, children: [{ type: 'text', text: 'ok', format: 0, style: '', mode: 'normal', detail: 0, version: 1 }] }] },
-}
-
-const formBody = (emailTo: string) => ({
-  title: `${tag} form`,
-  fields: [],
-  submitButtonLabel: 'Send',
-  confirmationType: 'message',
-  confirmationMessage: lexicalText,
-  emails: [{ emailTo, emailFrom: 'noreply@nextlevelshop.md', subject: 'Audit', message: lexicalText }],
-})
-
 describe('[FINDING-1] wholesale і brandDiscounts задає сам клієнт', () => {
   it('реєстрація гостя не виставляє wholesale і brandDiscounts', async () => {
     const { doc } = await registerAsGuest({ wholesale: true, brandDiscounts: [{ brand: f.brand, discountPercent: 50 }] })
@@ -1430,46 +1417,15 @@ describe('[FINDING-2] customer змінює контент і каталог (д
 })
 
 
-describe('[FINDING-3] form-submissions: будь-який авторизований читає й видаляє відправлення', () => {
-  it.fails('customer не читає form-submissions', async () => {
-    expect((await ctx.http('GET', '/form-submissions', 'customer')).status).toBe(403)
-  })
-
-  it.fails('customer не видаляє form-submissions', async () => {
-    expect((await ctx.http('DELETE', `/form-submissions/${MISSING_ID}`, 'customer')).status).toBe(403)
-  })
-
-  it('гість і admin: гість не читає, admin читає (поточна поведінка)', async () => {
-    expect((await ctx.http('GET', '/form-submissions', 'guest')).status).toBe(403)
-    expect((await ctx.http('GET', '/form-submissions', 'admin')).status).toBe(200)
-  })
-})
-
-describe('[FINDING-4] forms: customer створює форми, що розсилають листи', () => {
-  it('контроль: форма, створена admin, розсилає лист на вказану адресу при відправленні гостем', async () => {
-    const victim = `${tag}-victim@example.test`
-    const created = await ctx.http('POST', '/forms', 'admin', formBody(victim))
-    expect(created.status, JSON.stringify(created.body).slice(0, 300)).toBe(201)
-    cleanups.push(() => ctx.payload.delete({ collection: 'forms', id: created.body.doc.id }))
-    const send = vi.mocked(ctx.payload.sendEmail)
-    send.mockClear()
-    const submission = await ctx.http('POST', '/form-submissions', 'guest', { form: created.body.doc.id, submissionData: [] })
-    expect(submission.status).toBe(201)
-    cleanups.push(() => ctx.payload.delete({ collection: 'form-submissions', id: submission.body.doc.id }))
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    expect(send.mock.calls.some(([message]) => JSON.stringify(message).includes(victim))).toBe(true)
-  })
-
-  it.fails('customer не створює форму з довільним списком розсилки', async () => {
-    const response = await ctx.http('POST', '/forms', 'customer', formBody(`${tag}-victim2@example.test`))
-    if (response.body?.doc?.id) cleanups.push(() => ctx.payload.delete({ collection: 'forms', id: response.body.doc.id }))
-    expect(response.status).toBe(403)
-  })
-
-  it.fails('customer не змінює й не видаляє форми', async () => {
-    const updated = await ctx.http('PATCH', `/forms/${MISSING_ID}`, 'customer', {})
-    const removed = await ctx.http('DELETE', `/forms/${MISSING_ID}`, 'customer')
-    expect([updated.status, removed.status]).toEqual([403, 403])
+describe('Плагін form-builder прибрано (знахідки 3 і 4)', () => {
+  it('колекцій forms і form-submissions немає в конфігу, REST для них не існує', async () => {
+    const slugs = ctx.payload.config.collections.map((collection) => collection.slug)
+    expect(slugs).not.toContain('forms')
+    expect(slugs).not.toContain('form-submissions')
+    for (const who of ['guest', 'customer', 'admin'] as const) {
+      expect((await ctx.http('GET', '/form-submissions', who)).status, who).toBe(404)
+      expect((await ctx.http('POST', '/forms', who, {})).status, who).toBe(404)
+    }
   })
 })
 

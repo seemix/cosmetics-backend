@@ -61,20 +61,6 @@ export const RESOURCES: Record<string, ResourceRule> = {
   'cash-operations': ONLY_ADMIN('розд. 11'),
   'salary-schemes': ONLY_ADMIN('розд. 11, В12: схеми менеджеру недоступні'),
   payrolls: { create: 'A', read: 'AM', update: 'A', delete: 'A', why: 'В12: manager читає лише свої проведені розрахунки (B2), решту admin' },
-  forms: {
-    create: 'AM',
-    read: 'AMCG',
-    update: 'AM',
-    delete: 'AM',
-    why: 'плагін form-builder: форми читають усі (відображення на сайті); запис admin і manager; питання власнику Q2/Q3',
-  },
-  'form-submissions': {
-    create: 'AMCG',
-    read: 'AM',
-    update: '',
-    delete: 'AM',
-    why: 'плагін form-builder: відправляти форму може будь-хто; читати й видаляти відправлення має лише персонал (персональні дані)',
-  },
   addresses: {
     create: 'AMC',
     read: 'AMC',
@@ -135,11 +121,6 @@ export const GLOBALS: Record<string, { read: Policy; update: Policy; why: string
  * пропускає, а правильну поведінку фіксує тест у блоці `[FINDING-n]` (test.failing).
  */
 export const KNOWN_DEVIATIONS: Record<string, number> = {
-  'forms.create.customer': 4,
-  'forms.update.customer': 4,
-  'forms.delete.customer': 4,
-  'form-submissions.read.customer': 3,
-  'form-submissions.delete.customer': 3,
 }
 
 /**
@@ -162,10 +143,6 @@ export const DEFAULT_ACCESS_ALLOWLIST: Record<string, string> = {
 
 /** Відомі випадки дефолтного access, які є знахідками (не винятки): ключ `slug.операція` -> номер знахідки. */
 export const DEFAULT_ACCESS_FINDINGS: Record<string, number> = {
-  'forms.create': 4,
-  'forms.update': 4,
-  'forms.delete': 4,
-  'form-submissions.delete': 3,
   'products.readVersions': 10,
   'variants.readVersions': 10,
 }
