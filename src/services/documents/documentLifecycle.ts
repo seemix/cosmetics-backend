@@ -119,7 +119,7 @@ const headerFields = ({ dateField }: Required<Pick<DocumentLifecycleOptions, 'da
     options: STATUS_OPTIONS,
     admin: { position: 'sidebar' },
   },
-  { name: dateField.name, label: dateField.label, type: 'date', required: true },
+  { name: dateField.name, label: dateField.label, type: 'date', required: true, defaultValue: () => new Date().toISOString() },
   {
     name: 'postedAt',
     label: label('custom:field:postedAt'),
