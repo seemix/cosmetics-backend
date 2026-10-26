@@ -140,7 +140,6 @@ export const KNOWN_DEVIATIONS: Record<string, number> = {
   'forms.delete.customer': 4,
   'form-submissions.read.customer': 3,
   'form-submissions.delete.customer': 3,
-  'carts.create.guest': 6,
 }
 
 /**

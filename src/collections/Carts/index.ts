@@ -1,4 +1,5 @@
 import { priceHook } from '@/collections/Carts/hooks/priceHook'
+import { forceCartOwner } from '@/collections/Carts/hooks/forceCartOwner'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 import { getCartByUser } from '@/collections/Carts/endpoints/getCartByUser'
 import { updateCartItem } from '@/collections/Carts/endpoints/updateCartItem'
@@ -43,9 +44,15 @@ export const CartsCollection: CollectionOverride = ({ defaultCollection }) => ({
     }
     return field
   }),
+  // Плагін дозволяв створювати кошик без входу; кошик є лише в авторизованого користувача.
+  access: {
+    ...defaultCollection.access,
+    create: ({ req: { user } }) => !!user,
+  },
   hooks: {
     ...defaultCollection.hooks,
     beforeChange: [
+      forceCartOwner,
       ...(defaultCollection.hooks?.beforeChange || []),
       priceHook,
     ],

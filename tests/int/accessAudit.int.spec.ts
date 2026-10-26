@@ -1485,13 +1485,13 @@ describe('[FINDING-5] users.unlock: будь-який авторизований
 })
 
 describe('[FINDING-6] carts: гість створює кошики, у тому числі для чужого customer', () => {
-  it.fails('гість не створює кошик', async () => {
+  it('гість не створює кошик', async () => {
     const response = await ctx.http('POST', '/carts', 'guest', { items: [{ product: f.pub, quantity: 1 }], currency: 'MDL' })
     if (response.body?.doc?.id) cleanups.push(() => ctx.payload.delete({ collection: 'carts', id: response.body.doc.id }))
     expect(response.status).toBe(403)
   })
 
-  it.fails('чужі товари не потрапляють у кошик жертви', async () => {
+  it('чужі товари не потрапляють у кошик жертви', async () => {
     const victim = await tempUser()
     const response = await ctx.http('POST', '/carts', 'guest', { customer: String(victim.id), items: [{ product: f.pub, quantity: 7 }], currency: 'MDL' })
     if (response.body?.doc?.id) cleanups.push(() => ctx.payload.delete({ collection: 'carts', id: response.body.doc.id }))
@@ -1499,7 +1499,7 @@ describe('[FINDING-6] carts: гість створює кошики, у тому
     expect(mine.body?.items?.length ?? 0).toBe(0)
   })
 
-  it.fails('customer створює кошик лише для себе', async () => {
+  it('customer створює кошик лише для себе', async () => {
     const attacker = await tempUser()
     const victim = await tempUser()
     const response = await ctx.http('POST', '/carts', attacker, { customer: String(victim.id), items: [{ product: f.pub, quantity: 3 }], currency: 'MDL' })
