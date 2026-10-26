@@ -39,6 +39,8 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     ...defaultCollection.access,
     read: (args) => adminOrManager(args) || adminOrPublishedStatus(args),
     update: adminOrManager,
+    // Без правила історію версій (чернетки, старі ціни) читав би будь-який авторизований.
+    readVersions: adminOrManager,
   },
   versions: {
     drafts: true,

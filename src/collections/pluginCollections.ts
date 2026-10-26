@@ -1,5 +1,7 @@
 import type { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
-import type { Field } from 'payload'
+import type { Access, Field } from 'payload'
+
+import { adminOnly } from '@/access/adminOnly'
 
 import { description, label, localized, type CustomTranslationsKeys } from '@/i18n'
 
@@ -25,9 +27,10 @@ const translateFields = (fields: Field[], texts: Texts): Field[] =>
   })
 
 const override =
-  (texts: Texts): CollectionOverride =>
+  (texts: Texts, access: { readVersions?: Access } = {}): CollectionOverride =>
   ({ defaultCollection }) => ({
     ...defaultCollection,
+    access: { ...defaultCollection.access, ...access },
     // Група, як і раніше, лише там, де її задає плагін (це завжди `Ecommerce`).
     admin: {
       ...defaultCollection.admin,
@@ -37,10 +40,13 @@ const override =
   })
 
 /** Колекції плагіна ecommerce, які не мають власного файлу в `src/collections`. */
-export const VariantsCollection = override({
-  labels: { title: 'custom:field:title', product: 'custom:term:product', options: 'custom:field:variantOptions' },
-  descriptions: { title: 'custom:desc:adminOnlyTitle', group: 'custom:desc:pricesByCurrency' },
-})
+export const VariantsCollection = override(
+  {
+    labels: { title: 'custom:field:title', product: 'custom:term:product', options: 'custom:field:variantOptions' },
+    descriptions: { title: 'custom:desc:adminOnlyTitle', group: 'custom:desc:pricesByCurrency' },
+  },
+  { readVersions: adminOnly },
+)
 
 export const VariantTypesCollection = override({
   labels: { label: 'custom:field:label', name: 'custom:term:name', options: 'custom:field:options' },

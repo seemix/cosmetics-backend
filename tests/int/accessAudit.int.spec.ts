@@ -1556,13 +1556,13 @@ describe('[FINDING-9] неопубліковані товари доступні
 })
 
 describe('[FINDING-10] versions: будь-який авторизований читає історію товарів', () => {
-  it.fails('customer не читає версії товару (чернетки, старі ціни)', async () => {
+  it('customer не читає версії товару (чернетки, старі ціни)', async () => {
     const version = (await ctx.payload.findVersions({ collection: 'products', where: { parent: { equals: f.draft } }, overrideAccess: true })).docs[0]
     expect(version).toBeDefined()
     expect((await ctx.http('GET', `/products/versions/${version.id}`, 'customer')).status).toBe(403)
   })
 
-  it.fails('customer не читає список версій через GraphQL', async () => {
+  it('customer не читає список версій через GraphQL', async () => {
     const response = await ctx.gql('{ versionsProducts { totalDocs } }', 'customer')
     expect(response.body.errors?.[0]?.extensions?.name).toBe('Forbidden')
   })
