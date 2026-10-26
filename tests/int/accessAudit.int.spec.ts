@@ -1369,13 +1369,13 @@ const formBody = (emailTo: string) => ({
 })
 
 describe('[FINDING-1] wholesale і brandDiscounts задає сам клієнт', () => {
-  it.fails('реєстрація гостя не виставляє wholesale і brandDiscounts', async () => {
+  it('реєстрація гостя не виставляє wholesale і brandDiscounts', async () => {
     const { doc } = await registerAsGuest({ wholesale: true, brandDiscounts: [{ brand: f.brand, discountPercent: 50 }] })
     expect(doc!.wholesale).toBe(false)
     expect(doc!.brandDiscounts ?? []).toEqual([])
   })
 
-  it.fails('customer не змінює свої wholesale і brandDiscounts через PATCH /users/:id', async () => {
+  it('customer не змінює свої wholesale і brandDiscounts через PATCH /users/:id', async () => {
     const user = await tempUser()
     await ctx.http('PATCH', `/users/${user.id}`, user, { wholesale: true, brandDiscounts: [{ brand: f.brand, discountPercent: 50 }] })
     const saved = await ctx.payload.findByID({ collection: 'users', id: user.id, depth: 0, overrideAccess: true })
@@ -1383,7 +1383,7 @@ describe('[FINDING-1] wholesale і brandDiscounts задає сам клієнт
     expect(saved.brandDiscounts ?? []).toEqual([])
   })
 
-  it.fails('наслідок: замовлення клієнта, який сам себе зробив оптовиком, рахується за роздрібною ціною', async () => {
+  it('наслідок: замовлення клієнта, який сам себе зробив оптовиком, рахується за роздрібною ціною', async () => {
     const user = await tempUser()
     await ctx.http('PATCH', `/users/${user.id}`, user, { wholesale: true })
     const response = await ctx.http('POST', '/orders/create', user, {

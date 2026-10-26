@@ -1,4 +1,4 @@
-import type { Access, CollectionConfig, FieldAccess } from 'payload'
+import type { Access, CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
@@ -33,9 +33,6 @@ const readUsers: Access = (args) => {
     ],
   }
 }
-
-/** Оптовий статус і знижки задає не manager (розд. 11); права клієнта на свої дані як раніше. */
-const notManager: FieldAccess = ({ req: { user } }) => !isManager(user)
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -102,7 +99,8 @@ export const Users: CollectionConfig = {
       type: 'checkbox',
       label: label('custom:field:wholesaleCustomer'),
       defaultValue: false,
-      access: { create: notManager, update: notManager },
+      // Розд. 11: оптовий статус і знижки задає лише admin (не manager і не сам клієнт).
+      access: { create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
     },
     {
       name: 'surname',
@@ -140,7 +138,8 @@ export const Users: CollectionConfig = {
       name: 'brandDiscounts',
       label: label('custom:field:brandDiscounts'),
       type: 'array',
-      access: { create: notManager, update: notManager },
+      // Розд. 11: оптовий статус і знижки задає лише admin (не manager і не сам клієнт).
+      access: { create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
       admin: {
         description: description('custom:desc:personalDiscounts'),
       },
