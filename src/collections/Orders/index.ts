@@ -202,6 +202,15 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       admin: { condition: (data) => data?.paymentType === 'transfer' },
     },
     {
+      name: 'shippingFromCustomer',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/collections/Orders/components/ShippingFromCustomer#ShippingFromCustomer',
+        },
+      },
+    },
+    {
       name: 'shippingAddress',
       label: label('custom:field:shippingAddress'),
       type: 'group',
