@@ -294,7 +294,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   `schemeSnapshot` зберігається; сторно лише без виплат; виплата через C2 (`isSalary`, `payroll`).
   Складність: L. Модель: Opus. Залежить від В13.
 
-- [ ] **R1. Ендпоінти звітів.**
+- [x] **R1. Ендпоінти звітів.**
   Мета: `GET /api/reports/{stock,purchases,expenses,profit,debts,salary}` (розд. 12).
   Файли: `src/endpoints/reports/*`, `src/services/reports/*`.
   Готово: admin-only (явна перевірка ролі); агрегації MongoDB з `req`; тест прибутку

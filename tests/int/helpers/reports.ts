@@ -1,7 +1,7 @@
 import { createLocalReq, type Endpoint, type Payload } from 'payload'
 import { vi } from 'vitest'
 
-import type { CashOperation, Order, User } from '@/payload-types'
+import type { CashOperation, Order, Payroll, User } from '@/payload-types'
 import { applyCashMoves } from '@/services/finance/cashLedger.service'
 import { endOfDay, startOfDay } from '@/utilities/period'
 
@@ -179,10 +179,49 @@ export class ReportScenario {
     return this.track('expense-categories', doc.id)
   }
 
-  async newManager() {
+  async newManager(name?: string) {
     const user = await this.data.user()
-    await this.payload.update({ collection: 'users', id: user.id, data: { roles: ['manager'] } })
+    await this.payload.update({ collection: 'users', id: user.id, data: { roles: ['manager'], ...(name ? { name } : {}) } })
     return String(user.id)
+  }
+
+  /** Клієнт (роль customer), за потреби закріплений за менеджером. */
+  async newCustomer(manager?: string) {
+    const user = await this.data.user()
+    await this.payload.update({
+      collection: 'users',
+      id: user.id,
+      data: { roles: ['customer'], ...(manager ? { manager } : {}) } as never,
+    })
+    return String(user.id)
+  }
+
+  /** Схема зарплати менеджера: оклад і відсоток від виручки за датою замовлення, знімок менеджера. */
+  async scheme(
+    manager: string,
+    {
+      fixedBani = 0,
+      percentBp = 0,
+      validFrom,
+      validTo,
+    }: { fixedBani?: number; percentBp?: number; validFrom: string; validTo: string },
+  ) {
+    const doc = await this.payload.create({
+      collection: 'salary-schemes',
+      data: {
+        name: `${this.tag} scheme`,
+        manager,
+        fixedBani,
+        percentBp,
+        base: 'revenue',
+        dateBasis: 'order_date',
+        attribution: 'snapshot',
+        validFrom,
+        validTo,
+      } as never,
+      depth: 0,
+    })
+    return this.track('salary-schemes', doc.id)
   }
 
   /** Поповнення каси напряму через сервіс (лише `cash-moves`, без касових операцій). */
@@ -232,11 +271,11 @@ export class ReportScenario {
     return post ? this.post('purchases', id) : doc
   }
 
-  async order(items: Array<{ product: string; quantity: number }>): Promise<Order> {
+  async order(items: Array<{ product: string; quantity: number }>, { customer }: { customer?: string } = {}): Promise<Order> {
     const order = await this.payload.create({
       collection: 'orders',
       user: this.admin,
-      data: { items: items.map((item) => ({ ...item, price: 0 })), total: 0 } as never,
+      data: { items: items.map((item) => ({ ...item, price: 0 })), total: 0, ...(customer ? { customer } : {}) } as never,
       depth: 0,
     })
     this.track('orders', order.id)
@@ -301,7 +340,7 @@ export class ReportScenario {
     return post ? this.post('cash-operations', id) : doc
   }
 
-  async payroll(manager: string, periodFrom: string, periodTo: string, { post = true }: { post?: boolean } = {}) {
+  async payroll(manager: string, periodFrom: string, periodTo: string, { post = true }: { post?: boolean } = {}): Promise<Payroll> {
     const doc = await this.payload.create({
       collection: 'payrolls',
       data: { status: 'draft', documentDate: new Date().toISOString(), manager, periodFrom, periodTo } as never,
@@ -309,7 +348,7 @@ export class ReportScenario {
       depth: 0,
     })
     const id = this.track('payrolls', doc.id)
-    return post ? this.post('payrolls', id) : doc
+    return post ? ((await this.post('payrolls', id)) as Payroll) : doc
   }
 
   /** Зареєструвати документ, створений поза сценарієм, для прибирання. */
@@ -322,7 +361,7 @@ export class ReportScenario {
     await this.settings({ stockControlEnabled: this.previousSettings.stockControlEnabled === true })
     await this.settings(this.previousSettings).catch(() => {})
 
-    const direct = ['orders', 'purchases', 'stock-adjustments', 'stock-transfers', 'cash-operations', 'payrolls']
+    const direct = ['orders', 'purchases', 'stock-adjustments', 'stock-transfers', 'cash-operations', 'payrolls', 'salary-schemes']
     for (const slug of direct) await deleteDocumentsDirectly(this.payload, slug, this.docs[slug] ?? [])
 
     const accounts = this.docs['cash-accounts'] ?? []

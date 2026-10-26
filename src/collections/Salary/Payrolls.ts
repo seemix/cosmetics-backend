@@ -178,7 +178,8 @@ export const Payrolls: CollectionConfig = {
     group: localized('custom:group:finance'),
   },
   defaultSort: '-createdAt',
-  indexes: [{ fields: ['manager', 'status', 'periodFrom'] }],
+  // Звіт зарплати (R1): проведені розрахунки за `periodTo` у періоді.
+  indexes: [{ fields: ['manager', 'status', 'periodFrom'] }, { fields: ['status', 'periodTo'] }],
   hooks: {
     beforeValidate: lifecycle.hooks.beforeValidate,
     // Спершу розрахунок, потім статуси: проведення затверджує щойно перераховані суми.

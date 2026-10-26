@@ -2,9 +2,12 @@ import { getPayload, type Endpoint, type Payload } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { reportEndpoints } from '@/endpoints/reports'
+import { debtsReport } from '@/endpoints/reports/debts'
 import { expensesReport } from '@/endpoints/reports/expenses'
 import { profitReport } from '@/endpoints/reports/profit'
 import { purchasesReport } from '@/endpoints/reports/purchases'
+import { salaryReport } from '@/endpoints/reports/salary'
+import { stockReport } from '@/endpoints/reports/stock'
 import config from '@/payload.config'
 
 import { type Caller, callReport } from './helpers/reports'
@@ -50,6 +53,31 @@ const cases: Array<{
         code: 'INVALID_PARAMS',
         fields: [{ field: 'supplier', reason: 'not_found' }],
       },
+    ],
+  },
+  {
+    endpoint: stockReport,
+    valid: { q: 'no-such-product-r1', onlyPositive: 'false' },
+    invalid: [
+      { query: { warehouse: '1' }, code: 'INVALID_PARAMS', fields: [{ field: 'warehouse', reason: 'format' }] },
+      { query: { limit: 'abc' }, code: 'INVALID_PARAMS', fields: [{ field: 'limit', reason: 'format' }] },
+    ],
+  },
+  {
+    endpoint: debtsReport,
+    valid: { asOf: '2003-01-31', includeZero: 'true' },
+    invalid: [
+      { query: { asOf: '31.01.2003' }, code: 'INVALID_PARAMS', fields: [{ field: 'asOf', reason: 'format' }] },
+      { query: { page: '0' }, code: 'INVALID_PARAMS', fields: [{ field: 'page', reason: 'range' }] },
+    ],
+  },
+  {
+    endpoint: salaryReport,
+    valid: period,
+    invalid: [
+      { query: { from: '2003-01-01' }, code: 'INVALID_PARAMS', fields: [{ field: 'to', reason: 'required' }] },
+      { query: { ...period, manager: 'zzzzzzzzzzzzzzzzzzzzzzzz' }, code: 'INVALID_PARAMS', fields: [{ field: 'manager', reason: 'format' }] },
+      { query: { from: '2003-01-01', to: '2004-12-31' }, code: 'PERIOD_TOO_LONG' },
     ],
   },
 ]
