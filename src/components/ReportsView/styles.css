@@ -1,0 +1,219 @@
+/* Звіти (R2): лише змінні адмінки Payload, тож працює й у темній темі. */
+.reports {
+  padding-block: var(--base);
+  font-variant-numeric: tabular-nums;
+}
+
+.reports__title {
+  margin: 0 0 var(--base);
+}
+
+.reports__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--base) / 4);
+  border-bottom: 1px solid var(--theme-elevation-150);
+  margin-bottom: var(--base);
+}
+
+.reports__tab,
+.reports__btn {
+  font: inherit;
+  cursor: pointer;
+  color: var(--theme-text);
+  background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s);
+  padding: calc(var(--base) / 4) calc(var(--base) / 2);
+}
+
+.reports__tab {
+  border-bottom: 0;
+  border-radius: var(--style-radius-s) var(--style-radius-s) 0 0;
+}
+
+.reports__tab[aria-selected='true'] {
+  background: var(--theme-elevation-800);
+  color: var(--theme-elevation-0);
+  border-color: var(--theme-elevation-800);
+}
+
+.reports__btn:hover:not(:disabled),
+.reports__tab:hover {
+  background: var(--theme-elevation-100);
+}
+
+.reports__tab[aria-selected='true']:hover {
+  background: var(--theme-elevation-800);
+}
+
+.reports__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reports__tab:focus-visible,
+.reports__btn:focus-visible,
+.reports__field input:focus-visible,
+.reports__field select:focus-visible,
+.reports__scroll:focus-visible,
+.reports a:focus-visible,
+.reports summary:focus-visible {
+  outline: 2px solid var(--theme-success-500);
+  outline-offset: 2px;
+}
+
+.reports__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: calc(var(--base) / 2);
+  margin-bottom: calc(var(--base) / 2);
+}
+
+.reports__field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--base) / 8);
+}
+
+.reports__field input,
+.reports__field select {
+  font: inherit;
+  color: var(--theme-text);
+  background: var(--theme-input-bg);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s);
+  padding: calc(var(--base) / 4) calc(var(--base) / 2);
+  min-width: 11rem;
+}
+
+.reports__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--base) / 4);
+}
+
+.reports__muted {
+  color: var(--theme-elevation-600);
+  margin: calc(var(--base) / 4) 0;
+}
+
+.reports__block {
+  display: block;
+}
+
+.reports__badge {
+  display: inline-block;
+  margin: 0 0 calc(var(--base) / 2);
+  padding: 2px calc(var(--base) / 2);
+  border-radius: var(--style-radius-s);
+  background: var(--theme-elevation-100);
+  color: var(--theme-text);
+}
+
+.reports__error {
+  color: var(--theme-error-500);
+}
+
+.reports__banner {
+  margin: calc(var(--base) / 2) 0;
+  padding: calc(var(--base) / 2) var(--base);
+  border: 1px solid var(--theme-warning-500);
+  background: var(--theme-warning-100);
+  color: var(--theme-warning-900, var(--theme-text));
+  border-radius: var(--style-radius-s);
+}
+
+.reports__banner p {
+  margin: 0;
+}
+
+.reports__section {
+  margin-top: var(--base);
+}
+
+.reports__heading {
+  margin: 0 0 calc(var(--base) / 4);
+}
+
+.reports__scroll {
+  overflow-x: auto;
+}
+
+.reports__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.reports__table th,
+.reports__table td {
+  padding: calc(var(--base) / 4) calc(var(--base) / 2);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--theme-elevation-100);
+  font-weight: normal;
+}
+
+.reports__table thead th {
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--theme-elevation-50);
+}
+
+.reports__table tfoot td {
+  font-weight: 600;
+  border-top: 2px solid var(--theme-elevation-300);
+}
+
+.reports__table .reports__right {
+  text-align: right;
+}
+
+.reports__num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.reports__neg {
+  color: var(--theme-error-500);
+}
+
+.reports__strong {
+  font-weight: 600;
+}
+
+.reports__summary {
+  margin: 0;
+  max-width: 32rem;
+}
+
+.reports__summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--base);
+  padding: calc(var(--base) / 4) 0;
+  border-bottom: 1px solid var(--theme-elevation-100);
+}
+
+.reports__summary-row--strong {
+  font-weight: 600;
+}
+
+.reports__summary dt,
+.reports__summary dd {
+  margin: 0;
+}
+
+.reports__orders {
+  margin: calc(var(--base) / 4) 0 0;
+  padding-left: var(--base);
+  text-align: left;
+}
+
+.reports__pager {
+  display: flex;
+  align-items: center;
+  gap: var(--base);
+  margin-top: calc(var(--base) / 2);
+}

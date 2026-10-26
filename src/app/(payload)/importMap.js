@@ -36,7 +36,9 @@ import { OrderManager as OrderManager_335956527a86746b9253d4f624bab000 } from '@
 import { PriceField as PriceField_26d3ff61e3685d035d1966db2d7f432e } from '@/collections/Orders/components/PriceField'
 import { CustomNav as CustomNav_7a25bf58b9bf0789c79437d44273b9e5 } from 'payload-sidebar-plugin/rsc'
 import { default as default_d1bedd1c8ef921b4392dcdd8e2c30daf } from '@/assets/CustomLogo.tsx'
+import { ReportsNavLink as ReportsNavLink_1dadd44ed884203072469c985f618525 } from '@/components/ReportsView/ReportsNavLink'
 import { BeforeLogin as BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
+import { ReportsPage as ReportsPage_aa003d33c6e06d4dbc3638f4ed98639f } from '@/components/ReportsView'
 
 export const importMap = {
   "@payloadcms/ui#SlugField": SlugField_3817bf644402e67bfe6577f60ef982de,
@@ -77,5 +79,7 @@ export const importMap = {
   "@/collections/Orders/components/PriceField#PriceField": PriceField_26d3ff61e3685d035d1966db2d7f432e,
   "payload-sidebar-plugin/rsc#CustomNav": CustomNav_7a25bf58b9bf0789c79437d44273b9e5,
   "@/assets/CustomLogo.tsx#default": default_d1bedd1c8ef921b4392dcdd8e2c30daf,
-  "@/components/BeforeLogin#BeforeLogin": BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e
+  "@/components/ReportsView/ReportsNavLink#ReportsNavLink": ReportsNavLink_1dadd44ed884203072469c985f618525,
+  "@/components/BeforeLogin#BeforeLogin": BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e,
+  "@/components/ReportsView#ReportsPage": ReportsPage_aa003d33c6e06d4dbc3638f4ed98639f
 }

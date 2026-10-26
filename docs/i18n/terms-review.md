@@ -29,3 +29,10 @@
 | `custom:term:profit` | Profit | Прибыль | Profit | Без податків і ПДВ (П4): власнику варто знати, що це «операційний» прибуток касово-облікового методу |
 | `custom:term:warehouseLosses` | Warehouse losses | Потери склада | Pierderi de stoc | Включає списання й нестачі інвентаризації мінус надлишки; альтернатива RU «Списания и недостачи» |
 | `custom:term:expenses` | Expenses | Расходы | Cheltuieli | Касовий метод: лише проведені витрати з каси, без оплат постачальникам |
+| `custom:reports:colOpening` | Opening balance | Начальное сальдо | Sold inițial | Початковий борг постачальнику з документа «Початкові залишки»; RU «Сальдо» — бухгалтерський термін, може бути незвичним |
+| `custom:reports:meaningWeOweNegative` | Advance paid: they owe us | Аванс: должны нам | Avans: ni se datorează | Від'ємний борг постачальнику = аванс (див. `custom:term:advance`) |
+| `custom:reports:meaningOwedToUsNegative` | Overpayment: we owe them | Переплата: мы должны | Plată în plus: noi datorăm | Від'ємний борг покупця = переплата (див. `custom:term:overpayment`) |
+| `custom:reports:colSalaryDebt` | Debt | Долг | Datorie | У звіті зарплати це борг менеджеру (нараховано мінус виплачено) |
+| `custom:reports:cancelledAfterPayroll` | Cancelled after payroll | Отменены после расчёта | Anulate după calcul | Замовлення, скасовані після затвердження payroll (ризик Р6); RO «calcul» = `custom:term:payroll` |
+| `custom:reports:presetYearToDate` | Year to date | С начала года | De la începutul anului | — |
+| `custom:reports:guests` | Guest orders | Гостевые заказы | Comenzi ale vizitatorilor | Те саме, що «гості» в `custom:option:customersRetail`; RO «vizitatori» теж під сумнівом |

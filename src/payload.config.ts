@@ -114,6 +114,14 @@ export default buildConfig({
         Icon: '@/assets/CustomLogo.tsx',
       },
       beforeLogin: ['@/components/BeforeLogin#BeforeLogin'],
+      // Посилання «Звіти» (лише admin) і сама сторінка `/admin/reports`.
+      afterNavLinks: ['@/components/ReportsView/ReportsNavLink#ReportsNavLink'],
+      views: {
+        reports: {
+          Component: '@/components/ReportsView#ReportsPage',
+          path: '/reports',
+        },
+      },
 
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below and the import `BeforeDashboard` statement on line 15.
