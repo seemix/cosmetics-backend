@@ -17,18 +17,23 @@ export function buildTelegramMessage(
     })
     .join('\n\n')
 
+  const phone = shippingAddress?.phone?.trim() ?? ''
+  const phoneText = phone.startsWith('+373') ? phone : `+373${phone}`
+
+  const delivery = [shippingAddress?.city, shippingAddress?.address]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(', ')
+
   return `
 <b>🛒 Новый заказ №${orderNumber}</b>
 
-👤 ${shippingAddress.name}
-📞 +373${shippingAddress.phone}
-📧 ${shippingAddress.email}
+👤 ${shippingAddress?.name}
+📞 ${phoneText}
+📧 ${shippingAddress?.email}
 💰 ${paymentType === 'cash' ? 'Наличными' : `По перечислению \nSRL: ${SRL}`}
 
-🚚 <b>Доставка:</b>
-${shippingAddress.city}, ${shippingAddress.address}
-
-${comment?.trim() ? `💬 <b>Комментарий:</b>\n${comment}\n` : ''}
+${delivery ? `🚚 <b>Доставка:</b>\n${delivery}\n\n` : ''}${comment?.trim() ? `💬 <b>Комментарий:</b>\n${comment}\n` : ''}
 
 📦 <b>Товары</b>
 
