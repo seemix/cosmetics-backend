@@ -208,6 +208,8 @@ export default buildConfig({
         'expense-categories': 'list-checks',
         'cash-moves': 'send',
         'cash-operations': 'credit-card',
+        'customer-balances': 'contact',
+        'customer-moves': 'book-open',
         'salary-schemes': 'file-pen',
         payrolls: 'user-check',
         'accounting-settings': 'sliders-horizontal',
