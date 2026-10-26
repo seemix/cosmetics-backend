@@ -6,7 +6,12 @@ import { ru } from './ru'
 /** Для `i18n.translations` у `payload.config.ts`. */
 export const customTranslations = {
   en: { ...en, general: { payloadSettings: 'Dashboard settings' } },
-  ru: { ...ru, ...pluginEcommerceRu, general: { payloadSettings: 'Настройки панели' } },
+  ru: {
+    ...ru,
+    ...pluginEcommerceRu,
+    // Без «новый»: «Создать Касса» вместо «Создать новый касса» (согласование рода не работает с подставным названием).
+    general: { payloadSettings: 'Настройки панели', createNewLabel: 'Создать {{label}}', creatingNewLabel: 'Создание {{label}}' },
+  },
   ro: { ...ro, ...pluginEcommerceRo, general: { payloadSettings: 'Setările panoului' } },
 }
 
