@@ -267,8 +267,8 @@ describe('B. матриця ресурсів (REST): create / read / update / de
     })
   }
 
-  it('записувані кодом колекції (stock-moves, stock-balances, product-costs, cash-moves): запис заборонено всім, включно з admin', async () => {
-    for (const slug of ['stock-moves', 'stock-balances', 'product-costs', 'cash-moves']) {
+  it('записувані кодом колекції (stock-moves, stock-balances, product-costs, cash-moves, customer-balances, customer-moves): запис заборонено всім, включно з admin', async () => {
+    for (const slug of ['stock-moves', 'stock-balances', 'product-costs', 'cash-moves', 'customer-balances', 'customer-moves']) {
       for (const who of WHO) {
         for (const [method, path] of [
           ['POST', `/${slug}`],

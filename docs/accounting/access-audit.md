@@ -264,6 +264,8 @@
 | expense-categories | create: A; read: A; update: A; delete: A. розд. 11 | `B. матриця ресурсів` › «expense-categories: …» |
 | cash-moves | create: нікому; read: A; update: нікому; delete: нікому. журнал пише лише код | `B. матриця ресурсів` › «cash-moves: …» |
 | cash-operations | create: A; read: A; update: A; delete: A. розд. 11 | `B. матриця ресурсів` › «cash-operations: …» |
+| customer-balances | create: нікому; read: A; update: нікому; delete: нікому. кеш авансу клієнта пише лише код (розд. 6.4) | `B. матриця ресурсів` › «customer-balances: …» |
+| customer-moves | create: нікому; read: A; update: нікому; delete: нікому. журнал розрахунків з клієнтами пише лише код (розд. 6.4) | `B. матриця ресурсів` › «customer-moves: …» |
 | salary-schemes | create: A; read: A; update: A; delete: A. розд. 11, В12: схеми менеджеру недоступні | `B. матриця ресурсів` › «salary-schemes: …» |
 | payrolls | create: A; read: AM; update: A; delete: A. В12: manager читає лише свої проведені розрахунки (B2), решту admin | `B. матриця ресурсів` › «payrolls: …» |
 | forms | create: AM; read: AMCG; update: AM; delete: AM. **Відхилення:** create/customer: [FINDING-4], update/customer: [FINDING-4], delete/customer: [FINDING-4]. плагін form-builder: форми читають усі (відображення на сайті); запис admin і manager; питання власнику Q2/Q3 | `B. матриця ресурсів` › «forms: …» |
@@ -281,7 +283,7 @@
 | payload-preferences | create: AMC; read: AMC; update: AMC; delete: AMC. системна: налаштування інтерфейсу користувача; доступ лише до своїх записів (preferenceAccess) | `B. матриця ресурсів` › «payload-preferences: …» |
 | payload-migrations | create: нікому; read: нікому; update: нікому; delete: нікому. системна: REST вимкнено (501), graphQL вимкнено | `B. матриця ресурсів` › «payload-migrations: …» |
 | глобал accounting-settings | read: A; update: A. M1: налаштування обліку лише admin | `B. матриця ресурсів` › «глобал accounting-settings: …» |
-| `stock-moves`, `stock-balances`, `product-costs`, `cash-moves` | POST/PATCH/DELETE (одиночні й за `where`) заборонені всім, включно з admin | `B. матриця ресурсів` › «записувані кодом колекції…» |
+| `stock-moves`, `stock-balances`, `product-costs`, `cash-moves`, `customer-balances`, `customer-moves` | POST/PATCH/DELETE (одиночні й за `where`) заборонені всім, включно з admin | `B. матриця ресурсів` › «записувані кодом колекції…» |
 
 ### 4.2. Власні й чужі документи (B2)
 

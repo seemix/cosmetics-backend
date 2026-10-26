@@ -44,6 +44,11 @@ export type CustomerDebtItem = {
   name: string | null
   email: string | null
   ordersCount: number
+  /** Σ боргів по замовленнях. */
+  debtBani: number
+  /** Аванс клієнта (розд. 6.4); у гостей завжди 0. */
+  advanceBani: number
+  /** Баланс: борг − аванс; мінус = ми винні клієнту. */
   owedToUsBani: number
   orders: CustomerDebtOrder[]
 }
@@ -76,20 +81,28 @@ export const getDebtsReport = async (
   // Послідовно: паралельні операції в одній сесії транзакції MongoDB не підтримує.
   const supplierDebts = (await listSupplierDebts(req, asOf.at)).filter((debt) => keep(debt.debtBani))
   const managerDebts = (await listManagerDebts(req, asOf.at)).filter((debt) => keep(debt.debtBani))
-  // Сервіс C5 повертає лише замовлення з боргом > 0, тож `includeZero` на покупців не впливає.
+  // Сервіс C5 повертає лише замовлення з боргом > 0, а аванси лише ненульові, тож `includeZero`
+  // на покупців не впливає.
   const orderDebts = await getCustomerDebts(req)
+  const advances = await req.payload.db.collections['customer-balances'].collection
+    .find<{ customer: ObjectIdLike; balanceBani: number }>({ balanceBani: { $ne: 0 } }, { session, projection: { customer: 1, balanceBani: 1 } })
+    .toArray()
 
   const byCustomer = new Map<string | null, CustomerDebtItem>()
+  const itemOf = (customer: string | null) =>
+    byCustomer.get(customer) ?? { customer, name: null, email: null, ordersCount: 0, debtBani: 0, advanceBani: 0, owedToUsBani: 0, orders: [] }
+
+  for (const advance of advances) {
+    const item = itemOf(String(advance.customer))
+    item.advanceBani += advance.balanceBani
+    item.owedToUsBani -= advance.balanceBani
+    byCustomer.set(item.customer, item)
+  }
+
   for (const debt of orderDebts) {
-    const item = byCustomer.get(debt.customer) ?? {
-      customer: debt.customer,
-      name: null,
-      email: null,
-      ordersCount: 0,
-      owedToUsBani: 0,
-      orders: [],
-    }
+    const item = itemOf(debt.customer)
     item.ordersCount += 1
+    item.debtBani += debt.debtBani
     item.owedToUsBani += debt.debtBani
     item.orders.push({
       order: debt.orderId,

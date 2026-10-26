@@ -280,6 +280,8 @@ describe('M1: матриця прав (розд. 11)', () => {
       'expense-categories',
       'cash-moves',
       'cash-operations',
+      'customer-balances',
+      'customer-moves',
     ]
 
     it.each(adminOnlyCollections)('%s: read лише admin', async (collection) => {

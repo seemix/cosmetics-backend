@@ -1,4 +1,10 @@
-import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type PayloadRequest } from 'payload'
+import {
+  APIError,
+  type CollectionAfterChangeHook,
+  type CollectionBeforeChangeHook,
+  type CollectionConfig,
+  type PayloadRequest,
+} from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { hiddenUnlessAdmin } from '@/access/isAdmin'
@@ -9,6 +15,12 @@ import { activeSuppliersOnly } from '@/collections/Suppliers'
 import { moneyField } from '@/fields/money'
 import { collectionLabels, customT, label, localized, type CustomTranslationsKeys } from '@/i18n'
 import { documentLifecycle, type DocumentTransitionArgs } from '@/services/documents/documentLifecycle'
+import {
+  depositToCustomer,
+  releaseOrderPayment,
+  settleCustomer,
+  withdrawFromCustomer,
+} from '@/services/finance/customerBalance.service'
 import { getOrderRevenueBani, type PaymentOrder } from '@/services/finance/orderPayments.service'
 import { requireSession } from '@/services/stock/session'
 import { receive, revert } from '@/services/stock/stockLedger.service'
@@ -19,7 +31,9 @@ type StockLine = { warehouse: Relation; product: Relation; quantity: number; uni
 type CashLine = { account: Relation; amountBani: number }
 type SupplierLine = { supplier: Relation; amountBani: number }
 type CustomerLine = { order: Relation; amountBani: number }
-type Kind = 'stock' | 'cash' | 'supplierDebt' | 'customerDebt'
+type AdvanceLine = { customer: Relation; amountBani: number }
+type Kind = 'stock' | 'cash' | 'supplierDebt' | 'customerDebt' | 'customerAdvance'
+type OrderDoc = PaymentOrder & { _id: { toString(): string }; customer?: { toString(): string } | null }
 
 const idOf = (value: Relation) => (typeof value === 'object' ? value.id : value)
 
@@ -150,7 +164,7 @@ const loadOrders = async (req: PayloadRequest, ids: string[]) => {
   const model = req.payload.db.collections['orders']
   const session = await requireSession(req)
   const found = await model.collection
-    .find<PaymentOrder & { _id: { toString(): string } }>(
+    .find<OrderDoc>(
       { _id: { $in: ids.map((id) => new model.base.Types.ObjectId(id)) } },
       { session },
     )
@@ -212,13 +226,20 @@ const postCustomerDebt = async (args: DocumentTransitionArgs) => {
   }
 }
 
-/** Сторно kind=customerDebt заборонене, якщо по замовленню вже є оплати. */
-const reverseCustomerDebt = async ({ req, originalDoc }: DocumentTransitionArgs) => {
+/**
+ * Сторно kind=customerDebt: оплата замовлення клієнта повертається на його аванс (розд. 6.4) і гасить
+ * інші борги, крім замовлень цього документа. Для гостьового замовлення з оплатами сторно заборонене.
+ */
+const reverseCustomerDebt = async (args: DocumentTransitionArgs) => {
+  const { req, originalDoc, date } = args
   const lines = (originalDoc.customerLines ?? []) as CustomerLine[]
-  const orders = await loadOrders(req, lines.map((line) => String(idOf(line.order))))
+  const ids = lines.map((line) => String(idOf(line.order)))
+  const orders = await loadOrders(req, ids)
 
   for (const order of orders.values()) {
-    if ((Number(order.paidBani) || 0) > 0) {
+    if (order.customer) {
+      await releaseOrderPayment(req, { order: String(order._id), customer: String(order.customer), exclude: ids, doc: docRef(args), date })
+    } else if ((Number(order.paidBani) || 0) > 0) {
       throw new APIError(
         customT(req.t)('custom:error:customerDebtHasPayments', { order: order.orderNumber ?? String(order._id) }),
         409,
@@ -226,6 +247,30 @@ const reverseCustomerDebt = async ({ req, originalDoc }: DocumentTransitionArgs)
         true,
       )
     }
+  }
+}
+
+const advanceLinesOf = ({ data, originalDoc }: Pick<DocumentTransitionArgs, 'data' | 'originalDoc'>) =>
+  (data.advanceLines ?? originalDoc.advanceLines ?? []) as AdvanceLine[]
+
+/** Проведення kind=customerAdvance: аванс клієнта зростає й одразу гасить його борги (розд. 6.4). */
+const postCustomerAdvance = async (args: DocumentTransitionArgs) => {
+  const { req, date } = args
+  const lines = advanceLinesOf(args)
+
+  if (lines.length === 0) fail(req, 'custom:error:openingNoLines')
+
+  for (const line of lines) {
+    await depositToCustomer(req, { customer: String(idOf(line.customer)), amountBani: line.amountBani, kind: 'opening', doc: docRef(args), date })
+  }
+}
+
+/** Сторно kind=customerAdvance: сума знімається з авансу, а решта з оплат найновіших замовлень клієнта. */
+const reverseCustomerAdvance = async (args: DocumentTransitionArgs) => {
+  const { req, date } = args
+
+  for (const line of advanceLinesOf(args)) {
+    await withdrawFromCustomer(req, { customer: String(idOf(line.customer)), amountBani: line.amountBani, doc: docRef(args), date })
   }
 }
 
@@ -237,6 +282,7 @@ const lifecycle = documentLifecycle({
     if (kind === 'cash') return postCashOpening(args)
     if (kind === 'supplierDebt') return postSupplierDebt(args)
     if (kind === 'customerDebt') return postCustomerDebt(args)
+    if (kind === 'customerAdvance') return postCustomerAdvance(args)
 
     return postOpening(args)
   },
@@ -246,10 +292,31 @@ const lifecycle = documentLifecycle({
     // supplierDebt: сторно лише змінює статус, і борг перестає враховуватися.
     if (kind === 'supplierDebt') return
     if (kind === 'customerDebt') return reverseCustomerDebt(args)
+    if (kind === 'customerAdvance') return reverseCustomerAdvance(args)
 
     return reverseOpening(args)
   },
 })
+
+/**
+ * Проведений customerDebt: аванс клієнтів гасить нові борги. Після збереження, бо ліміт оплати
+ * (`getOrderPayableCapBani`) бачить лише проведені документи.
+ */
+const settleCustomerDebts: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req }) => {
+  if (operation !== 'update' || doc.kind !== 'customerDebt') return doc
+  if (doc.status !== 'posted' || previousDoc?.status === 'posted') return doc
+
+  const lines = (doc.customerLines ?? []) as CustomerLine[]
+  const orders = await loadOrders(req, lines.map((line) => String(idOf(line.order))))
+  const customers = new Set([...orders.values()].flatMap((order) => (order.customer ? [String(order.customer)] : [])))
+  const ref = { collection: 'opening-balances', id: String(doc.id), number: String(doc.number) }
+
+  for (const customer of customers) {
+    await settleCustomer(req, { customer, doc: ref, date: new Date(doc.postedAt ?? Date.now()) })
+  }
+
+  return doc
+}
 
 /** Один рядок на пару товар × склад, на касу, постачальника і замовлення: дубль подвоїв би залишок чи борг. */
 const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
@@ -264,7 +331,9 @@ const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc, req })
         ? (source('supplierLines') as SupplierLine[]).map((line) => String(idOf(line.supplier)))
         : kind === 'customerDebt'
           ? (source('customerLines') as CustomerLine[]).map((line) => String(idOf(line.order)))
-          : (source('stockLines') as StockLine[]).map((line) => `${idOf(line.product)}:${idOf(line.warehouse)}`)
+          : kind === 'customerAdvance'
+            ? (source('advanceLines') as AdvanceLine[]).map((line) => String(idOf(line.customer)))
+            : (source('stockLines') as StockLine[]).map((line) => `${idOf(line.product)}:${idOf(line.warehouse)}`)
 
   if (new Set(keys).size !== keys.length) {
     fail(
@@ -275,14 +344,19 @@ const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc, req })
           ? 'custom:error:openingSupplierDuplicate'
           : kind === 'customerDebt'
             ? 'custom:error:openingOrderDuplicate'
-            : 'custom:error:openingDuplicate',
+            : kind === 'customerAdvance'
+              ? 'custom:error:openingCustomerDuplicate'
+              : 'custom:error:openingDuplicate',
     )
   }
 
   return data
 }
 
-/** Початкові залишки, див. docs/accounting/design.md, розд. 2.2, 10. Борги: supplierDebt (C4), customerDebt (C5). */
+/**
+ * Початкові залишки, див. docs/accounting/design.md, розд. 2.2, 10. Борги: supplierDebt (C4),
+ * customerDebt (C5); аванси клієнтів: customerAdvance (розд. 6.4).
+ */
 export const OpeningBalances: CollectionConfig = {
   slug: 'opening-balances',
   labels: collectionLabels('custom:collection:openingBalances:singular', 'custom:collection:openingBalances:plural'),
@@ -304,6 +378,7 @@ export const OpeningBalances: CollectionConfig = {
   hooks: {
     beforeValidate: lifecycle.hooks.beforeValidate,
     beforeChange: [validateOpening, ...lifecycle.hooks.beforeChange],
+    afterChange: [settleCustomerDebts],
     beforeDelete: lifecycle.hooks.beforeDelete,
   },
   fields: [
@@ -319,6 +394,31 @@ export const OpeningBalances: CollectionConfig = {
         { label: label('custom:option:openingCash'), value: 'cash' },
         { label: label('custom:option:openingSupplierDebt'), value: 'supplierDebt' },
         { label: label('custom:option:openingCustomerDebt'), value: 'customerDebt' },
+        { label: label('custom:option:openingCustomerAdvance'), value: 'customerAdvance' },
+      ],
+    },
+    {
+      name: 'advanceLines',
+      label: label('custom:field:advanceLines'),
+      type: 'array',
+      required: true,
+      minRows: 1,
+      admin: { condition: (data) => data?.kind === 'customerAdvance' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'customer',
+              label: label('custom:field:customer'),
+              type: 'relationship',
+              relationTo: 'users',
+              required: true,
+              filterOptions: { roles: { in: ['customer'] } },
+            },
+            moneyField({ name: 'amountBani', label: label('custom:term:amount'), required: true, min: 1 }),
+          ],
+        },
       ],
     },
     {

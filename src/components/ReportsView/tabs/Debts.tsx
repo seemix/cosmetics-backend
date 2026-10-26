@@ -63,9 +63,11 @@ export const DebtsTab = ({ data, onPage }: { data: DebtsReport; onPage: (page: n
                 </details>
               ),
             },
+            { header: t('custom:reports:colDebt'), numeric: true, cell: (row) => <Money bani={row.debtBani} /> },
+            { header: t('custom:reports:colAdvance'), numeric: true, cell: (row) => <Money bani={row.advanceBani} /> },
             { header: t('custom:reports:colOwedToUs'), numeric: true, cell: (row) => <DebtAmount kind="owedToUs" bani={row.owedToUsBani} /> },
           ]}
-          footer={['', '', t('custom:term:total'), <DebtAmount key="total" kind="owedToUs" bani={data.customers.totalBani} />]}
+          footer={['', '', '', '', t('custom:term:total'), <DebtAmount key="total" kind="owedToUs" bani={data.customers.totalBani} />]}
         />
         <Pager pagination={data.customers.pagination} onPage={onPage} />
       </Section>

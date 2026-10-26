@@ -9,7 +9,8 @@ const isCancelTransition = (status: unknown, previousStatus: unknown) =>
 /**
  * Перевірки скасування до збереження (дизайн, розд. 9.1), щоб відхилене скасування не змінило замовлення.
  * Непроведене замовлення (історичне або облік вимкнено) лише змінює статус.
- * Проведене: оплата блокує (спершу повернення клієнту), закритий період блокує; інакше `cancelledAt = now`.
+ * Проведене: оплата гостьового замовлення блокує (спершу повернення клієнту), оплата замовлення
+ * клієнта повертається на його аванс (`settleCustomerBalance`); закритий період блокує; інакше `cancelledAt = now`.
  * Хто скасовує: `orders.update` дозволено лише admin (В5); скасувати можна й `shipped`.
  */
 export const prepareOrderCancel: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
@@ -19,7 +20,7 @@ export const prepareOrderCancel: CollectionBeforeChangeHook = async ({ data, ori
   const stockPostedAt = originalDoc.accounting?.stockPostedAt
   if (!stockPostedAt) return data
 
-  if ((Number(originalDoc.paidBani) || 0) > 0) {
+  if ((Number(originalDoc.paidBani) || 0) > 0 && !originalDoc.customer) {
     throw new APIError(customT(req.t)('custom:error:paidOrderCancel'), 409, undefined, true)
   }
 

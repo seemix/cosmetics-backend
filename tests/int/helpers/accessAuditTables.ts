@@ -59,6 +59,8 @@ export const RESOURCES: Record<string, ResourceRule> = {
   'expense-categories': ONLY_ADMIN('розд. 11'),
   'cash-moves': CODE_ONLY('A', 'журнал пише лише код'),
   'cash-operations': ONLY_ADMIN('розд. 11'),
+  'customer-balances': CODE_ONLY('A', 'кеш авансу клієнта пише лише код (розд. 6.4)'),
+  'customer-moves': CODE_ONLY('A', 'журнал розрахунків з клієнтами пише лише код (розд. 6.4)'),
   'salary-schemes': ONLY_ADMIN('розд. 11, В12: схеми менеджеру недоступні'),
   payrolls: { create: 'A', read: 'AM', update: 'A', delete: 'A', why: 'В12: manager читає лише свої проведені розрахунки (B2), решту admin' },
   addresses: {

@@ -12,6 +12,7 @@ import { deductOrderStock } from '@/collections/Orders/hooks/deductOrderStock'
 import { writeOrderStockMoves } from '@/collections/Orders/hooks/writeOrderStockMoves'
 import { cancelOrderStock, prepareOrderCancel } from '@/collections/Orders/hooks/cancelOrderStock'
 import { forbidDeletePosted } from '@/collections/Orders/hooks/forbidDeletePosted'
+import { settleCustomerBalance } from '@/collections/Orders/hooks/settleCustomerBalance'
 import { guardManagerOrderUpdate } from '@/collections/Orders/hooks/guardManagerOrderUpdate'
 import { guardPostedOrder } from '@/collections/Orders/hooks/guardPostedOrder'
 import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
@@ -323,7 +324,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       assignAccountingFields,
       deductOrderStock,
     ],
-    afterChange: [writeOrderStockMoves, cancelOrderStock, sendNewOrderNotification],
+    afterChange: [writeOrderStockMoves, cancelOrderStock, settleCustomerBalance, sendNewOrderNotification],
     beforeDelete: [forbidDeletePosted],
   },
 })

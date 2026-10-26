@@ -160,9 +160,18 @@ export type CustomerDebt = {
   capBani: number
   paidBani: number
   debtBani: number
+  /** Дата створення замовлення: аванс гасить борги від найстарішого. */
+  createdAt: string | null
 }
 
-type DebtRow = { _id: { toString(): string }; orderNumber?: string; customer?: { toString(): string }; capBani: number; paidBani: number }
+type DebtRow = {
+  _id: { toString(): string }
+  orderNumber?: string
+  customer?: { toString(): string }
+  capBani: number
+  paidBani: number
+  createdAt?: Date | string | null
+}
 
 const toDebt = (row: DebtRow): CustomerDebt => ({
   orderId: String(row._id),
@@ -171,6 +180,7 @@ const toDebt = (row: DebtRow): CustomerDebt => ({
   capBani: row.capBani,
   paidBani: row.paidBani,
   debtBani: row.capBani - row.paidBani,
+  createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : null,
 })
 
 /**
@@ -184,7 +194,7 @@ export const getCustomerDebts = async (
 ): Promise<CustomerDebt[]> => {
   const session = await readSession(req)
   const customerMatch = (field: string) => (customer ? [{ $match: { [field]: toObjectId(req, customer) } }] : [])
-  const projection = { orderNumber: 1, customer: 1, capBani: 1, paidBani: 1 }
+  const projection = { orderNumber: 1, customer: 1, capBani: 1, paidBani: 1, createdAt: 1 }
 
   const regular = await model(req, 'orders')
     .aggregate<DebtRow>([
@@ -206,7 +216,14 @@ export const getCustomerDebts = async (
       { $unwind: '$order' },
       { $match: { 'order.status': { $ne: 'cancelled' }, 'order.accounting.stockPostedAt': null } },
       ...customerMatch('order.customer'),
-      { $addFields: { paidBani: { $ifNull: ['$order.paidBani', 0] }, orderNumber: '$order.orderNumber', customer: '$order.customer' } },
+      {
+        $addFields: {
+          paidBani: { $ifNull: ['$order.paidBani', 0] },
+          orderNumber: '$order.orderNumber',
+          customer: '$order.customer',
+          createdAt: '$order.createdAt',
+        },
+      },
       { $match: { $expr: { $gt: ['$capBani', '$paidBani'] } } },
       { $project: projection },
     ])

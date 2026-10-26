@@ -87,10 +87,10 @@ export interface Config {
     'expense-categories': ExpenseCategory;
     'cash-moves': CashMove;
     'cash-operations': CashOperation;
+    'customer-balances': CustomerBalance;
+    'customer-moves': CustomerMove;
     'salary-schemes': SalaryScheme;
     payrolls: Payroll;
-    forms: Form;
-    'form-submissions': FormSubmission;
     addresses: Address;
     variants: Variant;
     variantTypes: VariantType;
@@ -138,10 +138,10 @@ export interface Config {
     'expense-categories': ExpenseCategoriesSelect<false> | ExpenseCategoriesSelect<true>;
     'cash-moves': CashMovesSelect<false> | CashMovesSelect<true>;
     'cash-operations': CashOperationsSelect<false> | CashOperationsSelect<true>;
+    'customer-balances': CustomerBalancesSelect<false> | CustomerBalancesSelect<true>;
+    'customer-moves': CustomerMovesSelect<false> | CustomerMovesSelect<true>;
     'salary-schemes': SalarySchemesSelect<false> | SalarySchemesSelect<true>;
     payrolls: PayrollsSelect<false> | PayrollsSelect<true>;
-    forms: FormsSelect<false> | FormsSelect<true>;
-    'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
     variants: VariantsSelect<false> | VariantsSelect<true>;
     variantTypes: VariantTypesSelect<false> | VariantTypesSelect<true>;
@@ -867,7 +867,14 @@ export interface OpeningBalance {
   reversedBy?: (string | null) | User;
   reversalReason?: string | null;
   comment?: string | null;
-  kind: 'stock' | 'cash' | 'supplierDebt' | 'customerDebt';
+  kind: 'stock' | 'cash' | 'supplierDebt' | 'customerDebt' | 'customerAdvance';
+  advanceLines?:
+    | {
+        customer: string | User;
+        amountBani: number;
+        id?: string | null;
+      }[]
+    | null;
   cashLines?:
     | {
         account: string | CashAccount;
@@ -964,8 +971,8 @@ export interface CashOperation {
   account: string | CashAccount;
   toAccount?: (string | null) | CashAccount;
   amountBani: number;
-  order?: (string | null) | Order;
   customer?: (string | null) | User;
+  order?: (string | null) | Order;
   supplier?: (string | null) | Supplier;
   purchase?: (string | null) | Purchase;
   category?: (string | null) | ExpenseCategory;
@@ -1041,192 +1048,30 @@ export interface SalaryScheme {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "forms".
+ * via the `definition` "customer-balances".
  */
-export interface Form {
+export interface CustomerBalance {
   id: string;
-  title: string;
-  fields?:
-    | (
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            defaultValue?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'checkbox';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'country';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'email';
-          }
-        | {
-            message?: {
-              root: {
-                type: string;
-                children: {
-                  type: any;
-                  version: number;
-                  [k: string]: unknown;
-                }[];
-                direction: ('ltr' | 'rtl') | null;
-                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-                indent: number;
-                version: number;
-              };
-              [k: string]: unknown;
-            } | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'message';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'number';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            placeholder?: string | null;
-            options?:
-              | {
-                  label: string;
-                  value: string;
-                  id?: string | null;
-                }[]
-              | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'select';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'state';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'text';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'textarea';
-          }
-      )[]
-    | null;
-  submitButtonLabel?: string | null;
-  /**
-   * Choose whether to display an on-page message or redirect to a different page after they submit the form.
-   */
-  confirmationType?: ('message' | 'redirect') | null;
-  confirmationMessage?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  redirect?: {
-    url: string;
-  };
-  /**
-   * Send custom emails when the form submits. Use comma separated lists to send the same email to multiple recipients. To reference a value from this form, wrap that field's name with double curly brackets, i.e. {{firstName}}. You can use a wildcard {{*}} to output all data and {{*:table}} to format it as an HTML table in the email.
-   */
-  emails?:
-    | {
-        emailTo?: string | null;
-        cc?: string | null;
-        bcc?: string | null;
-        replyTo?: string | null;
-        emailFrom?: string | null;
-        subject: string;
-        /**
-         * Enter the message that should be sent in this email.
-         */
-        message?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        id?: string | null;
-      }[]
-    | null;
+  customer: string | User;
+  balanceBani: number;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "form-submissions".
+ * via the `definition` "customer-moves".
  */
-export interface FormSubmission {
+export interface CustomerMove {
   id: string;
-  form: string | Form;
-  submissionData?:
-    | {
-        field: string;
-        value: string;
-        id?: string | null;
-      }[]
-    | null;
+  date: string;
+  customer?: (string | null) | User;
+  kind: 'receipt' | 'refund' | 'opening' | 'allocation' | 'release' | 'reversal';
+  advanceDeltaBani: number;
+  order?: (string | null) | Order;
+  orderDeltaBani: number;
+  docCollection: string;
+  docId: string;
+  docNumber?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1372,20 +1217,20 @@ export interface PayloadLockedDocument {
         value: string | CashOperation;
       } | null)
     | ({
+        relationTo: 'customer-balances';
+        value: string | CustomerBalance;
+      } | null)
+    | ({
+        relationTo: 'customer-moves';
+        value: string | CustomerMove;
+      } | null)
+    | ({
         relationTo: 'salary-schemes';
         value: string | SalaryScheme;
       } | null)
     | ({
         relationTo: 'payrolls';
         value: string | Payroll;
-      } | null)
-    | ({
-        relationTo: 'forms';
-        value: string | Form;
-      } | null)
-    | ({
-        relationTo: 'form-submissions';
-        value: string | FormSubmission;
       } | null)
     | ({
         relationTo: 'addresses';
@@ -1801,6 +1646,13 @@ export interface OpeningBalancesSelect<T extends boolean = true> {
   reversalReason?: T;
   comment?: T;
   kind?: T;
+  advanceLines?:
+    | T
+    | {
+        customer?: T;
+        amountBani?: T;
+        id?: T;
+      };
   cashLines?:
     | T
     | {
@@ -1893,13 +1745,40 @@ export interface CashOperationsSelect<T extends boolean = true> {
   account?: T;
   toAccount?: T;
   amountBani?: T;
-  order?: T;
   customer?: T;
+  order?: T;
   supplier?: T;
   purchase?: T;
   category?: T;
   manager?: T;
   payroll?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-balances_select".
+ */
+export interface CustomerBalancesSelect<T extends boolean = true> {
+  customer?: T;
+  balanceBani?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-moves_select".
+ */
+export interface CustomerMovesSelect<T extends boolean = true> {
+  date?: T;
+  customer?: T;
+  kind?: T;
+  advanceDeltaBani?: T;
+  order?: T;
+  orderDeltaBani?: T;
+  docCollection?: T;
+  docId?: T;
+  docNumber?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1955,155 +1834,6 @@ export interface PayrollsSelect<T extends boolean = true> {
         id?: T;
       };
   schemeSnapshot?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "forms_select".
- */
-export interface FormsSelect<T extends boolean = true> {
-  title?: T;
-  fields?:
-    | T
-    | {
-        checkbox?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              defaultValue?: T;
-              id?: T;
-              blockName?: T;
-            };
-        country?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        email?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        message?:
-          | T
-          | {
-              message?: T;
-              id?: T;
-              blockName?: T;
-            };
-        number?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        select?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              placeholder?: T;
-              options?:
-                | T
-                | {
-                    label?: T;
-                    value?: T;
-                    id?: T;
-                  };
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        state?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        text?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        textarea?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-      };
-  submitButtonLabel?: T;
-  confirmationType?: T;
-  confirmationMessage?: T;
-  redirect?:
-    | T
-    | {
-        url?: T;
-      };
-  emails?:
-    | T
-    | {
-        emailTo?: T;
-        cc?: T;
-        bcc?: T;
-        replyTo?: T;
-        emailFrom?: T;
-        subject?: T;
-        message?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "form-submissions_select".
- */
-export interface FormSubmissionsSelect<T extends boolean = true> {
-  form?: T;
-  submissionData?:
-    | T
-    | {
-        field?: T;
-        value?: T;
-        id?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
 }

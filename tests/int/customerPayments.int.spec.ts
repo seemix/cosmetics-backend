@@ -33,6 +33,7 @@ const warehouses: string[] = []
 const orders: string[] = []
 const accounts: string[] = []
 const operations: Array<number | string> = []
+const customers: string[] = []
 const fundingDoc = { collection: 'test-docs', id: 'customer-payments-funding' }
 const telegramEnv = { token: process.env.TELEGRAM_BOT_TOKEN, chat: process.env.TELEGRAM_CHAT_ID }
 
@@ -74,7 +75,16 @@ const movesOf = async (id: number | string) =>
     })
   ).docs
 
-/** Замовлення з адмінки на 1 шт. за 100,00: проводиться, якщо облік увімкнено. */
+const newCustomer = async () => {
+  const id = String((await data.user()).id)
+  customers.push(id)
+  return id
+}
+
+/**
+ * Замовлення з адмінки на 1 шт. за 100,00: проводиться, якщо облік увімкнено. Кожне має свого
+ * клієнта, бо гроші клієнта гасять усі його борги (розд. 6.4); гостьове без клієнта.
+ */
 const newOrder = async (options: { guest?: boolean } = {}): Promise<Order> => {
   const product = String((await data.product({ brand, retailPrice: 100 })).id)
   products.push(product)
@@ -86,12 +96,21 @@ const newOrder = async (options: { guest?: boolean } = {}): Promise<Order> => {
     data: {
       items: [{ product, quantity: 1, price: 0 }],
       total: 0,
-      ...(options.guest ? {} : { customer }),
+      ...(options.guest ? {} : { customer: await newCustomer() }),
     } as never,
     depth: 0,
   })
   orders.push(String(order.id))
   return order
+}
+
+const advanceOf = async (order: Order) => {
+  const { docs } = await payload.find({
+    collection: 'customer-balances',
+    where: { customer: { equals: idOf(order.customer) } },
+    depth: 0,
+  })
+  return docs[0]?.balanceBani ?? 0
 }
 
 const orderOf = (order: Order) => payload.findByID({ collection: 'orders', id: order.id, depth: 0 })
@@ -172,6 +191,9 @@ describe('C3: надходження й повернення від покупц
     await payload.delete({ collection: 'cash-moves', where: { account: { in: accounts } } })
     await payload.delete({ collection: 'cash-accounts', where: { id: { in: accounts } } })
     await payload.delete({ collection: 'expense-categories', where: { id: { equals: rent } } })
+    await payload.delete({ collection: 'customer-moves', where: { order: { in: orders } } })
+    await payload.delete({ collection: 'customer-moves', where: { customer: { in: customers } } })
+    await payload.delete({ collection: 'customer-balances', where: { customer: { in: customers } } })
     await deleteDocumentsDirectly(payload, 'orders', orders)
     await cleanupStock(payload, products, warehouses)
     await data.cleanup()
@@ -187,7 +209,7 @@ describe('C3: надходження й повернення від покупц
 
       const first = await pay('customer_receipt', order, account, 4000)
 
-      expect(idOf(first.customer)).toBe(customer)
+      expect(idOf(first.customer)).toBe(idOf(order.customer))
       expect(await balanceOf(account)).toBe(4000)
       expect((await movesOf(first.id)).map((move) => [String(move.account), move.deltaBani])).toEqual([[account, 4000]])
       expect(await paymentOf(order)).toEqual({ paidBani: 4000, paymentState: 'partial', status: 'pending' })
@@ -198,9 +220,21 @@ describe('C3: надходження й повернення від покупц
       expect(await paymentOf(order)).toEqual({ paidBani: 10000, paymentState: 'paid', status: 'pending' })
     })
 
-    it('переплата відхиляється, документ лишається чернеткою', async () => {
+    it('переплата клієнта йде в аванс', async () => {
       const account = await newAccount('overpay')
       const order = await newOrder()
+      await pay('customer_receipt', order, account, 9000)
+
+      await pay('customer_receipt', order, account, 1001)
+
+      expect(await balanceOf(account)).toBe(10001)
+      expect(await paymentOf(order)).toMatchObject({ paidBani: 10000, paymentState: 'paid' })
+      expect(await advanceOf(order)).toBe(1)
+    })
+
+    it('переплата гостьового замовлення відхиляється, документ лишається чернеткою', async () => {
+      const account = await newAccount('overpay-guest')
+      const order = await newOrder({ guest: true })
       await pay('customer_receipt', order, account, 9000)
 
       const doc = await draft('customer_receipt', order, account, 1001)
@@ -212,7 +246,7 @@ describe('C3: надходження й повернення від покупц
       expect(await paymentOf(order)).toMatchObject({ paidBani: 9000, paymentState: 'partial' })
     })
 
-    it('дві паралельні надходження понад суму замовлення: рівно один успіх', async () => {
+    it('дві паралельні надходження понад суму замовлення: гроші не губляться й не дублюються', async () => {
       const account = await newAccount('race')
       const order = await newOrder()
       const [a, b] = [
@@ -221,10 +255,13 @@ describe('C3: надходження й повернення від покупц
       ]
 
       const results = await Promise.allSettled([post(a.id), post(b.id)])
+      const received = 6000 * results.filter((result) => result.status === 'fulfilled').length
 
-      expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1)
-      expect(await paymentOf(order)).toMatchObject({ paidBani: 6000, paymentState: 'partial' })
-      expect(await balanceOf(account)).toBe(6000)
+      // Конфлікт запису може відхилити одне з проведень; що пройшло, те й розподілено.
+      expect(received).toBeGreaterThan(0)
+      expect(await balanceOf(account)).toBe(received)
+      expect((await paymentOf(order)).paidBani).toBe(Math.min(received, 10000))
+      expect(await advanceOf(order)).toBe(received - Math.min(received, 10000))
     })
 
     it('скасоване замовлення не приймає оплату', async () => {
@@ -252,7 +289,7 @@ describe('C3: надходження й повернення від покупц
       expect((await paymentOf(order)).paidBani).toBe(0)
     })
 
-    it('замовлення обов\'язкове, поля інших типів очищаються', async () => {
+    it('клієнт або замовлення обов\'язкові, поля інших типів очищаються', async () => {
       const account = await newAccount('no-order')
 
       await expect(
@@ -261,7 +298,7 @@ describe('C3: надходження й повернення від покупц
           data: { status: 'draft', operationDate: '2026-10-25T00:00:00.000Z', type: 'customer_receipt', account, amountBani: 100 },
           ...asAdmin,
         }),
-      ).rejects.toThrow(/Select the order/)
+      ).rejects.toThrow(/Select the customer or the order/)
 
       const order = await newOrder()
       const expense = await payload.create({
@@ -317,9 +354,10 @@ describe('C3: надходження й повернення від покупц
     it('повернення на скасованому замовленні дозволене', async () => {
       const account = await newAccount('refund-cancelled')
       await fund(account, 5000)
-      // Історичне замовлення з оплатою: без stockPostedAt скасування лише змінює статус.
+      // Історичне гостьове замовлення з оплатою: без stockPostedAt скасування лише змінює статус
+      // (у замовлення клієнта оплата при скасуванні пішла б на аванс).
       await settings({ stockControlEnabled: false })
-      const order = await newOrder().finally(() => settings({ stockControlEnabled: true }))
+      const order = await newOrder({ guest: true }).finally(() => settings({ stockControlEnabled: true }))
       await payload.update({ collection: 'orders', id: order.id, data: { paidBani: 5000, paymentState: 'partial' }, depth: 0 })
       await setStatus(order, 'cancelled')
 
@@ -358,13 +396,13 @@ describe('C3: надходження й повернення від покупц
       expect(mirror).toMatchObject({ deltaBani: -10000, reversalOf: original.id })
     })
 
-    it('сторно надходження відхиляється, якщо paidBani < amount', async () => {
+    it('сторно надходження відхиляється, якщо гроші клієнта вже повернули', async () => {
       const account = await newAccount('rev-receipt-paid')
       const order = await newOrder()
       const receipt = await pay('customer_receipt', order, account, 5000)
       await pay('customer_refund', order, account, 3000)
 
-      await expect(reverse(receipt.id)).rejects.toThrow(/only 20\.00 paid/)
+      await expect(reverse(receipt.id)).rejects.toThrow(/only 20\.00 of paid money left/)
 
       expect(await statusOf(receipt.id)).toBe('posted')
       expect(await paymentOf(order)).toMatchObject({ paidBani: 2000, paymentState: 'partial' })
@@ -390,7 +428,7 @@ describe('C3: надходження й повернення від покупц
       expect(await balanceOf(account)).toBe(2000)
     })
 
-    it('сторно повернення повертає paidBani; на скасованому замовленні відхиляється', async () => {
+    it('сторно повернення повертає paidBani; по скасованому замовленню гроші йдуть на аванс', async () => {
       const account = await newAccount('rev-refund')
       const order = await newOrder()
       await pay('customer_receipt', order, account, 10000)
@@ -403,6 +441,20 @@ describe('C3: надходження й повернення від покупц
       const full = await pay('customer_refund', order, account, 10000)
       await setStatus(order, 'cancelled')
 
+      await reverse(full.id)
+      expect(await statusOf(full.id)).toBe('reversed')
+      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'cancelled' })
+      expect(await advanceOf(order)).toBe(10000)
+      expect(await balanceOf(account)).toBe(10000)
+    })
+
+    it('гостьове: сторно повернення на скасованому замовленні відхиляється', async () => {
+      const account = await newAccount('rev-refund-guest')
+      const order = await newOrder({ guest: true })
+      await pay('customer_receipt', order, account, 10000)
+      const full = await pay('customer_refund', order, account, 10000)
+      await setStatus(order, 'cancelled')
+
       await expect(reverse(full.id)).rejects.toThrow(/is cancelled/)
       expect(await statusOf(full.id)).toBe('posted')
       expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'cancelled' })
@@ -411,9 +463,21 @@ describe('C3: надходження й повернення від покупц
   })
 
   describe('замовлення й транзакція', () => {
-    it('оплачене замовлення не скасовується; після повного повернення скасування проходить', async () => {
+    it('оплачене замовлення клієнта скасовується, оплата йде на аванс', async () => {
       const account = await newAccount('cancel-paid')
       const order = await newOrder()
+      await pay('customer_receipt', order, account, 10000)
+
+      const cancelled = await setStatus(order, 'cancelled')
+
+      expect(cancelled).toMatchObject({ status: 'cancelled', paidBani: 0, paymentState: 'unpaid' })
+      expect(await advanceOf(order)).toBe(10000)
+      expect(await balanceOf(account)).toBe(10000)
+    })
+
+    it('оплачене гостьове замовлення не скасовується; після повного повернення скасування проходить', async () => {
+      const account = await newAccount('cancel-paid-guest')
+      const order = await newOrder({ guest: true })
       await pay('customer_receipt', order, account, 10000)
 
       await expect(setStatus(order, 'cancelled')).rejects.toThrow(/refund the customer/)

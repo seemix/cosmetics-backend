@@ -445,8 +445,8 @@ landedBani_i = amountBani_i + alloc_i
 
 | type | Обов'язкові зв'язки | cash-moves | Інші ефекти | Валідація |
 |---|---|---|---|---|
-| customer_receipt | order | `account +amount` | `order.paidBani += amount`, `paymentState` | замовлення не скасоване; проведене (`stockPostedAt`) або має опційний борг; `amount ≤ total×100 − paidBani` |
-| customer_refund | order | `account −amount` | `order.paidBani −= amount` | `amount ≤ paidBani` |
+| customer_receipt | customer або order | `account +amount` | клієнт: аванс `+amount`, далі розподіл по боргах (6.4); гостьове замовлення: `order.paidBani += amount`, `paymentState` | вказане замовлення не скасоване; проведене (`stockPostedAt`) або має опційний борг; гостьове: `amount ≤ total×100 − paidBani` |
+| customer_refund | customer або order | `account −amount` | з order: `order.paidBani −= amount`; без order: аванс `−amount` (6.4) | з order: `amount ≤ paidBani`; без order: `amount ≤` аванс |
 | supplier_payment | supplier | `account −amount` | зменшує борг постачальнику | переплата дозволена (аванс) |
 | expense | category (+manager для isSalary) | `account −amount` | витрата періоду | |
 | transfer | toAccount ≠ account | `account −amount`, `toAccount +amount` | | |
@@ -458,10 +458,41 @@ landedBani_i = amountBani_i + alloc_i
 | Борг | Формула |
 |---|---|
 | Покупця по замовленню | `revenueBani − paidBani` для не скасованих проведених + опційні `customerDebt` − надходження по них |
+| Баланс покупця | Σ боргів по його замовленнях − аванс (`customer-balances`, 6.4); мінус = ми винні клієнту |
 | Постачальнику | Σ проведених `purchases.lines.amountBani` (supplier) + Σ `extraCosts.amountBani` (payee) + `supplierDebt` − Σ `supplier_payment` − сторновані |
 | Менеджеру | Σ `payrolls.totalBani` (posted) − Σ витрат isSalary з цим `manager` |
 
 ПДВ: поза обсягом. Усі суми як є (брутто). Якщо компанія платник ПДВ, вхідний ПДВ потрапляє в собівартість, що спотворює прибуток (В2).
+
+### 6.4 Баланс клієнта (В14)
+
+Гроші клієнта не прив'язані до замовлення: оптовий клієнт платить загальною сумою за кредитні
+замовлення. Оплата кожного замовлення лишається в `orders.paidBani`/`paymentState` (на них стоять
+зарплата, звіти й статуси), а не розподілені гроші лежать в авансі клієнта.
+
+- `customer-balances`: один документ на клієнта, `balanceBani` = аванс (≥ 0), кеш журналу.
+- `customer-moves`: журнал, лише доповнюється. Рядок: `customer`, `kind`, `advanceDeltaBani`,
+  `order`, `orderDeltaBani`, документ-причина. Σ `advanceDeltaBani` клієнта = аванс,
+  Σ `orderDeltaBani` замовлення = `paidBani` (перевіряє `cashCacheCheck`).
+- Сервіс `customerBalance.service`: аванс змінюється умовним `$inc` у транзакції, `paidBani` через
+  `changeOrderPaid`.
+
+| Подія | Ефект |
+|---|---|
+| Надходження клієнта, початковий аванс, сторно повернення | аванс `+amount`, далі розподіл (`allocation`) |
+| Розподіл | аванс гасить борги: спершу вказане замовлення, далі від найстарішого (`createdAt`) |
+| Нове проведене замовлення клієнта | розподіл наявного авансу |
+| Проведений `customerDebt` | розподіл авансу клієнтів цих замовлень |
+| Повернення без замовлення | аванс `−amount`, не більше за аванс |
+| Повернення по замовленню | `order.paidBani −= amount`, аванс не змінюється |
+| Сторно надходження чи початкового авансу | спершу з авансу, решта знімається з оплат найновіших замовлень; якщо гроші вже повернули, помилка |
+| Скасування замовлення клієнта, сторно `customerDebt` | `paidBani` замовлення повертається на аванс (`release`), далі розподіл по інших боргах |
+
+Гостьові замовлення (без клієнта) аванса не мають: оплата прямо в замовлення, переплата заборонена,
+оплачене замовлення не скасовується до повернення коштів.
+
+Зарплата за `payment_date` бере найпізнішу дату рядка журналу з `orderDeltaBani > 0`, тобто момент,
+коли замовлення отримало гроші (надходження або зарахування авансу).
 
 ## 7. Менеджери й зарплата
 

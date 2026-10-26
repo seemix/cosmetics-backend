@@ -24,6 +24,7 @@ const warehouses: string[] = []
 const orders: string[] = []
 const openings: Array<number | string> = []
 const operations: Array<number | string> = []
+const customers: string[] = []
 const telegramEnv = { token: process.env.TELEGRAM_BOT_TOKEN, chat: process.env.TELEGRAM_CHAT_ID }
 
 const idOf = (value: unknown) => String(typeof value === 'object' && value ? (value as { id: unknown }).id : value)
@@ -38,22 +39,33 @@ const asAdmin = {
   overrideAccess: false,
 } as const
 
-/** Замовлення з адмінки на 1 шт.; `historical` = створене до вмикання обліку складу (без stockPostedAt). */
+const newCustomer = async () => {
+  const id = String((await data.user()).id)
+  customers.push(id)
+  return id
+}
+
+/**
+ * Замовлення з адмінки на 1 шт.; `historical` = створене до вмикання обліку складу (без stockPostedAt).
+ * Без `owner` у кожного замовлення свій клієнт: гроші клієнта гасять усі його борги (розд. 6.4).
+ */
 const newOrder = async ({
   historical = false,
   guest = false,
   retailPrice = 100,
-}: { historical?: boolean; guest?: boolean; retailPrice?: number } = {}): Promise<Order> => {
+  owner,
+}: { historical?: boolean; guest?: boolean; retailPrice?: number; owner?: string } = {}): Promise<Order> => {
   const product = String((await data.product({ brand, retailPrice })).id)
   products.push(product)
   await stockUp(payload, product, warehouse, 5, 5000)
+  const buyer = guest ? null : (owner ?? (await newCustomer()))
 
   await settings({ stockControlEnabled: !historical })
   const order = await payload
     .create({
       collection: 'orders',
       user: admin,
-      data: { items: [{ product, quantity: 1, price: 0 }], total: 0, ...(guest ? {} : { customer }) } as never,
+      data: { items: [{ product, quantity: 1, price: 0 }], total: 0, ...(buyer ? { customer: buyer } : {}) } as never,
       depth: 0,
     })
     .finally(() => settings({ stockControlEnabled: true }))
@@ -122,6 +134,15 @@ const debtsOf = async (filters: { customer?: string } = {}) =>
 
 const debtOfOrder = async (order: Order) => (await debtsOf()).find((debt) => debt.orderId === String(order.id))
 
+const advanceOf = async (order: Order) => {
+  const { docs } = await payload.find({
+    collection: 'customer-balances',
+    where: { customer: { equals: idOf(order.customer) } },
+    depth: 0,
+  })
+  return docs[0]?.balanceBani ?? 0
+}
+
 describe('C5: борги покупців', () => {
   beforeAll(async () => {
     payload = await getPayload({ config: await config })
@@ -162,6 +183,9 @@ describe('C5: борги покупців', () => {
     await deleteDocumentsDirectly(payload, 'cash-operations', operations)
     await payload.delete({ collection: 'cash-moves', where: { account: { equals: account } } })
     await payload.delete({ collection: 'cash-accounts', where: { id: { equals: account } } })
+    await payload.delete({ collection: 'customer-moves', where: { order: { in: orders } } })
+    await payload.delete({ collection: 'customer-moves', where: { customer: { in: [customer, ...customers] } } })
+    await payload.delete({ collection: 'customer-balances', where: { customer: { in: [customer, ...customers] } } })
     await deleteDocumentsDirectly(payload, 'orders', orders)
     await cleanupStock(payload, products, warehouses)
     await data.cleanup()
@@ -173,7 +197,7 @@ describe('C5: борги покупців', () => {
       const order = await newOrder()
       expect(await debtOfOrder(order)).toMatchObject({
         number: order.orderNumber,
-        customer,
+        customer: idOf(order.customer),
         capBani: 10000,
         paidBani: 0,
         debtBani: 10000,
@@ -205,7 +229,7 @@ describe('C5: борги покупців', () => {
       expect((await paymentOf(order)).paidBani).toBe(0)
     })
 
-    it('історичне з customerDebt 500,00 і оплатою 200,00 → борг 300,00; понад ліміт відхиляється; після повної оплати paid', async () => {
+    it('історичне з customerDebt 500,00 і оплатою 200,00 → борг 300,00; понад ліміт іде в аванс; після повної оплати paid', async () => {
       const order = await newOrder({ historical: true, retailPrice: 1000 })
       await debtOn(order, 50000)
       expect(await debtOfOrder(order)).toMatchObject({ capBani: 50000, paidBani: 0, debtBani: 50000 })
@@ -214,17 +238,24 @@ describe('C5: борги покупців', () => {
       expect(await debtOfOrder(order)).toMatchObject({ capBani: 50000, paidBani: 20000, debtBani: 30000 })
       expect(await paymentOf(order)).toEqual({ paidBani: 20000, paymentState: 'partial' })
 
-      const tooMuch = await draftReceipt(order, 30001)
-      await expect(post(tooMuch.id)).rejects.toThrow(/Overpayment.*left to pay 300\.00/)
-      expect((await paymentOf(order)).paidBani).toBe(20000)
-
-      await receive(order, 30000)
+      await receive(order, 30001)
       expect(await paymentOf(order)).toEqual({ paidBani: 50000, paymentState: 'paid' })
+      expect(await advanceOf(order)).toBe(1)
       expect(await debtOfOrder(order)).toBeUndefined()
     })
 
+    it('гостьове історичне: понад ліміт відхиляється', async () => {
+      const order = await newOrder({ historical: true, guest: true, retailPrice: 1000 })
+      await debtOn(order, 50000)
+      await receive(order, 20000)
+
+      const tooMuch = await draftReceipt(order, 30001)
+      await expect(post(tooMuch.id)).rejects.toThrow(/Overpayment.*left to pay 300\.00/)
+      expect((await paymentOf(order)).paidBani).toBe(20000)
+    })
+
     it('підсумок по клієнтах: гості в окремій групі без клієнта', async () => {
-      const [mine, guest] = [await newOrder(), await newOrder({ guest: true })]
+      const [mine, guest] = [await newOrder({ owner: customer }), await newOrder({ guest: true })]
       await receive(mine, 1000)
 
       const debts = await debtsOf({ customer })
@@ -294,12 +325,19 @@ describe('C5: борги покупців', () => {
       expect((await paymentOf(order)).paidBani).toBe(200)
     })
 
-    it('сторно з paidBani > 0 відхиляється, без оплат дозволене', async () => {
+    it('сторно з оплатою: у клієнта оплата йде на аванс, у гостя відхиляється; без оплат дозволене', async () => {
       const order = await newOrder({ historical: true })
       const first = await debtOn(order, 5000)
       await receive(order, 1000)
 
-      await expect(reverseDebt(first.id)).rejects.toThrow(/has payments/)
+      await reverseDebt(first.id)
+      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid' })
+      expect(await advanceOf(order)).toBe(1000)
+
+      const guest = await newOrder({ historical: true, guest: true })
+      const guestDebt = await debtOn(guest, 5000)
+      await receive(guest, 1000)
+      await expect(reverseDebt(guestDebt.id)).rejects.toThrow(/has payments/)
 
       const free = await newOrder({ historical: true })
       const second = await debtOn(free, 5000)
@@ -309,8 +347,8 @@ describe('C5: борги покупців', () => {
       await expect(post((await draftReceipt(free, 100)).id)).rejects.toThrow(/has not deducted stock/)
     })
 
-    it('дві паралельні оплати понад ліміт історичного замовлення: рівно один успіх', async () => {
-      const order = await newOrder({ historical: true, retailPrice: 1000 })
+    it('гостьове: дві паралельні оплати понад ліміт історичного замовлення: рівно один успіх', async () => {
+      const order = await newOrder({ historical: true, guest: true, retailPrice: 1000 })
       await debtOn(order, 50000)
       const [a, b] = [await draftReceipt(order, 30000), await draftReceipt(order, 30000)]
 

@@ -14,7 +14,13 @@ import {
   revertCashMoves,
   type CashOperationType,
 } from '@/services/finance/cashLedger.service'
-import { assertCanAcceptPayment, changeOrderPaid } from '@/services/finance/orderPayments.service'
+import {
+  changeOrderPayment,
+  depositToCustomer,
+  refundCustomerAdvance,
+  withdrawFromCustomer,
+} from '@/services/finance/customerBalance.service'
+import { assertCanAcceptPayment } from '@/services/finance/orderPayments.service'
 import { changePayrollPaid } from '@/services/salary/payrollPayments.service'
 
 type Relation = string | { id: string }
@@ -63,8 +69,8 @@ const FIELDS_BY_TYPE: Record<string, CashOperationType[]> = {
   customer: ['customer_receipt', 'customer_refund'],
 }
 
-/** Зміна `paidBani` замовлення при проведенні: надходження збільшує, повернення зменшує (розд. 6.2). */
-const PAYMENT_SIGN: Partial<Record<CashOperationType, 1 | -1>> = { customer_receipt: 1, customer_refund: -1 }
+/** Розрахунки з покупцем (розд. 6.2, 6.4): надходження й повернення. */
+const PAYMENT_TYPES = new Set<CashOperationType>(['customer_receipt', 'customer_refund'])
 
 const docRef = ({ id, data, originalDoc }: DocumentTransitionArgs) => ({
   collection: 'cash-operations',
@@ -73,19 +79,44 @@ const docRef = ({ id, data, originalDoc }: DocumentTransitionArgs) => ({
 })
 
 /**
- * Оплата замовлення в транзакції проведення: `paidBani` і `paymentState` атомарно, `status` не
- * змінюється (В6). `direction = -1` для сторно. Не тип оплати замовлення ⇒ нічого.
+ * Оплата покупця в транзакції проведення (розд. 6.4), `status` замовлення не змінюється (В6).
+ * Клієнт: надходження йде на аванс і гасить борги (спершу вказане замовлення), повернення без
+ * замовлення бере з авансу, з замовленням зменшує його оплату. Гостьове замовлення: оплата прямо
+ * в замовлення. `direction = -1` для сторно. Не оплата покупця ⇒ нічого.
  */
-const changePayment = async ({ req, data, originalDoc }: DocumentTransitionArgs, direction: 1 | -1) => {
+const changePayment = async (args: DocumentTransitionArgs, direction: 1 | -1) => {
+  const { req, data, originalDoc } = args
   const type = (data.type ?? originalDoc.type) as CashOperationType
-  const sign = PAYMENT_SIGN[type]
-  if (!sign) return
+  if (!PAYMENT_TYPES.has(type)) return
 
-  const order = String(idOf((data.order ?? originalDoc.order) as Relation))
-  const deltaBani = sign * direction * Number(data.amountBani ?? originalDoc.amountBani)
+  const order = idOf((data.order ?? originalDoc.order) as Relation)
+  const customer = idOf((data.customer ?? originalDoc.customer) as Relation)
+  const amountBani = Number(data.amountBani ?? originalDoc.amountBani)
+  const move = {
+    doc: docRef(args),
+    // Проведення датується операцією, сторно своїм моментом, як і рухи каси.
+    date: direction === 1 ? new Date(String(data.operationDate ?? originalDoc.operationDate)) : args.date,
+  }
+  const incoming = (type === 'customer_receipt') === (direction === 1)
+  const kind = direction === 1 ? (type === 'customer_receipt' ? 'receipt' : 'refund') : 'reversal'
 
-  if (type === 'customer_receipt' && direction === 1) await assertCanAcceptPayment(req, order)
-  await changeOrderPaid(req, { order, deltaBani })
+  if (type === 'customer_receipt' && direction === 1 && order) await assertCanAcceptPayment(req, String(order))
+
+  if (!customer) {
+    // Гостьове замовлення: валідація вимагає `order`, якщо клієнта немає.
+    await changeOrderPayment(req, { ...move, order: String(order), customer: null, kind, deltaBani: incoming ? amountBani : -amountBani })
+    return
+  }
+
+  if (incoming) {
+    await depositToCustomer(req, { ...move, customer: String(customer), amountBani, kind, first: order ? String(order) : null })
+  } else if (type === 'customer_receipt') {
+    await withdrawFromCustomer(req, { ...move, customer: String(customer), amountBani })
+  } else if (order) {
+    await changeOrderPayment(req, { ...move, order: String(order), customer: String(customer), kind, deltaBani: -amountBani })
+  } else {
+    await refundCustomerAdvance(req, { ...move, customer: String(customer), amountBani })
+  }
 }
 
 /**
@@ -108,8 +139,8 @@ const changeSalaryPayment = async ({ req, data, originalDoc }: DocumentTransitio
 
 /**
  * Проведення: рухи `cash-moves` датою `operationDate` і умовний `$inc` балансу; переказ змінює
- * обидві каси або жодну; оплата покупця змінює `paidBani` замовлення (розд. 6.2).
- * Замовлення оновлюється першим: переплата повідомляється раніше за нестачу в касі.
+ * обидві каси або жодну; оплата покупця змінює аванс клієнта й `paidBani` замовлень (розд. 6.2, 6.4).
+ * Оплата оновлюється першою: її помилка повідомляється раніше за нестачу в касі.
  */
 const postOperation = async (args: DocumentTransitionArgs) => {
   const { req, data, originalDoc } = args
@@ -131,8 +162,9 @@ const postOperation = async (args: DocumentTransitionArgs) => {
 
 /**
  * Сторно: дзеркальні рухи датою сторно; якщо з каси-отримувача вже витрачено, помилка нестачі.
- * Оплата замовлення повертається назад: сторно надходження вимагає `paidBani ≥ amount`, сторно
- * повернення заборонене для скасованого замовлення й не дає переплати.
+ * Оплата повертається назад: сторно надходження клієнта знімає суму з авансу, а решту з оплат
+ * найновіших замовлень; сторно повернення клієнта знову зараховує суму на аванс. Гостьове
+ * замовлення: сторно надходження вимагає `paidBani ≥ amount`, сторно повернення не дає переплати.
  */
 const reverseOperation = async (args: DocumentTransitionArgs) => {
   const { req, id, date } = args
@@ -180,13 +212,18 @@ const validateOperation: CollectionBeforeChangeHook = async ({ data, originalDoc
 
   if (type === 'supplier_payment' && !idOf(value('supplier'))) fail(req, 'custom:error:supplierPaymentSupplierRequired')
 
-  if (PAYMENT_SIGN[type]) {
+  if (PAYMENT_TYPES.has(type)) {
     const order = idOf(value('order'))
-    if (!order) fail(req, 'custom:error:paymentOrderRequired')
 
-    // Покупець лише копіюється із замовлення; у гостьового замовлення порожній.
-    const { customer } = await req.payload.findByID({ collection: 'orders', id: String(order), depth: 0, req })
-    data.customer = idOf(customer)
+    if (order) {
+      // З замовленням клієнт береться з нього; у гостьового замовлення порожній.
+      const { customer } = await req.payload.findByID({ collection: 'orders', id: String(order), depth: 0, req })
+      data.customer = idOf(customer)
+    } else {
+      // Без замовлення гроші йдуть на баланс клієнта, тож клієнт обов'язковий.
+      data.customer = idOf(value('customer'))
+      if (!data.customer) fail(req, 'custom:error:paymentCustomerRequired')
+    }
   }
 
   if (type === 'expense') {
@@ -208,9 +245,9 @@ const validateOperation: CollectionBeforeChangeHook = async ({ data, originalDoc
 }
 
 const onlyFor = (type: CashOperationType) => (data: Record<string, unknown>) => data?.type === type
-const onlyForPayments = (data: Record<string, unknown>) => Boolean(PAYMENT_SIGN[data?.type as CashOperationType])
+const onlyForPayments = (data: Record<string, unknown>) => PAYMENT_TYPES.has(data?.type as CashOperationType)
 
-/** Касові операції: витрата, переказ, оплата постачальнику, надходження й повернення покупця; див. docs/accounting/design.md, розд. 2.4, 6.2. */
+/** Касові операції: витрата, переказ, оплата постачальнику, надходження й повернення покупця; див. docs/accounting/design.md, розд. 2.4, 6.2, 6.4. */
 export const CashOperations: CollectionConfig = {
   slug: 'cash-operations',
   labels: collectionLabels('custom:collection:cashOperations:singular', 'custom:collection:cashOperations:plural'),
@@ -277,18 +314,21 @@ export const CashOperations: CollectionConfig = {
       type: 'row',
       fields: [
         {
-          name: 'order',
-          label: label('custom:field:order'),
-          type: 'relationship',
-          relationTo: 'orders',
-          admin: { condition: onlyForPayments },
-        },
-        {
           name: 'customer',
           label: label('custom:field:customer'),
           type: 'relationship',
           relationTo: 'users',
-          admin: { readOnly: true, condition: onlyForPayments },
+          filterOptions: { roles: { in: ['customer'] } },
+          admin: { condition: onlyForPayments, description: description('custom:desc:paymentCustomer') },
+        },
+        {
+          name: 'order',
+          label: label('custom:field:order'),
+          type: 'relationship',
+          relationTo: 'orders',
+          // Обраний клієнт звужує список до його замовлень; гостьові без клієнта.
+          filterOptions: ({ data }) => (data?.customer ? { customer: { equals: idOf(data.customer as Relation) } } : true),
+          admin: { condition: onlyForPayments, description: description('custom:desc:paymentOrder') },
         },
       ],
     },

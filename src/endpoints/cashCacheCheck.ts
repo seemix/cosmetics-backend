@@ -12,8 +12,9 @@ import { requireSession } from '@/services/stock/session'
 /**
  * Перевірка й перебудова кешів фінансів з журналів (docs/accounting/design.md, розд. 4.4, 6.1), як
  * `stockCacheCheck` для складу: (a) `cash-accounts.balanceBani` = Σ `cash-moves.deltaBani`,
- * (b) `orders.paidBani` = Σ надходжень − Σ повернень (проведені `cash-operations`),
- * (c) `payrolls.paidBani` = Σ проведених виплат зарплати з цим `payroll` (M4). Запускати в
+ * (b) `orders.paidBani` = Σ `customer-moves.orderDeltaBani` замовлення (розд. 6.4),
+ * (c) `payrolls.paidBani` = Σ проведених виплат зарплати з цим `payroll` (M4),
+ * (d) `customer-balances.balanceBani` = Σ `customer-moves.advanceDeltaBani` клієнта. Запускати в
  * неробочий час: проведення, що йдуть паралельно, дають розбіжності, яких насправді немає.
  */
 
@@ -57,11 +58,20 @@ export type PayrollPaidDiscrepancy = {
   actual: number
 }
 
+export type CustomerAdvanceDiscrepancy = {
+  type: 'customerAdvance'
+  entity: 'customer'
+  id: string
+  expected: number
+  actual: number
+}
+
 export type CashCacheDiscrepancy =
   | BalanceDiscrepancy
   | NegativeBalanceDiscrepancy
   | OrderPaidDiscrepancy
   | PayrollPaidDiscrepancy
+  | CustomerAdvanceDiscrepancy
 
 const collection = (req: PayloadRequest, slug: string) => req.payload.db.collections[slug]
 
@@ -79,15 +89,10 @@ export const checkCashCache = async (req: PayloadRequest, session?: Session): Pr
     .collection.find<{ _id: ObjectIdLike; balanceBani?: number; allowNegative?: boolean }>({}, { session })
     .toArray()
   const payments = toMap(
-    await collection(req, 'cash-operations')
+    await collection(req, 'customer-moves')
       .aggregate<Total>([
-        { $match: { status: 'posted', type: { $in: ['customer_receipt', 'customer_refund'] }, order: { $ne: null } } },
-        {
-          $group: {
-            _id: '$order',
-            total: { $sum: { $cond: [{ $eq: ['$type', 'customer_receipt'] }, '$amountBani', { $multiply: ['$amountBani', -1] }] } },
-          },
-        },
+        { $match: { order: { $ne: null } } },
+        { $group: { _id: '$order', total: { $sum: '$orderDeltaBani' } } },
       ])
       .session(session ?? null),
   )
@@ -110,6 +115,18 @@ export const checkCashCache = async (req: PayloadRequest, session?: Session): Pr
       { paidBani: { $nin: [0, null] } },
       { session, projection: { paidBani: 1, number: 1 } },
     )
+    .toArray()
+
+  const advances = toMap(
+    await collection(req, 'customer-moves')
+      .aggregate<Total>([
+        { $match: { customer: { $ne: null } } },
+        { $group: { _id: '$customer', total: { $sum: '$advanceDeltaBani' } } },
+      ])
+      .session(session ?? null),
+  )
+  const customerBalances = await collection(req, 'customer-balances')
+    .collection.find<{ customer: ObjectIdLike; balanceBani?: number }>({}, { session, projection: { customer: 1, balanceBani: 1 } })
     .toArray()
 
   const discrepancies: CashCacheDiscrepancy[] = []
@@ -149,6 +166,15 @@ export const checkCashCache = async (req: PayloadRequest, session?: Session): Pr
     }
   }
 
+  const actualAdvance = new Map(customerBalances.map((balance) => [String(balance.customer), balance.balanceBani ?? 0]))
+
+  for (const id of new Set([...actualAdvance.keys(), ...advances.keys()])) {
+    const expected = advances.get(id) ?? 0
+    const actual = actualAdvance.get(id) ?? 0
+
+    if (actual !== expected) discrepancies.push({ type: 'customerAdvance', entity: 'customer', id, expected, actual })
+  }
+
   return discrepancies
 }
 
@@ -165,13 +191,18 @@ export type FixCashCacheResult = { fixed: CashCacheDiscrepancy[]; skipped: CashC
 /**
  * Перебудовує кеші з журналів в одній транзакції й логує кожну зміну. `balanceBani` виправляється
  * завжди; `paidBani` замовлень лише з `orders: true` (змінює дані замовлень, тож явний прапорець),
- * `paidBani` розрахунків зарплати лише з `payrolls: true` (сирий `updateOne`, проведений payroll незмінний).
+ * `paidBani` розрахунків зарплати лише з `payrolls: true` (сирий `updateOne`, проведений payroll незмінний),
+ * аванси клієнтів лише з `customers: true`.
  * Від'ємний баланс не виправляється: він потребує операцій, а не перебудови кешу. Замовлення
  * змінюються сирим `updateOne`, як і в `orderPayments.service`, тому хуки Orders не спрацьовують.
  */
 export const fixCashCache = (
   req: PayloadRequest,
-  { orders = false, payrolls = false }: { orders?: boolean; payrolls?: boolean } = {},
+  {
+    orders = false,
+    payrolls = false,
+    customers = false,
+  }: { orders?: boolean; payrolls?: boolean; customers?: boolean } = {},
 ): Promise<FixCashCacheResult> =>
   runInTransaction(req, async () => {
     const session = await requireSession(req)
@@ -204,6 +235,14 @@ export const fixCashCache = (
           { $set: { paidBani: item.expected, updatedAt: new Date() } },
           { session },
         )
+      } else if (item.type === 'customerAdvance' && customers) {
+        const model = collection(req, 'customer-balances')
+        const now = new Date()
+        await model.collection.updateOne(
+          { customer: new model.base.Types.ObjectId(item.id) },
+          { $set: { balanceBani: item.expected, updatedAt: now }, $setOnInsert: { createdAt: now } },
+          { session, upsert: true },
+        )
       } else {
         result.skipped.push(item)
         continue
@@ -231,7 +270,7 @@ export const cashCacheCheck: Endpoint = {
 
 /**
  * `POST /cash/cache-rebuild`; `?orders=true` додатково виправляє `paidBani` замовлень,
- * `?payrolls=true` — `paidBani` розрахунків зарплати.
+ * `?payrolls=true` — `paidBani` розрахунків зарплати, `?customers=true` — аванси клієнтів.
  */
 export const cashCacheRebuild: Endpoint = {
   path: '/cash/cache-rebuild',
@@ -243,6 +282,7 @@ export const cashCacheRebuild: Endpoint = {
     const { fixed, skipped } = await fixCashCache(req, {
       orders: req.searchParams?.get('orders') === 'true',
       payrolls: req.searchParams?.get('payrolls') === 'true',
+      customers: req.searchParams?.get('customers') === 'true',
     })
 
     return Response.json({ ok: true, fixed, skipped })

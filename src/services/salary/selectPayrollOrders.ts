@@ -37,8 +37,9 @@ const readSession = async (req: PayloadRequest) => {
  * - `attribution`: `snapshot` → `orders.manager = M` (індекс `{manager, createdAt}`);
  *   `current` → поточний `users.manager` клієнта = M, гостьові замовлення не входять.
  * - `dateBasis`: `order_date` → `stockPostedAt ∈ [from, to]` (індекс `{accounting.stockPostedAt}`);
- *   `payment_date` → `paymentState = paid` і найпізніша `operationDate` проведених `customer_receipt`
- *   замовлення ∈ [from, to] (індекс `{order}` у `cash-operations`; сторновані не враховуються).
+ *   `payment_date` → `paymentState = paid` і найпізніша дата надходження грошей на замовлення
+ *   (`customer-moves` з `orderDeltaBani > 0`: надходження, зарахування авансу) ∈ [from, to]
+ *   (індекс `{order, date}` у `customer-moves`).
  * - `customerFilter`: `retail` → гість або клієнт без `wholesale`; `wholesale` → клієнт з `wholesale`
  *   (поточний стан клієнта).
  */
@@ -71,13 +72,10 @@ export const selectPayrollOrders = async (
       { $match: match },
       {
         $lookup: {
-          from: model(req, 'cash-operations').collection.collectionName,
+          from: model(req, 'customer-moves').collection.collectionName,
           localField: '_id',
           foreignField: 'order',
-          pipeline: [
-            { $match: { type: 'customer_receipt', status: 'posted' } },
-            { $group: { _id: null, at: { $max: '$operationDate' } } },
-          ],
+          pipeline: [{ $match: { orderDeltaBani: { $gt: 0 } } }, { $group: { _id: null, at: { $max: '$date' } } }],
           as: 'lastPayment',
         },
       },
