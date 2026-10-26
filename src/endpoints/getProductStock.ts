@@ -1,5 +1,6 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 
+import { isAdmin } from '@/access/isAdmin'
 import { checkRole } from '@/access/utilities'
 
 export type ProductStock = {
@@ -13,19 +14,22 @@ export type ProductStock = {
   lastPurchaseUnitCostBani: number | null
 }
 
+/** Відповідь для manager (В11): лише кількість, без вартості й середньої. */
+export type ProductStockQty = Pick<ProductStock, 'productId' | 'warehouses' | 'totalQty'>
+
 const OBJECT_ID = /^[0-9a-fA-F]{24}$/
 
 /**
  * Залишки товару по складах і середня собівартість для картки товару в адмінці.
- * Роль перевіряється явно (D7). Поки немає ролі manager (M1, залежить від В11),
- * доступ лише в admin: собівартість менеджерам не віддаємо.
+ * Роль перевіряється явно (D7): admin отримує все, manager лише кількість (В11),
+ * собівартість менеджерам не віддаємо.
  */
 export const getProductStock: Endpoint = {
   path: '/stock/product/:id',
   method: 'get',
   handler: async (req: PayloadRequest): Promise<Response> => {
     if (!req.user) return Response.json({ message: 'Unauthorized' }, { status: 401 })
-    if (!checkRole(['admin'], req.user)) return Response.json({ message: 'Forbidden' }, { status: 403 })
+    if (!checkRole(['admin', 'manager'], req.user)) return Response.json({ message: 'Forbidden' }, { status: 403 })
 
     const id = req.routeParams?.id as string | undefined
     if (!id || !OBJECT_ID.test(id)) return Response.json({ message: 'Invalid product id' }, { status: 400 })
@@ -74,11 +78,16 @@ export const getProductStock: Endpoint = {
       .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
       .map(({ sortOrder: _sortOrder, ...warehouse }) => warehouse)
 
-    const cost = costs.docs[0]
-    const body: ProductStock = {
+    const quantities: ProductStockQty = {
       productId: id,
       warehouses,
       totalQty: warehouses.reduce((sum, warehouse) => sum + warehouse.qty, 0),
+    }
+    if (!isAdmin(req.user)) return Response.json(quantities)
+
+    const cost = costs.docs[0]
+    const body: ProductStock = {
+      ...quantities,
       valueBani: cost?.valueBani ?? 0,
       avgCostBani: cost && cost.qty > 0 ? cost.valueBani / cost.qty : 0,
       lastPurchaseUnitCostBani: cost?.lastPurchaseUnitCostBani ?? null,

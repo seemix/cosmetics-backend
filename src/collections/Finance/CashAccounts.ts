@@ -1,6 +1,7 @@
 import type { CollectionConfig, Where } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { moneyField } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
@@ -18,6 +19,7 @@ export const CashAccounts: CollectionConfig = {
     delete: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     useAsTitle: 'name',
     defaultColumns: ['name', 'code', 'kind', 'balanceBani', 'isActive'],
     listSearchableFields: ['name', 'code'],

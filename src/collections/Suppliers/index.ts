@@ -1,6 +1,7 @@
 import type { CollectionConfig, Where } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
 /** `filterOptions` для relationship-полів на `suppliers` у документах: лише активні постачальники. */
@@ -16,6 +17,7 @@ export const Suppliers: CollectionConfig = {
     delete: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     useAsTitle: 'name',
     defaultColumns: ['name', 'phone', 'isCarrier', 'isActive'],
     listSearchableFields: ['name', 'idno', 'phone'],

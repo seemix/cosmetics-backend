@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { adminOrManager } from '@/access/adminOrManager'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
 import { codeOnlyAccess, validateInteger } from './shared'
@@ -8,8 +10,10 @@ import { codeOnlyAccess, validateInteger } from './shared'
 export const StockBalances: CollectionConfig = {
   slug: 'stock-balances',
   labels: collectionLabels('custom:collection:stockBalances:singular', 'custom:collection:stockBalances:plural'),
-  access: codeOnlyAccess,
+  // В11: менеджер читає кількість по складах; вартості тут немає, вона в `product-costs`.
+  access: { ...codeOnlyAccess, read: adminOrManager },
   admin: {
+    hidden: hiddenUnlessAdmin,
     defaultColumns: ['product', 'warehouse', 'qty', 'updatedAt'],
     group: localized('custom:group:stock'),
   },

@@ -262,7 +262,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
 
 Після етапу: роль manager, знімок менеджера, зарплата, звіти.
 
-- [ ] **M1. Роль manager і доступ до адмінки.** — залежить від В8-В12
+- [x] **M1. Роль manager і доступ до адмінки.** — залежить від В8-В12
   Мета: матриця прав розд. 11.
   Файли: `src/collections/Users/index.ts` (опція ролі, `access.admin`), нові
   `src/access/adminOrManager.ts`, `adminOrManagerField.ts`, `Products/index.ts` (access, field access цін),

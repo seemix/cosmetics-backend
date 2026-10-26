@@ -1,6 +1,7 @@
 import { APIError, type CollectionBeforeChangeHook, type CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { validateInteger } from '@/collections/Stock/shared'
 import { collectionLabels, customT, label, localized } from '@/i18n'
 import { documentLifecycle, type DocumentTransitionArgs } from '@/services/documents/documentLifecycle'
@@ -82,6 +83,7 @@ export const StockTransfers: CollectionConfig = {
     delete: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'fromWarehouse', 'toWarehouse', 'postedAt'],
     listSearchableFields: ['number'],

@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { validateBani } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
 import type { CustomTranslationsKeys } from '@/i18n'
@@ -36,6 +37,7 @@ export const StockMoves: CollectionConfig = {
   labels: collectionLabels('custom:collection:stockMoves:singular', 'custom:collection:stockMoves:plural'),
   access: codeOnlyAccess,
   admin: {
+    hidden: hiddenUnlessAdmin,
     defaultColumns: ['date', 'product', 'warehouse', 'moveType', 'qtyDelta', 'valueDeltaBani', 'docNumber'],
     group: localized('custom:group:stock'),
   },

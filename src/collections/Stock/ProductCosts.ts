@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { validateBani } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
@@ -11,6 +12,7 @@ export const ProductCosts: CollectionConfig = {
   labels: collectionLabels('custom:collection:productCosts:singular', 'custom:collection:productCosts:plural'),
   access: codeOnlyAccess,
   admin: {
+    hidden: hiddenUnlessAdmin,
     defaultColumns: ['product', 'qty', 'valueBani', 'avgCostBani'],
     group: localized('custom:group:stock'),
   },

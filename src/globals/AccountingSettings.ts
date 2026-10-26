@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { description, label, localized } from '@/i18n'
 
 const activeWarehouse = { isActive: { equals: true } }
@@ -13,6 +14,7 @@ export const AccountingSettings: GlobalConfig = {
     update: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     group: localized('custom:group:stock'),
   },
   fields: [

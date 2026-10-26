@@ -1,6 +1,7 @@
 import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type PayloadRequest } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { validateInteger } from '@/collections/Stock/shared'
 import { moneyField } from '@/fields/money'
 import { collectionLabels, customT, description, label, localized, type CustomTranslationsKeys } from '@/i18n'
@@ -216,6 +217,7 @@ export const StockAdjustments: CollectionConfig = {
     delete: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'kind', 'warehouse', 'postedAt'],
     listSearchableFields: ['number'],

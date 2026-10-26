@@ -1,6 +1,7 @@
 import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type PayloadRequest } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { activeCashAccountsOnly } from '@/collections/Finance/CashAccounts'
 import { activeExpenseCategoriesOnly } from '@/collections/Finance/ExpenseCategories'
 import { activeSuppliersOnly } from '@/collections/Suppliers'
@@ -196,6 +197,7 @@ export const CashOperations: CollectionConfig = {
     delete: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'type', 'account', 'amountBani', 'postedAt'],
     listSearchableFields: ['number'],

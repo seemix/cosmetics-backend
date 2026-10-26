@@ -1,6 +1,7 @@
 import type { CollectionConfig, Where } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
 /** `filterOptions` для relationship-полів на `expense-categories` у документах: лише активні статті. */
@@ -20,6 +21,7 @@ export const ExpenseCategories: CollectionConfig = {
     delete: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     useAsTitle: 'name',
     defaultColumns: ['name', 'code', 'isSalary', 'isActive'],
     listSearchableFields: ['name', 'code'],

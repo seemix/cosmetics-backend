@@ -11,19 +11,27 @@ import { deductOrderStock } from '@/collections/Orders/hooks/deductOrderStock'
 import { writeOrderStockMoves } from '@/collections/Orders/hooks/writeOrderStockMoves'
 import { cancelOrderStock, prepareOrderCancel } from '@/collections/Orders/hooks/cancelOrderStock'
 import { forbidDeletePosted } from '@/collections/Orders/hooks/forbidDeletePosted'
+import { guardManagerOrderUpdate } from '@/collections/Orders/hooks/guardManagerOrderUpdate'
 import { guardPostedOrder } from '@/collections/Orders/hooks/guardPostedOrder'
 import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
+import { adminOnly } from '@/access/adminOnly'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
+import { adminOrCustomerOwner } from '@/access/adminOrCustomerOwner'
+import { adminOrManager } from '@/access/adminOrManager'
+import { adminOrManagerField } from '@/access/adminOrManagerField'
 import { checkRole } from '@/access/utilities'
 import { collectionLabels, label, localized } from '@/i18n'
 
-/** Склад, джерело й автор задаються при створенні й далі не змінюються (REST; хук тримає те саме для Local API). */
-const adminCreateOnly = { read: adminOnlyFieldAccess, create: adminOnlyFieldAccess, update: () => false }
+/**
+ * Склад, джерело й автор задаються при створенні й далі не змінюються (REST; хук тримає те саме для Local API).
+ * Менеджер бачить їх і обирає склад, створюючи замовлення в адмінці (розд. 2.5, 9.3).
+ */
+const adminCreateOnly = { read: adminOrManagerField, create: adminOrManagerField, update: () => false }
 
-/** Лише admin або власник замовлення: `paidBani`, `paymentState`. */
+/** Лише admin, manager або власник замовлення: `paidBani`, `paymentState`. */
 const adminOrOwnerRead: FieldAccess = ({ req: { user }, doc }) => {
   if (!user) return false
-  if (checkRole(['admin'], user)) return true
+  if (checkRole(['admin', 'manager'], user)) return true
   const customer = doc?.customer
   return String(typeof customer === 'object' && customer ? customer.id : customer) === String(user.id)
 }
@@ -43,6 +51,14 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   ...defaultCollection,
   slug: 'orders',
   labels: collectionLabels('custom:collection:orders:singular', 'custom:collection:orders:plural'),
+  // Розд. 11: manager створює в адмінці й бачить усі; update обмежує `guardManagerOrderUpdate`.
+  // Публічний `createOrder` пише через Local API і від цих прав не залежить.
+  access: {
+    create: adminOrManager,
+    read: (args) => adminOrManager(args) || adminOrCustomerOwner(args),
+    update: adminOrManager,
+    delete: adminOnly,
+  },
   admin: {
     useAsTitle: 'createdAt',
     group: localized('custom:group:ecommerce'),
@@ -119,6 +135,8 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
               label: label('custom:field:price'),
               type: 'number',
               required: true,
+              // Для manager лише читання (розд. 9.3, В7); ціну каталогу ставить `populatePricesAndTotal`.
+              access: { create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
               admin: {
                 components: {
                   Field: '@/collections/Orders/components/PriceField#PriceField',
@@ -253,6 +271,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     // Додаємо хук перед збереженням замовлення.
     // Важливо: setOrderNumber має виконуватись або до, або після, порядок можна скоригувати за потреби.
     beforeChange: [
+      guardManagerOrderUpdate,
       setOrderNumber,
       guardPostedOrder,
       prepareOrderCancel,

@@ -1,6 +1,7 @@
 import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type PayloadRequest } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { activeCashAccountsOnly } from '@/collections/Finance/CashAccounts'
 import { applyCashMoves, revertCashMoves } from '@/services/finance/cashLedger.service'
 import { validateInteger } from '@/collections/Stock/shared'
@@ -292,6 +293,7 @@ export const OpeningBalances: CollectionConfig = {
     delete: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'kind', 'postedAt'],
     listSearchableFields: ['number'],

@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { validateInteger } from '@/collections/Stock/shared'
 import { activeSuppliersOnly } from '@/collections/Suppliers'
 import { moneyField } from '@/fields/money'
@@ -30,6 +31,7 @@ export const Purchases: CollectionConfig = {
     delete: adminOnly,
   },
   admin: {
+    hidden: hiddenUnlessAdmin,
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'supplier', 'warehouse', 'landedTotalBani', 'postedAt'],
     listSearchableFields: ['number', 'supplierInvoiceNo'],

@@ -18,6 +18,11 @@ import { getBestSellers } from '@/collections/Products/endpoints/getBestSellers'
 import { autoTranslate } from '@/collections/Products/hooks/autoTranslate'
 import { getSingleProduct } from '@/collections/Products/endpoints/getSingleProduct'
 import { setTitleWithArticle } from '@/collections/Products/hooks/setTitleWithArticle'
+import { guardManagerPublish } from '@/collections/Products/hooks/guardManagerPublish'
+import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
+import { adminOrManager } from '@/access/adminOrManager'
+import { adminOrManagerField } from '@/access/adminOrManagerField'
+import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import { canReadWholesalePrice } from '@/access/canReadWholesalePrice'
 import { checkRole } from '@/access/utilities'
 import { localizedSlugField } from '@/fields/slug'
@@ -28,6 +33,12 @@ import { collectionLabels, label, localized } from '@/i18n'
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
   labels: collectionLabels('custom:collection:products:singular', 'custom:collection:products:plural'),
+  // Розд. 11, В8: manager бачить усі товари й редагує описові поля; створення й видалення лише admin.
+  access: {
+    ...defaultCollection.access,
+    read: (args) => adminOrManager(args) || adminOrPublishedStatus(args),
+    update: adminOrManager,
+  },
   versions: {
     drafts: true,
     maxPerDoc: 2,
@@ -76,7 +87,10 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     { name: 'subtitle', label: label('custom:field:subtitle'), type: 'text', localized: true, required: true },
     { name: 'article', label: label('custom:field:article'), type: 'text', localized: false, required: true, admin: { position: 'sidebar' }, index: true },
     { name: 'brand', label: label('custom:field:brand'), type: 'relationship', relationTo: 'brands', required: true, admin: { position: 'sidebar' } },
-    { name: 'retailPrice', label: label('custom:field:retailPrice'), type: 'number', required: true, defaultValue: 0, admin: { position: 'sidebar' } },
+    {
+      name: 'retailPrice', label: label('custom:field:retailPrice'), type: 'number', required: true, defaultValue: 0, admin: { position: 'sidebar' },
+      access: { update: adminOnlyFieldAccess },
+    },
     { name: 'action', label: label('custom:field:action'), type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
     { name: 'bestSeller', label: label('custom:field:bestSeller'), type: 'checkbox', defaultValue: false, index: true, admin: { position: 'sidebar' } },
     { name: 'unavailable', label: label('custom:field:unavailable'), type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
@@ -84,7 +98,9 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     {
       name: 'wholesalePrice', label: label('custom:field:wholesalePrice'), type: 'number', admin: { position: 'sidebar' },
       access: {
-        read: canReadWholesalePrice,
+        // Manager бачить оптову ціну для продажу оптовикам (розд. 11), змінює лише admin (В8).
+        read: (args) => adminOrManagerField(args) || canReadWholesalePrice(args),
+        update: adminOnlyFieldAccess,
       },
     },
     {
@@ -271,6 +287,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ],
   endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers, getSingleProduct],
   hooks: {
+   beforeOperation: [guardManagerPublish],
    afterRead: [populateRelatedProducts],
    afterChange: [autoTranslate],
   },

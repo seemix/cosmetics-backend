@@ -1,8 +1,9 @@
-import type { CollectionConfig } from 'payload'
+import type { Access, CollectionConfig, FieldAccess } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { adminOrSelf } from '@/access/adminOrSelf'
+import { isManager } from '@/access/isAdmin'
 import { publicAccess } from '@/access/publicAccess'
 import { checkRole } from '@/access/utilities'
 import { collectionLabels, description, label, localized } from '@/i18n'
@@ -19,14 +20,29 @@ import { verifyEmail } from '@/email-templates/verify-email'
 import { getFavorites } from './endpoints/getFavorites'
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 
+/** Manager бачить себе й клієнтів: роль `customer` без ролей `admin` і `manager` (розд. 11). */
+const readUsers: Access = (args) => {
+  if (!isManager(args.req.user)) return adminOrSelf(args)
+
+  return {
+    or: [
+      { id: { equals: args.req.user?.id } },
+      { and: [{ roles: { equals: 'customer' } }, { roles: { not_in: ['admin', 'manager'] } }] },
+    ],
+  }
+}
+
+/** Оптовий статус і знижки задає не manager (розд. 11); права клієнта на свої дані як раніше. */
+const notManager: FieldAccess = ({ req: { user } }) => !isManager(user)
+
 export const Users: CollectionConfig = {
   slug: 'users',
   labels: collectionLabels('custom:collection:users:singular', 'custom:collection:users:plural'),
   access: {
-    admin: ({ req: { user } }) => checkRole(['admin'], user),
+    admin: ({ req: { user } }) => checkRole(['admin', 'manager'], user),
     create: publicAccess,
     delete: adminOnly,
-    read: adminOrSelf,
+    read: readUsers,
     update: adminOrSelf,
 
   },
@@ -84,6 +100,7 @@ export const Users: CollectionConfig = {
       type: 'checkbox',
       label: label('custom:field:wholesaleCustomer'),
       defaultValue: false,
+      access: { create: notManager, update: notManager },
     },
     {
       name: 'surname',
@@ -121,6 +138,7 @@ export const Users: CollectionConfig = {
       name: 'brandDiscounts',
       label: label('custom:field:brandDiscounts'),
       type: 'array',
+      access: { create: notManager, update: notManager },
       admin: {
         description: description('custom:desc:personalDiscounts'),
       },

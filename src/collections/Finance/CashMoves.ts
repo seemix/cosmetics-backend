@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { codeOnlyAccess } from '@/collections/Stock/shared'
 import { validateBani } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
@@ -10,6 +11,7 @@ export const CashMoves: CollectionConfig = {
   labels: collectionLabels('custom:collection:cashMoves:singular', 'custom:collection:cashMoves:plural'),
   access: codeOnlyAccess,
   admin: {
+    hidden: hiddenUnlessAdmin,
     defaultColumns: ['date', 'account', 'deltaBani', 'docNumber'],
     group: localized('custom:group:finance'),
   },
