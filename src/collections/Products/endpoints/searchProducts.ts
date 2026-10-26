@@ -1,3 +1,4 @@
+import { withPublishedProducts } from '@/access/publishedProducts'
 import { Endpoint, PayloadRequest } from 'payload'
 import { sortGenerator } from '@/services/sortPage.service'
 import { formatPaginatedProducts } from '@/collections/Products/services/productsByRelation.service'
@@ -70,14 +71,17 @@ export const searchProducts: Endpoint = {
         inventory: false,
         categories: false,
       },
-      where: {
-        or: [
-          { title: { like: q } },
-          { subtitle: { like: q } },
-          { article: { like: q } },
-          ...(brandIds.length ? [{ brand: { in: brandIds } }] : []),
-        ],
-      },
+      where: withPublishedProducts(
+        {
+          or: [
+            { title: { like: q } },
+            { subtitle: { like: q } },
+            { article: { like: q } },
+            ...(brandIds.length ? [{ brand: { in: brandIds } }] : []),
+          ],
+        },
+        req.user,
+      ),
       req,
     })
 

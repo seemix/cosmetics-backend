@@ -1,3 +1,4 @@
+import { withPublishedProducts } from '@/access/publishedProducts'
 import { Endpoint, PayloadRequest } from 'payload'
 import { canUserReadWholesalePrice } from '@/access/canReadWholesalePrice'
 
@@ -19,11 +20,7 @@ export const getFavorites: Endpoint = {
     const products = await req.payload.find({
       collection: 'products',
       locale: req.locale,
-      where: {
-        id: {
-          in: favorites,
-        },
-      },
+      where: withPublishedProducts({ id: { in: favorites } }, req.user),
       depth: 1,
       select: {
         brand: false,

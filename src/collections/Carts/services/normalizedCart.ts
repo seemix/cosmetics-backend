@@ -1,3 +1,4 @@
+import { withPublishedProducts } from '@/access/publishedProducts'
 import type { PayloadRequest } from 'payload'
 import { getCartItemProductId, getCartProductIds } from '@/collections/Carts/utilities/cartItem'
 
@@ -58,9 +59,7 @@ export async function buildProductsMap(
 ): Promise<Map<string, any>> {
   const products = await req.payload.find({
     collection: 'products',
-    where: {
-      id: { in: productIds },
-    },
+    where: withPublishedProducts({ id: { in: productIds } }, req.user),
     locale: options.locale,
     depth: options.depth,
     limit: productIds.length,

@@ -1519,26 +1519,26 @@ describe('[FINDING-8] createOrder не перевіряє кількість (в
 })
 
 describe('[FINDING-9] неопубліковані товари доступні публічно (обхід access через Local API)', () => {
-  it.fails('GET /products/:id не віддає чернетку гостю', async () => {
+  it('GET /products/:id не віддає чернетку гостю', async () => {
     expect((await ctx.http('GET', `/products/${f.draft}`, 'guest')).status).toBe(404)
   })
 
-  it.fails('каталог бренду не містить чернетки', async () => {
+  it('каталог бренду не містить чернетки', async () => {
     const response = await ctx.http('GET', `/products/products-brand/${fx.brandSlug}`, 'guest')
     expect(response.body.products.map((product: { id: string }) => String(product.id))).not.toContain(f.draft)
   })
 
-  it.fails('пошук не знаходить чернетку', async () => {
+  it('пошук не знаходить чернетку', async () => {
     const response = await ctx.http('GET', `/products/products-search?q=${encodeURIComponent('DRAFT-SECRET')}`, 'guest')
     expect(response.body.products.map((product: { id: string }) => String(product.id))).not.toContain(f.draft)
   })
 
-  it.fails('гостьовий кошик не показує чернетку', async () => {
+  it('гостьовий кошик не показує чернетку', async () => {
     const response = await ctx.http('POST', '/carts/guest', 'guest', { items: [{ productId: f.draft, quantity: 1 }] })
     expect(JSON.stringify(response.body)).not.toContain('DRAFT-SECRET')
   })
 
-  it.fails('чернетку не можна замовити', async () => {
+  it('чернетку не можна замовити', async () => {
     const response = await ctx.http('POST', '/orders/create', 'guest', {
       items: [{ product: f.draft, quantity: 1 }],
       shippingAddress: { name: 'T', phone: '1', email: 'b@example.test', city: 'C', address: 'A' },
@@ -1547,7 +1547,7 @@ describe('[FINDING-9] неопубліковані товари доступні
     expect(response.status).toBeGreaterThanOrEqual(400)
   })
 
-  it.fails('обране не віддає чернетку, id якої додано вручну', async () => {
+  it('обране не віддає чернетку, id якої додано вручну', async () => {
     const user = await tempUser()
     await ctx.http('POST', '/users/favorites', user, { id: f.draft })
     const response = await ctx.http('GET', '/users/favorites', user)

@@ -1,4 +1,5 @@
 import type { Endpoint, PayloadRequest } from 'payload'
+import { canSeeDraftProducts } from '@/access/publishedProducts'
 import { calculateProductPrice } from '@/services/price.service'
 import { getPromoBrandIds, isBrandEligibleForPromo } from '@/services/promo.service'
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
@@ -64,7 +65,8 @@ export const createOrder: Endpoint = {
           req,
         })
 
-        if (!product) {
+        // Чернетку клієнт замовити не може: для нього її «немає».
+        if (!product || (product._status === 'draft' && !canSeeDraftProducts(user))) {
           return Response.json({ message: `Product not found: ${item.product}` }, { status: 404 })
         }
 

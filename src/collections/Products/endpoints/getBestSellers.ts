@@ -1,3 +1,4 @@
+import { withPublishedProducts } from '@/access/publishedProducts'
 import { Endpoint, PayloadRequest } from 'payload'
 import { formatPaginatedProducts } from '@/collections/Products/services/productsByRelation.service'
 
@@ -11,9 +12,7 @@ export const getBestSellers: Endpoint = {
       locale: req.locale,
       limit: 10,
       depth: 2, // Ставимо depth: 2, щоб підтягнувся об'єкт brand для розрахунку знижки
-      where: {
-        bestSeller: { equals: true },
-      },
+      where: withPublishedProducts({ bestSeller: { equals: true } }, req.user),
       select: {
         inventory: false,
         generateSlug: false,

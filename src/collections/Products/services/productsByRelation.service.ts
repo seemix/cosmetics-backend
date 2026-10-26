@@ -1,3 +1,4 @@
+import { withPublishedProducts } from '@/access/publishedProducts'
 import { PayloadRequest } from 'payload'
 import { ProductsByRelationResult } from '@/collections/Products/endpoints/types'
 import { sortGenerator } from '@/services/sortPage.service'
@@ -143,9 +144,7 @@ export async function getProductsByRelation(
       inventory: false,
       ...filter,
     },
-    where: {
-      [config.relationField]: { equals: relation.id },
-    },
+    where: withPublishedProducts({ [config.relationField]: { equals: relation.id } }, req.user),
     req,
   })
 

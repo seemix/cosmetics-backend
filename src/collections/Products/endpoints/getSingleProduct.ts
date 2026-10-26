@@ -1,3 +1,4 @@
+import { withPublishedProducts } from '@/access/publishedProducts'
 import { loadInStock, transformProduct } from '@/collections/Products/services/productsByRelation.service'
 import { Endpoint, PayloadRequest } from 'payload'
 
@@ -28,10 +29,11 @@ export const getSingleProduct: Endpoint = {
         titleWithArticle: false,
         inventory: false
       },
-      where: {
+      where: withPublishedProducts(
         // Якщо це ID, шукаємо по id, інакше по slug
-        [isId ? 'id' : 'slug']: { equals: identifier },
-      },
+        { [isId ? 'id' : 'slug']: { equals: identifier } },
+        req.user,
+      ),
       req,
     })
 
