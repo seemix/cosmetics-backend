@@ -240,6 +240,7 @@ export interface User {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  manager?: (string | null) | User;
   favorites?: (string | Product)[] | null;
   updatedAt: string;
   createdAt: string;
@@ -1404,6 +1405,7 @@ export interface UsersSelect<T extends boolean = true> {
   orders?: T;
   cart?: T;
   addresses?: T;
+  manager?: T;
   favorites?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -273,7 +273,7 @@ errors, `pnpm generate:types` після зміни колекцій, `pnpm test
   Увага: `Users/index.ts` має локальну незакомічену правку cookies, її не комітити.
   Складність: M. Модель: Opus.
 
-- [ ] **M2. Менеджер у клієнта.**
+- [x] **M2. Менеджер у клієнта.**
   Мета: `Users.manager` (розд. 2.5).
   Файли: `src/collections/Users/index.ts`, скрипт `scripts/import-customer-managers.ts`.
   Готово: змінює лише admin; manager при створенні клієнта стає його менеджером (В10);

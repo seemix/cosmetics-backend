@@ -29,6 +29,9 @@ export const updateUserInfo: Endpoint = {
       collection: 'users',
       id: req.user.id,
       data: dataToUpdate,
+      // Відповідь іде клієнту: field access приховує roles і manager.
+      overrideAccess: false,
+      user: req.user,
       req,
     })
 

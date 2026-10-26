@@ -2,11 +2,12 @@ import type { Access, CollectionConfig, FieldAccess } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
+import { adminOrManagerField } from '@/access/adminOrManagerField'
 import { adminOrSelf } from '@/access/adminOrSelf'
 import { isManager } from '@/access/isAdmin'
 import { publicAccess } from '@/access/publicAccess'
 import { checkRole } from '@/access/utilities'
-import { collectionLabels, description, label, localized } from '@/i18n'
+import { collectionLabels, customT, description, label, localized } from '@/i18n'
 
 import { addFavoritesItem } from '@/collections/Users/endpoints/addFavoritesItem'
 import { getMyFavorites } from '@/collections/Users/endpoints/getMyFavorites'
@@ -19,6 +20,7 @@ import { forgotPassword } from '@/email-templates/forgot-password'
 import { verifyEmail } from '@/email-templates/verify-email'
 import { getFavorites } from './endpoints/getFavorites'
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
+import { assignCustomerManager } from './hooks/assignCustomerManager'
 
 /** Manager бачить себе й клієнтів: роль `customer` без ролей `admin` і `manager` (розд. 11). */
 const readUsers: Access = (args) => {
@@ -224,6 +226,31 @@ export const Users: CollectionConfig = {
 
     },
     {
+      name: 'manager',
+      label: label('custom:term:assignedManager'),
+      type: 'relationship',
+      relationTo: 'users',
+      hasMany: false,
+      index: true,
+      filterOptions: { roles: { contains: 'manager' } },
+      access: { read: adminOrManagerField, create: adminOrManagerField, update: adminOnlyFieldAccess },
+      admin: { description: description('custom:desc:assignedManager'), position: 'sidebar' },
+      // filterOptions не захищає API: роль менеджера перевіряємо на сервері.
+      validate: async (value, { req, previousValue }) => {
+        const idOf = (v: unknown) => (v && typeof v === 'object' ? (v as { id?: unknown }).id : v)
+        const id = idOf(value)
+        if (id === null || id === undefined || id === '') return true
+        // Незмінене значення не перевіряємо: колишній менеджер міг втратити роль, а клієнт має зберігатися.
+        if (previousValue !== undefined && String(idOf(previousValue)) === String(id)) return true
+
+        const manager = await req.payload
+          .findByID({ collection: 'users', id: id as string | number, depth: 0, overrideAccess: true, req })
+          .catch(() => null)
+
+        return manager && checkRole(['manager'], manager) ? true : customT(req.t)('custom:error:customerManagerInvalid')
+      },
+    },
+    {
       name: 'favorites',
       label: label('custom:field:favorites'),
       type: 'relationship',
@@ -233,4 +260,5 @@ export const Users: CollectionConfig = {
 
   ],
   endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem, updateUserInfo],
+  hooks: { beforeChange: [assignCustomerManager] },
 }
