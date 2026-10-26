@@ -126,6 +126,8 @@ export const ro: CustomTranslationsObject = {
       paymentOrderNotFound: 'Comanda plății nu a fost găsită',
       paymentOrderCancelled: 'Comanda {{order}} este anulată și nu acceptă plăți',
       paymentOrderNotPosted: 'Pentru comanda {{order}} stocul nu a fost descărcat, nu acceptă plăți',
+      paymentNothingDue: 'Comanda {{order}} nu mai are nimic de plătit',
+      paymentNoCashAccount: 'Nu există casă activă de tip „{{kind}}” pentru comanda {{order}}, creați una în Case',
       paymentOverpaid: 'Plată în plus pentru comanda {{order}}: solicitat {{requested}}, rămas de achitat {{remaining}}',
       paymentExceedsPaid: 'Pentru comanda {{order}} s-a achitat doar {{paid}}, solicitat {{requested}}',
       openingSupplierDuplicate: 'Un furnizor poate apărea o singură dată într-un sold inițial',
@@ -534,6 +536,9 @@ export const ro: CustomTranslationsObject = {
     },
     orderForm: {
       priceError: 'Eroare la obținerea prețului, verificați API',
+      acceptPayment: 'Acceptă plata',
+      acceptPaymentHint: 'Creează o chitanță ciornă pentru suma rămasă, verificați-o și înregistrați-o',
+      acceptPaymentFailed: 'Nu s-a putut crea plata',
     },
     reports: {
       navLink: 'Rapoarte',

@@ -126,6 +126,8 @@ export const ru: CustomTranslationsObject = {
       paymentOrderNotFound: 'Заказ оплаты не найден',
       paymentOrderCancelled: 'Заказ {{order}} отменён и не принимает оплату',
       paymentOrderNotPosted: 'По заказу {{order}} не списан товар, он не принимает оплату',
+      paymentNothingDue: 'По заказу {{order}} нечего оплачивать',
+      paymentNoCashAccount: 'Нет активной кассы типа «{{kind}}» для заказа {{order}}, создайте её в кассах',
       paymentOverpaid: 'Переплата по заказу {{order}}: запрошено {{requested}}, осталось оплатить {{remaining}}',
       paymentExceedsPaid: 'По заказу {{order}} оплачено только {{paid}}, запрошено {{requested}}',
       openingSupplierDuplicate: 'Поставщик может встречаться только один раз в начальных остатках',
@@ -534,6 +536,9 @@ export const ru: CustomTranslationsObject = {
     },
     orderForm: {
       priceError: 'Не удалось получить цену, проверьте API',
+      acceptPayment: 'Принять оплату',
+      acceptPaymentHint: 'Создаёт черновик поступления на остаток суммы, проверьте и проведите его',
+      acceptPaymentFailed: 'Не удалось создать оплату',
     },
     reports: {
       navLink: 'Отчёты',

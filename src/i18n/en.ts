@@ -128,6 +128,8 @@ export const en = {
       paymentOrderNotFound: 'The order of the payment was not found',
       paymentOrderCancelled: 'Order {{order}} is cancelled and cannot accept payments',
       paymentOrderNotPosted: 'Order {{order}} has not deducted stock, it cannot accept payments',
+      paymentNothingDue: 'Order {{order}} has nothing left to pay',
+      paymentNoCashAccount: 'No active {{kind}} account for order {{order}}, create one in Cash accounts',
       paymentOverpaid: 'Overpayment on order {{order}}: requested {{requested}}, left to pay {{remaining}}',
       paymentExceedsPaid: 'Order {{order}} has only {{paid}} paid, requested {{requested}}',
       openingSupplierDuplicate: 'A supplier can appear only once in an opening balance',
@@ -536,6 +538,9 @@ export const en = {
     },
     orderForm: {
       priceError: 'Error getting price, check API',
+      acceptPayment: 'Accept payment',
+      acceptPaymentHint: 'Creates a draft cash receipt for the remaining amount, review and post it',
+      acceptPaymentFailed: 'Could not create the payment',
     },
     reports: {
       navLink: 'Reports',

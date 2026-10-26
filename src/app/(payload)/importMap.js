@@ -39,6 +39,7 @@ import { default as default_d1bedd1c8ef921b4392dcdd8e2c30daf } from '@/assets/Cu
 import { ReportsNavLink as ReportsNavLink_1dadd44ed884203072469c985f618525 } from '@/components/ReportsView/ReportsNavLink'
 import { BeforeLogin as BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
 import { ReportsPage as ReportsPage_aa003d33c6e06d4dbc3638f4ed98639f } from '@/components/ReportsView'
+import { AcceptPaymentButton as AcceptPaymentButton_5d3e082bcdb974da74b1d8d5dddba180 } from '@/collections/Orders/components/AcceptPaymentButton'
 
 export const importMap = {
   "@payloadcms/ui#SlugField": SlugField_3817bf644402e67bfe6577f60ef982de,
@@ -82,4 +83,5 @@ export const importMap = {
   "@/components/ReportsView/ReportsNavLink#ReportsNavLink": ReportsNavLink_1dadd44ed884203072469c985f618525,
   "@/components/BeforeLogin#BeforeLogin": BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e,
   "@/components/ReportsView#ReportsPage": ReportsPage_aa003d33c6e06d4dbc3638f4ed98639f
+  "@/collections/Orders/components/AcceptPaymentButton#AcceptPaymentButton": AcceptPaymentButton_5d3e082bcdb974da74b1d8d5dddba180,
 }

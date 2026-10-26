@@ -3,6 +3,7 @@ import type { FieldAccess, PayloadRequest, TextFieldValidation } from 'payload'
 import { email, text } from 'payload/shared'
 
 import { createOrder } from '@/collections/Orders/endpoints/createOrder'
+import { acceptPayment } from '@/collections/Orders/endpoints/acceptPayment'
 import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
 import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
@@ -82,6 +83,15 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       admin: {
         components: {
           Field: '@/collections/Orders/components/OrderManager#OrderManager',
+        },
+      },
+    },
+    {
+      name: 'acceptPayment',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/collections/Orders/components/AcceptPaymentButton#AcceptPaymentButton',
         },
       },
     },
@@ -289,7 +299,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     },
   ],
   indexes: [{ fields: ['manager', 'createdAt'] }],
-  endpoints: [createOrder, getMyOrders],
+  endpoints: [createOrder, getMyOrders, acceptPayment],
   hooks: {
     beforeOperation: [guardSortFields],
     // Додаємо хук перед збереженням замовлення.
