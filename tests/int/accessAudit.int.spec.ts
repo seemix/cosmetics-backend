@@ -1660,7 +1660,7 @@ describe('[FINDING-16] add-item читає тіло раніше, ніж пер�
 })
 
 describe('[FINDING-17] кошики: відповідь розкриває існування чужого cartId', () => {
-  it.fails('remove-item: чужий і неіснуючий cartId дають однакову відповідь', async () => {
+  it('remove-item: чужий і неіснуючий cartId дають однакову відповідь', async () => {
     const owner = await tempUser()
     const other = await tempUser()
     const cart = await ctx.payload.create({ collection: 'carts', data: { customer: owner.id, items: [{ product: f.pub, quantity: 1 }], currency: 'MDL' } as never })

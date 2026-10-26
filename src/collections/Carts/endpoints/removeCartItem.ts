@@ -34,6 +34,8 @@ export const removeCartItem: Endpoint = {
       collection: 'carts',
       id: cartId,
       depth: 1,
+      // Без помилки NotFound: чужий і неіснуючий кошик мають давати однакову відповідь.
+      disableErrors: true,
       req,
     })
 

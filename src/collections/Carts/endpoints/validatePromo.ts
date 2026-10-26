@@ -73,15 +73,12 @@ export const validatePromo: Endpoint = {
       collection: 'carts',
       id: cartId,
       depth: 1,
+      // Чужий і неіснуючий кошик дають однакову відповідь (не розкриваємо існування).
+      disableErrors: true,
       req,
     })
 
-
-    if (!cart) {
-      return Response.json({ error: 'Cart not found' }, { status: 404 })
-    }
-
-    if (!user?.id || !isCartOwnedBy(cart, user.id)) {
+    if (!cart || !user?.id || !isCartOwnedBy(cart, user.id)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
