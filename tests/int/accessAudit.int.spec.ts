@@ -1646,7 +1646,7 @@ describe('[FINDING-14] невідомий slug і службові шляхи д
 
 describe('[FINDING-15] ендпоінти плагіна seo не перевіряють автентифікацію', () => {
   for (const name of ['generate-title', 'generate-description', 'generate-url', 'generate-image']) {
-    it.fails('POST /plugin-seo/' + name + ' для гостя → 401/403', async () => {
+    it('POST /plugin-seo/' + name + ' для гостя → 401/403', async () => {
       const response = await ctx.http('POST', '/plugin-seo/' + name, 'guest', { doc: {}, collectionSlug: 'products' })
       expect([401, 403]).toContain(response.status)
     })

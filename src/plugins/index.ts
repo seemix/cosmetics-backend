@@ -10,6 +10,7 @@ import { ProductsCollection } from '@/collections/Products'
 import { adminOrCustomerOwner } from '@/access/adminOrCustomerOwner'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import { adminOnly } from '@/access/adminOnly'
+import { checkRole } from '@/access/utilities'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { CartsCollection } from '@/collections/Carts'
@@ -31,11 +32,29 @@ const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
   return doc?.slug ? `${url}/${doc.slug}` : url
 }
 
+/** Ендпоінти `plugin-seo` не перевіряють автентифікацію; їх викликає лише адмінка, тож пускаємо admin і manager. */
+const restrictSeoEndpoints: Plugin = (config) => ({
+  ...config,
+  endpoints: (config.endpoints ?? []).map((endpoint) =>
+    endpoint.path.startsWith('/plugin-seo/')
+      ? {
+          ...endpoint,
+          handler: async (req) => {
+            if (!req.user) return Response.json({ message: 'Unauthorized' }, { status: 401 })
+            if (!checkRole(['admin', 'manager'], req.user)) return Response.json({ message: 'Forbidden' }, { status: 403 })
+            return endpoint.handler(req)
+          },
+        }
+      : endpoint,
+  ),
+})
+
 export const plugins: Plugin[] = [
   seoPlugin({
     generateTitle,
     generateURL,
   }),
+  restrictSeoEndpoints,
   ecommercePlugin({
     access: {
       adminOnly,
