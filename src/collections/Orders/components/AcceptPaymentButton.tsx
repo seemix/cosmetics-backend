@@ -35,7 +35,9 @@ export const AcceptPaymentButton = () => {
         return
       }
 
-      router.push(`${config.routes.admin}/collections/cash-operations/${body.id}`)
+      // Адмінка може стояти в корені (`routes.admin = '/'`), тоді без обрізання вийшло б `//collections/...`.
+      const adminRoute = config.routes.admin.replace(/\/+$/, '')
+      router.push(`${adminRoute}/collections/cash-operations/${body.id}`)
     } catch {
       setError(customT(t)('custom:orderForm:acceptPaymentFailed'))
     } finally {
