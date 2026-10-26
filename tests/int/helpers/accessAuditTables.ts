@@ -363,7 +363,6 @@ export const ENDPOINTS: EndpointCase[] = [
     request: (fx) => ({ method: 'POST', path: '/carts/add-item', body: { item: { productId: fx.productId, quantity: 1 } } }),
     expect: authed(ok),
     garbage: { method: 'POST', path: '/carts/add-item', body: {} },
-    roleFirstFinding: { guest: 16 },
   },
   {
     key: 'PATCH /carts/update-item',
@@ -372,7 +371,6 @@ export const ENDPOINTS: EndpointCase[] = [
     request: (fx) => ({ method: 'PATCH', path: '/carts/update-item', body: { item: { productId: fx.productId, quantity: 2 } } }),
     expect: authed(authedOk),
     garbage: { method: 'PATCH', path: '/carts/update-item', body: {} },
-    roleFirstFinding: { guest: 15 },
   },
   {
     key: 'POST /carts/remove-item',

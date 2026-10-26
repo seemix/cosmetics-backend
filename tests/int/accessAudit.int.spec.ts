@@ -1654,7 +1654,7 @@ describe('[FINDING-15] ендпоінти плагіна seo не перевір
 })
 
 describe('[FINDING-16] add-item читає тіло раніше, ніж перевіряє автентифікацію', () => {
-  it.fails('гість з порожнім тілом отримує 401, а не 500', async () => {
+  it('гість з порожнім тілом отримує 401, а не 500', async () => {
     expect((await ctx.http('POST', '/carts/add-item', 'guest', {})).status).toBe(401)
   })
 })

@@ -10,12 +10,14 @@ export const addCartItem: Endpoint = {
 
   handler: async (req) => {
     const { user } = req
-    const { item, promoCode } = await (req as any).json()
-    const { productId, quantity } = item
 
+    // Автентифікація першою: до читання тіла (гість із порожнім тілом отримує 401, а не 500).
     if (!user) {
       return Response.json({ message: 'Unauthorized' }, { status: 401 })
     }
+
+    const { item, promoCode } = await (req as any).json()
+    const { productId, quantity } = item ?? {}
 
     if (!productId || typeof quantity !== 'number' || quantity <= 0) {
       return Response.json(
