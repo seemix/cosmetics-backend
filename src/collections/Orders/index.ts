@@ -202,7 +202,13 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       ],
     },
     { name: 'comment', label: label('custom:term:comment'), type: 'text' },
-    { name: 'promoCodeApplied', label: label('custom:field:promoCodeApplied'), type: 'text' },
+    {
+      name: 'promoCodeApplied',
+      label: label('custom:field:promoCodeApplied'),
+      type: 'text',
+      // Промокод застосовує лише сайт: у формі створення з адмінки поле не потрібне.
+      admin: { condition: (data) => data?.source === 'web' },
+    },
     { name: 'discount', label: label('custom:field:discount'), type: 'number' },
     {
       name: 'source',
