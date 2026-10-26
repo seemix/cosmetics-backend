@@ -235,3 +235,75 @@ export const getCustomerDebtTotals = async (
 
   return [...totals.values()]
 }
+
+/** Борг менеджеру за зарплатою: плюс = ми винні менеджеру, мінус = переплата (аванс). */
+export type ManagerDebt = {
+  manager: string
+  /** Σ `payrolls.totalBani` проведених розрахунків. */
+  accruedBani: number
+  /** Σ `cash-operations` type=expense зі статтею `isSalary` і цим `manager` (з payroll і без). */
+  paidBani: number
+  debtBani: number
+}
+
+/** Σ нарахувань і виплат за менеджерами на `asOf`; `manager` обмежує вибірку одним менеджером. */
+const collectManagerParts = async (req: PayloadRequest, asOf: Date, manager?: string) => {
+  const session = await readSession(req)
+  const only = manager ? { manager: toObjectId(req, manager) } : {}
+
+  // Послідовно: паралельні операції в одній сесії транзакції MongoDB не підтримує.
+  const accrued = await sumBy(
+    req,
+    'payrolls',
+    [{ $match: { ...countedAsOf('postedAt', asOf), ...only } }, { $group: { _id: '$manager', total: { $sum: '$totalBani' } } }],
+    session,
+  )
+  const salaryCategories = await model(req, 'expense-categories')
+    .collection.find<{ _id: unknown }>({ isSalary: true }, { session, projection: { _id: 1 } })
+    .toArray()
+  const paid = await sumBy(
+    req,
+    'cash-operations',
+    [
+      {
+        $match: {
+          type: 'expense',
+          category: { $in: salaryCategories.map((category) => category._id) },
+          manager: manager ? toObjectId(req, manager) : { $ne: null },
+          ...countedAsOf('operationDate', asOf),
+        },
+      },
+      { $group: { _id: '$manager', total: { $sum: '$amountBani' } } },
+    ],
+    session,
+  )
+
+  const byManager = new Map<string, ManagerDebt>()
+  const entry = (id: string) => {
+    const debt = byManager.get(id) ?? { manager: id, accruedBani: 0, paidBani: 0, debtBani: 0 }
+    byManager.set(id, debt)
+    return debt
+  }
+
+  for (const row of accrued) entry(String(row._id)).accruedBani = row.total
+  for (const row of paid) entry(String(row._id)).paidBani = row.total
+  for (const debt of byManager.values()) debt.debtBani = debt.accruedBani - debt.paidBani
+
+  return byManager
+}
+
+/**
+ * Борг менеджеру на `asOf` (розд. 6.3): Σ проведених розрахунків (за `postedAt`; сторнований
+ * враховується, якщо сторно пізніше `asOf`) − Σ виплат зарплати (за `operationDate`).
+ */
+export const getManagerDebt = async (req: PayloadRequest, managerId: string, asOf = new Date()): Promise<ManagerDebt> =>
+  (await collectManagerParts(req, asOf, managerId)).get(managerId) ?? {
+    manager: managerId,
+    accruedBani: 0,
+    paidBani: 0,
+    debtBani: 0,
+  }
+
+/** Борги всім менеджерам, що мають хоч одне нарахування чи виплату на `asOf`. */
+export const listManagerDebts = async (req: PayloadRequest, asOf = new Date()): Promise<ManagerDebt[]> =>
+  [...(await collectManagerParts(req, asOf)).values()].sort((a, b) => a.manager.localeCompare(b.manager))

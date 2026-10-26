@@ -12,3 +12,13 @@
 | `custom:option:openingSupplierDebt` | Supplier debts | Долги поставщикам | Datorii față de furnizori | — |
 | `custom:option:openingCustomerDebt` | Customer debts | Долги покупателей | Datoriile clienților | Борг за історичними замовленнями (покупець ще не доплатив) |
 | `custom:error:customerDebtOrderNotHistorical` | historical orders | исторические заказы | comenzi istorice | «Історичне» = замовлення до вмикання обліку складу (без `stockPostedAt`) |
+| `custom:term:payroll` | Payroll | Расчёт зарплаты | Calcul salarial | Документ нарахування за період. Альтернатива: RU «Ведомость», RO «Stat de plată» (але це радше список виплат кільком працівникам) |
+| `custom:term:fixedSalary` | Fixed salary | Оклад | Salariu fix | RO: «Salariu de bază» звучить звичніше, але може плутатися з базою нарахування |
+| `custom:term:percent` | Percent | Процент | Procent | RU: «Процент» vs «Комиссия, %» — що звичніше для власника |
+| `custom:term:accrualBase` | Accrual base | База начисления | Baza de calcul | — |
+| `custom:term:adjustment` | Adjustment | Корректировка | Ajustare | Премія (+) або штраф (−) одним полем; можливо, краще «Премия/штраф» |
+| `custom:term:salaryPayment` | Salary payment | Выплата зарплаты | Plata salariului | — |
+| `custom:term:salaryAdvance` | Salary advance | Аванс | Avans salarial | RU «Аванс» збігається з `custom:term:advance` (аванс постачальнику); у контексті зарплати це виплата без розрахунку |
+| `custom:field:attribution` | Sales attribution | Принадлежность продаж | Atribuirea vânzărilor | Чий продаж: менеджер на момент замовлення (знімок) чи поточний менеджер клієнта |
+| `custom:option:basePaidRevenue` | Paid revenue | Оплаченная выручка | Venituri încasate | — |
+| `custom:option:customersRetail` | Retail (including guests) | Розничные (включая гостей) | Cu amănuntul (inclusiv vizitatori) | RO: «vizitatori» для гостьових замовлень; альтернатива — «clienți neînregistrați» |

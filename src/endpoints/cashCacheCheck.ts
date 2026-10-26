@@ -12,7 +12,8 @@ import { requireSession } from '@/services/stock/session'
 /**
  * Перевірка й перебудова кешів фінансів з журналів (docs/accounting/design.md, розд. 4.4, 6.1), як
  * `stockCacheCheck` для складу: (a) `cash-accounts.balanceBani` = Σ `cash-moves.deltaBani`,
- * (b) `orders.paidBani` = Σ надходжень − Σ повернень (проведені `cash-operations`). Запускати в
+ * (b) `orders.paidBani` = Σ надходжень − Σ повернень (проведені `cash-operations`),
+ * (c) `payrolls.paidBani` = Σ проведених виплат зарплати з цим `payroll` (M4). Запускати в
  * неробочий час: проведення, що йдуть паралельно, дають розбіжності, яких насправді немає.
  */
 
@@ -47,7 +48,20 @@ export type OrderPaidDiscrepancy = {
   actual: number
 }
 
-export type CashCacheDiscrepancy = BalanceDiscrepancy | NegativeBalanceDiscrepancy | OrderPaidDiscrepancy
+export type PayrollPaidDiscrepancy = {
+  type: 'payrollPaid'
+  entity: 'payroll'
+  id: string
+  number: string | null
+  expected: number
+  actual: number
+}
+
+export type CashCacheDiscrepancy =
+  | BalanceDiscrepancy
+  | NegativeBalanceDiscrepancy
+  | OrderPaidDiscrepancy
+  | PayrollPaidDiscrepancy
 
 const collection = (req: PayloadRequest, slug: string) => req.payload.db.collections[slug]
 
@@ -83,6 +97,20 @@ export const checkCashCache = async (req: PayloadRequest, session?: Session): Pr
       { session, projection: { paidBani: 1, orderNumber: 1 } },
     )
     .toArray()
+  const salaryPayments = toMap(
+    await collection(req, 'cash-operations')
+      .aggregate<Total>([
+        { $match: { status: 'posted', type: 'expense', payroll: { $ne: null } } },
+        { $group: { _id: '$payroll', total: { $sum: '$amountBani' } } },
+      ])
+      .session(session ?? null),
+  )
+  const paidPayrolls = await collection(req, 'payrolls')
+    .collection.find<{ _id: ObjectIdLike; paidBani?: number; number?: string }>(
+      { paidBani: { $nin: [0, null] } },
+      { session, projection: { paidBani: 1, number: 1 } },
+    )
+    .toArray()
 
   const discrepancies: CashCacheDiscrepancy[] = []
 
@@ -109,6 +137,18 @@ export const checkCashCache = async (req: PayloadRequest, session?: Session): Pr
     }
   }
 
+  const payrollNumbers = new Map(paidPayrolls.map((payroll) => [String(payroll._id), payroll.number ?? null]))
+  const actualPayrollPaid = new Map(paidPayrolls.map((payroll) => [String(payroll._id), payroll.paidBani ?? 0]))
+
+  for (const id of new Set([...actualPayrollPaid.keys(), ...salaryPayments.keys()])) {
+    const expected = salaryPayments.get(id) ?? 0
+    const actual = actualPayrollPaid.get(id) ?? 0
+
+    if (actual !== expected) {
+      discrepancies.push({ type: 'payrollPaid', entity: 'payroll', id, number: payrollNumbers.get(id) ?? null, expected, actual })
+    }
+  }
+
   return discrepancies
 }
 
@@ -124,11 +164,15 @@ export type FixCashCacheResult = { fixed: CashCacheDiscrepancy[]; skipped: CashC
 
 /**
  * Перебудовує кеші з журналів в одній транзакції й логує кожну зміну. `balanceBani` виправляється
- * завжди; `paidBani` замовлень лише з `orders: true` (змінює дані замовлень, тож явний прапорець).
+ * завжди; `paidBani` замовлень лише з `orders: true` (змінює дані замовлень, тож явний прапорець),
+ * `paidBani` розрахунків зарплати лише з `payrolls: true` (сирий `updateOne`, проведений payroll незмінний).
  * Від'ємний баланс не виправляється: він потребує операцій, а не перебудови кешу. Замовлення
  * змінюються сирим `updateOne`, як і в `orderPayments.service`, тому хуки Orders не спрацьовують.
  */
-export const fixCashCache = (req: PayloadRequest, { orders = false }: { orders?: boolean } = {}): Promise<FixCashCacheResult> =>
+export const fixCashCache = (
+  req: PayloadRequest,
+  { orders = false, payrolls = false }: { orders?: boolean; payrolls?: boolean } = {},
+): Promise<FixCashCacheResult> =>
   runInTransaction(req, async () => {
     const session = await requireSession(req)
     const result: FixCashCacheResult = { fixed: [], skipped: [] }
@@ -151,6 +195,13 @@ export const fixCashCache = (req: PayloadRequest, { orders = false }: { orders?:
         await model.collection.updateOne(
           { _id: new model.base.Types.ObjectId(item.id) },
           { $set: { paidBani: item.expected, paymentState, updatedAt: new Date() } },
+          { session },
+        )
+      } else if (item.type === 'payrollPaid' && payrolls) {
+        const model = collection(req, 'payrolls')
+        await model.collection.updateOne(
+          { _id: new model.base.Types.ObjectId(item.id) },
+          { $set: { paidBani: item.expected, updatedAt: new Date() } },
           { session },
         )
       } else {
@@ -178,7 +229,10 @@ export const cashCacheCheck: Endpoint = {
   },
 }
 
-/** `POST /cash/cache-rebuild`; `?orders=true` додатково виправляє `paidBani` замовлень. */
+/**
+ * `POST /cash/cache-rebuild`; `?orders=true` додатково виправляє `paidBani` замовлень,
+ * `?payrolls=true` — `paidBani` розрахунків зарплати.
+ */
 export const cashCacheRebuild: Endpoint = {
   path: '/cash/cache-rebuild',
   method: 'post',
@@ -186,7 +240,10 @@ export const cashCacheRebuild: Endpoint = {
     const denied = requireAdmin(req)
     if (denied) return denied
 
-    const { fixed, skipped } = await fixCashCache(req, { orders: req.searchParams?.get('orders') === 'true' })
+    const { fixed, skipped } = await fixCashCache(req, {
+      orders: req.searchParams?.get('orders') === 'true',
+      payrolls: req.searchParams?.get('payrolls') === 'true',
+    })
 
     return Response.json({ ok: true, fixed, skipped })
   },

@@ -24,6 +24,8 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { MoneyCell as MoneyCell_2a1fbccdf68fd9be845df4de166fa2b2 } from '@/components/MoneyField/Cell'
 import { MoneyField as MoneyField_323e4e658f0a50038070131cb758c455 } from '@/components/MoneyField/Field'
+import { PercentBpCell as PercentBpCell_94908884919ce6a4af4c5a0f11f37e5d } from '@/components/PercentBpField/Cell'
+import { PercentBpField as PercentBpField_9ad825a4df64f536b9e61e8f62e7f58e } from '@/components/PercentBpField/Field'
 import { TableFeatureClient as TableFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { FixedToolbarFeatureClient as FixedToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { VariantOptionsSelector as VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
@@ -63,6 +65,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/MoneyField/Cell#MoneyCell": MoneyCell_2a1fbccdf68fd9be845df4de166fa2b2,
   "@/components/MoneyField/Field#MoneyField": MoneyField_323e4e658f0a50038070131cb758c455,
+  "@/components/PercentBpField/Cell#PercentBpCell": PercentBpCell_94908884919ce6a4af4c5a0f11f37e5d,
+  "@/components/PercentBpField/Field#PercentBpField": PercentBpField_9ad825a4df64f536b9e61e8f62e7f58e,
   "@payloadcms/richtext-lexical/client#TableFeatureClient": TableFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#FixedToolbarFeatureClient": FixedToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/plugin-ecommerce/rsc#VariantOptionsSelector": VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb,

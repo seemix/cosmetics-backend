@@ -15,6 +15,7 @@ import {
   type CashOperationType,
 } from '@/services/finance/cashLedger.service'
 import { assertCanAcceptPayment, changeOrderPaid } from '@/services/finance/orderPayments.service'
+import { changePayrollPaid } from '@/services/salary/payrollPayments.service'
 
 type Relation = string | { id: string }
 
@@ -57,6 +58,7 @@ const FIELDS_BY_TYPE: Record<string, CashOperationType[]> = {
   purchase: ['supplier_payment'],
   category: ['expense'],
   manager: ['expense'],
+  payroll: ['expense'],
   order: ['customer_receipt', 'customer_refund'],
   customer: ['customer_receipt', 'customer_refund'],
 }
@@ -87,6 +89,24 @@ const changePayment = async ({ req, data, originalDoc }: DocumentTransitionArgs,
 }
 
 /**
+ * Виплата зарплати за розрахунком (M4): `payroll.paidBani` атомарно в транзакції проведення.
+ * Перевірки (проведений payroll, той самий менеджер, без переплати) стоять у фільтрі `$inc`.
+ * Без `payroll` (аванс без розрахунку) нічого не змінюється. `direction = -1` для сторно.
+ */
+const changeSalaryPayment = async ({ req, data, originalDoc }: DocumentTransitionArgs, direction: 1 | -1) => {
+  const value = (field: string) => (data[field] !== undefined ? data[field] : originalDoc[field]) as Relation | null
+  const payroll = idOf(value('payroll'))
+  if (!payroll) return
+
+  const manager = idOf(value('manager'))
+  await changePayrollPaid(req, {
+    payroll: String(payroll),
+    manager: manager ? String(manager) : null,
+    deltaBani: direction * Number(data.amountBani ?? originalDoc.amountBani),
+  })
+}
+
+/**
  * Проведення: рухи `cash-moves` датою `operationDate` і умовний `$inc` балансу; переказ змінює
  * обидві каси або жодну; оплата покупця змінює `paidBani` замовлення (розд. 6.2).
  * Замовлення оновлюється першим: переплата повідомляється раніше за нестачу в касі.
@@ -96,6 +116,7 @@ const postOperation = async (args: DocumentTransitionArgs) => {
   const value = (field: string) => (data[field] ?? originalDoc[field]) as Relation | null | undefined
 
   await changePayment(args, 1)
+  await changeSalaryPayment(args, 1)
   await applyCashMoves(req, {
     doc: docRef(args),
     date: new Date(String(data.operationDate ?? originalDoc.operationDate)),
@@ -117,6 +138,7 @@ const reverseOperation = async (args: DocumentTransitionArgs) => {
   const { req, id, date } = args
 
   await changePayment(args, -1)
+  await changeSalaryPayment(args, -1)
 
   const { docs: moves } = await req.payload.find({
     collection: 'cash-moves',
@@ -178,6 +200,8 @@ const validateOperation: CollectionBeforeChangeHook = async ({ data, originalDoc
       req,
     })
     if (isSalary && !idOf(value('manager'))) fail(req, 'custom:error:salaryManagerRequired')
+    // Розрахунок зарплати стосується лише статей зарплати.
+    if (!isSalary) data.payroll = null
   }
 
   return data
@@ -305,6 +329,23 @@ export const CashOperations: CollectionConfig = {
           admin: { condition: onlyFor('expense'), description: description('custom:desc:salaryCategory') },
         },
       ],
+    },
+    {
+      name: 'payroll',
+      label: label('custom:term:payroll'),
+      type: 'relationship',
+      relationTo: 'payrolls',
+      // Лише проведені розрахунки менеджера операції; сервер перевіряє те саме при проведенні.
+      filterOptions: ({ data }) => ({
+        status: { equals: 'posted' },
+        ...(data?.manager ? { manager: { equals: idOf(data.manager as Relation) } } : {}),
+      }),
+      admin: {
+        // Стаття у формі відома лише за id, тож поле видно, коли обрано менеджера (зарплата);
+        // для статті без isSalary сервер очищає його.
+        condition: (data) => data?.type === 'expense' && Boolean(data?.manager),
+        description: description('custom:desc:salaryPayroll'),
+      },
     },
   ],
 }

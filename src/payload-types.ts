@@ -87,6 +87,8 @@ export interface Config {
     'expense-categories': ExpenseCategory;
     'cash-moves': CashMove;
     'cash-operations': CashOperation;
+    'salary-schemes': SalaryScheme;
+    payrolls: Payroll;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -136,6 +138,8 @@ export interface Config {
     'expense-categories': ExpenseCategoriesSelect<false> | ExpenseCategoriesSelect<true>;
     'cash-moves': CashMovesSelect<false> | CashMovesSelect<true>;
     'cash-operations': CashOperationsSelect<false> | CashOperationsSelect<true>;
+    'salary-schemes': SalarySchemesSelect<false> | SalarySchemesSelect<true>;
+    payrolls: PayrollsSelect<false> | PayrollsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -966,6 +970,72 @@ export interface CashOperation {
   purchase?: (string | null) | Purchase;
   category?: (string | null) | ExpenseCategory;
   manager?: (string | null) | User;
+  payroll?: (string | null) | Payroll;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payrolls".
+ */
+export interface Payroll {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  periodTo: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  reversalReason?: string | null;
+  comment?: string | null;
+  manager: string | User;
+  periodFrom: string;
+  scheme?: (string | null) | SalaryScheme;
+  adjustmentsBani?: number | null;
+  fixedBani?: number | null;
+  baseTotalBani?: number | null;
+  percentAmountBani?: number | null;
+  totalBani?: number | null;
+  paidBani?: number | null;
+  lines?:
+    | {
+        order?: (string | null) | Order;
+        orderNumber?: string | null;
+        baseBani?: number | null;
+        amountBani?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  schemeSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "salary-schemes".
+ */
+export interface SalaryScheme {
+  id: string;
+  name: string;
+  manager?: (string | null) | User;
+  validFrom?: string | null;
+  validTo?: string | null;
+  fixedBani?: number | null;
+  percentBp: number;
+  base: 'revenue' | 'gross_profit' | 'paid_revenue';
+  dateBasis: 'order_date' | 'payment_date';
+  attribution: 'snapshot' | 'current';
+  customerFilter?: ('all' | 'retail' | 'wholesale') | null;
+  period?: 'month' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1300,6 +1370,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'cash-operations';
         value: string | CashOperation;
+      } | null)
+    | ({
+        relationTo: 'salary-schemes';
+        value: string | SalaryScheme;
+      } | null)
+    | ({
+        relationTo: 'payrolls';
+        value: string | Payroll;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1821,6 +1899,62 @@ export interface CashOperationsSelect<T extends boolean = true> {
   purchase?: T;
   category?: T;
   manager?: T;
+  payroll?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "salary-schemes_select".
+ */
+export interface SalarySchemesSelect<T extends boolean = true> {
+  name?: T;
+  manager?: T;
+  validFrom?: T;
+  validTo?: T;
+  fixedBani?: T;
+  percentBp?: T;
+  base?: T;
+  dateBasis?: T;
+  attribution?: T;
+  customerFilter?: T;
+  period?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payrolls_select".
+ */
+export interface PayrollsSelect<T extends boolean = true> {
+  number?: T;
+  status?: T;
+  periodTo?: T;
+  postedAt?: T;
+  postedBy?: T;
+  reversedAt?: T;
+  reversedBy?: T;
+  reversalReason?: T;
+  comment?: T;
+  manager?: T;
+  periodFrom?: T;
+  scheme?: T;
+  adjustmentsBani?: T;
+  fixedBani?: T;
+  baseTotalBani?: T;
+  percentAmountBani?: T;
+  totalBani?: T;
+  paidBani?: T;
+  lines?:
+    | T
+    | {
+        order?: T;
+        orderNumber?: T;
+        baseBani?: T;
+        amountBani?: T;
+        id?: T;
+      };
+  schemeSnapshot?: T;
   updatedAt?: T;
   createdAt?: T;
 }

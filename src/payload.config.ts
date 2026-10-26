@@ -31,6 +31,8 @@ import { CashAccounts } from './collections/Finance/CashAccounts'
 import { CashMoves } from './collections/Finance/CashMoves'
 import { CashOperations } from './collections/Finance/CashOperations'
 import { ExpenseCategories } from './collections/Finance/ExpenseCategories'
+import { SalarySchemes } from './collections/Salary/SalarySchemes'
+import { Payrolls } from './collections/Salary/Payrolls'
 import { StockMoves } from './collections/Stock/StockMoves'
 import { StockBalances } from './collections/Stock/StockBalances'
 import { ProductCosts } from './collections/Stock/ProductCosts'
@@ -118,7 +120,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases, StockTransfers, StockAdjustments, OpeningBalances, CashAccounts, ExpenseCategories, CashMoves, CashOperations],
+  collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases, StockTransfers, StockAdjustments, OpeningBalances, CashAccounts, ExpenseCategories, CashMoves, CashOperations, SalarySchemes, Payrolls],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
@@ -195,6 +197,8 @@ export default buildConfig({
         'expense-categories': 'list-checks',
         'cash-moves': 'banknote',
         'cash-operations': 'credit-card',
+        'salary-schemes': 'file-pen',
+        payrolls: 'user-check',
         'accounting-settings': 'sliders-horizontal',
       },
     }),
