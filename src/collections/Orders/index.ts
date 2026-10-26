@@ -199,6 +199,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       name: 'SRL',
       label: label('custom:field:srl'),
       type: 'text',
+      admin: { condition: (data) => data?.paymentType === 'transfer' },
     },
     {
       name: 'shippingAddress',
