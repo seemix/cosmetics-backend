@@ -237,7 +237,12 @@ export const Users: CollectionConfig = {
       index: true,
       filterOptions: { roles: { contains: 'manager' } },
       access: { read: adminOrManagerField, create: adminOrManagerField, update: adminOnlyFieldAccess },
-      admin: { description: description('custom:desc:assignedManager'), position: 'sidebar' },
+      admin: {
+        description: description('custom:desc:assignedManager'),
+        position: 'sidebar',
+        // Адміністратор не має закріпленого менеджера. Роль бачить лише admin, тож без неї поле лишається видимим.
+        condition: (data) => !(Array.isArray(data?.roles) && data.roles.includes('admin')),
+      },
       // filterOptions не захищає API: роль менеджера перевіряємо на сервері.
       validate: async (value, { req, previousValue }) => {
         const idOf = (v: unknown) => (v && typeof v === 'object' ? (v as { id?: unknown }).id : v)
