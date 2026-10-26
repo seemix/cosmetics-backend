@@ -1,5 +1,5 @@
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
-import type { FieldAccess, TextFieldValidation } from 'payload'
+import type { FieldAccess, PayloadRequest, TextFieldValidation } from 'payload'
 import { email, text } from 'payload/shared'
 
 import { createOrder } from '@/collections/Orders/endpoints/createOrder'
@@ -227,6 +227,12 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       type: 'relationship',
       relationTo: 'warehouses',
       index: true,
+      // У формі створення підставляємо склад з налаштувань обліку; хук `assignAccountingFields` робить те саме, якщо поле порожнє.
+      defaultValue: async ({ req }: { req: PayloadRequest }) => {
+        const settings = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
+        const warehouse = settings.defaultAdminWarehouse
+        return (typeof warehouse === 'object' ? warehouse?.id : warehouse) ?? undefined
+      },
       access: adminCreateOnly,
       admin: { position: 'sidebar' },
     },
