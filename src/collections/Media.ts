@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { adminOrManager } from '@/access/adminOrManager'
 import { publicAccess } from '@/access/publicAccess'
 import { generateBlurHash } from '@/hooks/generateBlurHash'
 import { collectionLabels, label, localized } from '@/i18n'
@@ -15,8 +16,12 @@ export const Media: CollectionConfig = {
   },
   slug: 'media',
   labels: collectionLabels('custom:collection:media:singular', 'custom:collection:media:plural'),
+  // Читають усі; запис лише admin і manager (без цього діяв дефолт «будь-який авторизований», зокрема customer).
   access: {
+    create: adminOrManager,
     read: publicAccess,
+    update: adminOrManager,
+    delete: adminOrManager,
   },
 
   fields: [

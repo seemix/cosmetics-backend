@@ -1398,7 +1398,7 @@ describe('[FINDING-1] wholesale і brandDiscounts задає сам клієнт
 
 describe('[FINDING-2] customer змінює контент і каталог (дефолтний access)', () => {
   for (const slug of ['brands', 'categories', 'pages'] as const) {
-    it.fails(`${slug}: customer не створює, не змінює й не видаляє`, async () => {
+    it(`${slug}: customer не створює, не змінює й не видаляє`, async () => {
       const unique = `${tag}-${slug}-${Math.floor(Math.random() * 1e6)}`
       const target = await ctx.payload.create({ collection: slug, data: { title: unique, slug: unique } as never })
       cleanups.push(() => ctx.payload.delete({ collection: slug, id: target.id }))
@@ -1409,7 +1409,7 @@ describe('[FINDING-2] customer змінює контент і каталог (д
       expect([created.status, updated.status, removed.status]).toEqual([403, 403, 403])
     })
 
-    it.fails(`${slug}: customer не видаляє масово за where`, async () => {
+    it(`${slug}: customer не видаляє масово за where`, async () => {
       const unique = `${tag}-del-${slug}-${Math.floor(Math.random() * 1e6)}`
       const target = await ctx.payload.create({ collection: slug, data: { title: unique, slug: unique } as never })
       cleanups.push(() => ctx.payload.delete({ collection: slug, id: target.id }))
@@ -1420,7 +1420,7 @@ describe('[FINDING-2] customer змінює контент і каталог (д
   }
 
   for (const slug of ['posts', 'media'] as const) {
-    it.fails(`${slug}: create, update, delete заборонені customer`, async () => {
+    it(`${slug}: create, update, delete заборонені customer`, async () => {
       const created = await ctx.http('POST', `/${slug}`, 'customer', {})
       const updated = await ctx.http('PATCH', `/${slug}/${MISSING_ID}`, 'customer', {})
       const removed = await ctx.http('DELETE', `/${slug}/${MISSING_ID}`, 'customer')

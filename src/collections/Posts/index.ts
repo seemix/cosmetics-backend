@@ -1,5 +1,6 @@
 import { CollectionConfig } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { adminOrManager } from '@/access/adminOrManager'
 import { publicAccess } from '@/access/publicAccess'
 import { getPosts } from '@/collections/Posts/endpoints/getPosts'
 import { getSinglePost } from '@/collections/Posts/endpoints/getSinglePost'
@@ -9,8 +10,12 @@ import { collectionLabels, label, localized } from '@/i18n'
 export const Posts: CollectionConfig = {
   slug: 'posts',
   labels: collectionLabels('custom:collection:posts:singular', 'custom:collection:posts:plural'),
+  // Читають усі; запис лише admin і manager (без цього діяв дефолт «будь-який авторизований», зокрема customer).
   access: {
+    create: adminOrManager,
     read: publicAccess,
+    update: adminOrManager,
+    delete: adminOrManager,
   },
   admin: {
     group: localized('custom:group:content'),
