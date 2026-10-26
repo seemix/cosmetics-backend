@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { hiddenUnlessAdmin } from '@/access/isAdmin'
-import { validateBani } from '@/fields/money'
+import { moneyField } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
 import { codeOnlyAccess, validateInteger } from './shared'
@@ -35,21 +35,19 @@ export const ProductCosts: CollectionConfig = {
       validate: validateInteger,
       admin: { description: description('custom:desc:totalAllWarehouses') },
     },
-    {
+    moneyField({
       name: 'valueBani',
       label: label('custom:field:valueBani'),
-      type: 'number',
       required: true,
       min: 0,
-      validate: validateBani,
       admin: { description: description('custom:desc:zeroValue') },
-    },
-    {
+    }),
+    moneyField({
       name: 'avgCostBani',
       label: label('custom:field:avgCostBani'),
-      type: 'number',
+      fractional: true,
       virtual: true,
-      admin: { readOnly: true, description: description('custom:desc:avgCostFormula') },
+      admin: { description: description('custom:desc:avgCostFormula') },
       hooks: {
         afterRead: [
           ({ siblingData }) => {
@@ -59,12 +57,12 @@ export const ProductCosts: CollectionConfig = {
           },
         ],
       },
-    },
-    {
+    }),
+    moneyField({
       name: 'lastPurchaseUnitCostBani',
       label: label('custom:field:lastPurchaseUnitCostBani'),
-      type: 'number',
+      fractional: true,
       admin: { description: description('custom:desc:forReference') },
-    },
+    }),
   ],
 }

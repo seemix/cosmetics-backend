@@ -2,7 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { codeOnlyAccess } from '@/collections/Stock/shared'
-import { validateBani } from '@/fields/money'
+import { moneyField } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
 /** Журнал руху коштів: лише доповнюється кодом `cashLedger`, див. docs/accounting/design.md, розд. 2.4. */
@@ -20,14 +20,12 @@ export const CashMoves: CollectionConfig = {
   fields: [
     { name: 'date', label: label('custom:term:date'), type: 'date', required: true, index: true },
     { name: 'account', label: label('custom:term:cashAccount'), type: 'relationship', relationTo: 'cash-accounts', required: true },
-    {
+    moneyField({
       name: 'deltaBani',
       label: label('custom:field:deltaBani'),
-      type: 'number',
       required: true,
-      validate: validateBani,
       admin: { description: description('custom:desc:cashDelta') },
-    },
+    }),
     { name: 'docCollection', label: label('custom:field:docCollection'), type: 'text', required: true },
     { name: 'docId', label: label('custom:field:docId'), type: 'text', required: true },
     { name: 'docNumber', label: label('custom:field:docNumber'), type: 'text' },

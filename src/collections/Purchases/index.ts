@@ -97,12 +97,12 @@ export const Purchases: CollectionConfig = {
           fields: [
             moneyField({ name: 'allocatedBani', label: label('custom:field:allocatedBani'), admin: calculated }),
             moneyField({ name: 'landedBani', label: label('custom:field:landedBani'), admin: calculated }),
-            {
+            moneyField({
               name: 'landedUnitCost',
               label: label('custom:field:landedUnitCost'),
-              type: 'number',
-              admin: { readOnly: true, description: description('custom:desc:fractionalDisplay') },
-            },
+              fractional: true,
+              admin: { description: description('custom:desc:fractionalDisplay') },
+            }),
           ],
         },
       ],

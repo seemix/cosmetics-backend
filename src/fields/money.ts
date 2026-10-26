@@ -22,18 +22,21 @@ type MoneyFieldOptions = Omit<NumberField, 'type' | 'hasMany' | 'maxRows' | 'min
   name: string
   /** Забороняє нуль; знак суми довільний. */
   nonZero?: boolean
+  /** Дробові бані (собівартість одиниці): лише для показу, ввід вимкнено. */
+  fractional?: boolean
 }
 
 /**
  * Поле грошей: у БД цілі бані, в адмінці ввід і показ у MDL з двома знаками.
  * Першим використанням треба перегенерувати importMap (`pnpm generate:importmap`).
  */
-export const moneyField = ({ nonZero, ...options }: MoneyFieldOptions): NumberField => ({
+export const moneyField = ({ nonZero, fractional, ...options }: MoneyFieldOptions): NumberField => ({
   ...options,
   type: 'number',
-  validate: nonZero ? validateNonZeroBani : validateBani,
+  validate: fractional ? number : nonZero ? validateNonZeroBani : validateBani,
   admin: {
     ...options.admin,
+    ...(fractional && { readOnly: true, custom: { ...options.admin?.custom, fractional: true } }),
     components: {
       ...options.admin?.components,
       Field: '@/components/MoneyField/Field#MoneyField',

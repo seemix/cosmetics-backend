@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { hiddenUnlessAdmin } from '@/access/isAdmin'
-import { validateBani } from '@/fields/money'
+import { moneyField } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
 import type { CustomTranslationsKeys } from '@/i18n'
 
@@ -68,20 +68,18 @@ export const StockMoves: CollectionConfig = {
       validate: validateInteger,
       admin: { description: description('custom:desc:qtyDelta') },
     },
-    {
+    moneyField({
       name: 'valueDeltaBani',
       label: label('custom:field:valueDeltaBani'),
-      type: 'number',
       required: true,
-      validate: validateBani,
       admin: { description: description('custom:desc:valueDelta') },
-    },
-    {
+    }),
+    moneyField({
       name: 'unitCostBani',
       label: label('custom:field:unitCostBani'),
-      type: 'number',
+      fractional: true,
       admin: { description: description('custom:desc:unitCostFractional') },
-    },
+    }),
     {
       name: 'moveType',
       label: label('custom:term:kind'),

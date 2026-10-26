@@ -4,11 +4,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { FieldDescription, FieldError, FieldLabel, fieldBaseClass, useField } from '@payloadcms/ui'
 import type { NumberFieldClientComponent } from 'payload'
 
-import { formatMDL, toBani } from '@/utilities/money'
+import { formatMDL, formatMDLRounded, toBani } from '@/utilities/money'
 
 /** Показуємо MDL з двома знаками без розділювача розрядів (кому), щоб значення можна було редагувати. */
-const toInputText = (bani: unknown): string =>
-  typeof bani === 'number' && Number.isInteger(bani) ? formatMDL(bani).replace(/,/g, '') : ''
+const toInputText = (bani: unknown, fractional = false): string => {
+  if (typeof bani !== 'number' || !Number.isFinite(bani)) return ''
+  if (fractional) return formatMDLRounded(bani).replace(/,/g, '')
+
+  return Number.isInteger(bani) ? formatMDL(bani).replace(/,/g, '') : ''
+}
 
 /** Ввід у MDL з двома знаками, у формі й БД лежать цілі бані. */
 export const MoneyField: NumberFieldClientComponent = (props) => {
@@ -28,13 +32,14 @@ export const MoneyField: NumberFieldClientComponent = (props) => {
     validate: memoizedValidate,
   })
 
-  const [text, setText] = useState(() => toInputText(value))
+  const fractional = field.admin?.custom?.fractional === true
+  const [text, setText] = useState(() => toInputText(value, fractional))
   const focused = useRef(false)
 
   // Значення змінилося ззовні (завантаження документа, скидання форми).
   useEffect(() => {
-    if (!focused.current) setText(toInputText(value))
-  }, [value])
+    if (!focused.current) setText(toInputText(value, fractional))
+  }, [value, fractional])
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const next = event.target.value
@@ -54,7 +59,7 @@ export const MoneyField: NumberFieldClientComponent = (props) => {
 
   const handleBlur = () => {
     focused.current = false
-    setText(toInputText(value))
+    setText(toInputText(value, fractional))
   }
 
   const isReadOnly = Boolean(readOnly || disabled)

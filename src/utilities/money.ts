@@ -34,6 +34,9 @@ export const formatMDL = (bani: number): string => {
   return `${bani < 0 ? '-' : ''}${whole}.${fraction}`
 }
 
+/** Дробові бані (середня собівартість: 1234.5) → MDL з двома знаками, округлено до бана. */
+export const formatMDLRounded = (bani: number): string => formatMDL(Math.round(bani))
+
 /**
  * Розподіляє `total` бані між рядками пропорційно `weights` методом найбільших залишків:
  * кожен рядок отримує floor своєї частки, решта по одному бану йде рядкам з найбільшою

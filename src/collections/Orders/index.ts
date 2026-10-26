@@ -21,6 +21,7 @@ import { adminOrCustomerOwner } from '@/access/adminOrCustomerOwner'
 import { adminOrManager } from '@/access/adminOrManager'
 import { adminOrManagerField } from '@/access/adminOrManagerField'
 import { checkRole } from '@/access/utilities'
+import { moneyField } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
 /**
@@ -281,8 +282,8 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       admin: { readOnly: true },
       fields: [
         { name: 'stockPostedAt', label: label('custom:field:stockPostedAt'), type: 'date', index: true },
-        { name: 'cogsBani', label: label('custom:field:cogsBani'), type: 'number' },
-        { name: 'revenueBani', label: label('custom:field:revenueBani'), type: 'number' },
+        moneyField({ name: 'cogsBani', label: label('custom:field:cogsBani') }),
+        moneyField({ name: 'revenueBani', label: label('custom:field:revenueBani') }),
         { name: 'cancelledAt', label: label('custom:field:cancelledAt'), type: 'date' },
       ],
     },

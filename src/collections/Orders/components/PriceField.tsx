@@ -136,7 +136,11 @@ export const PriceField: NumberFieldClientComponent = (props) => {
 
   return (
     <>
-      <NumberField {...props} />
+      {/* Мітку беремо за мовою браузера: для щойно доданого рядка масиву серверна мітка може прийти іншою мовою. */}
+      <NumberField
+        {...props}
+        field={{ ...props.field, label: customT(t)('custom:field:price') }}
+      />
       {error && (
         <p role="alert" style={{ color: 'var(--theme-error-500)' }}>
           {customT(t)(error)}
