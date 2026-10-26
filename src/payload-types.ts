@@ -1053,7 +1053,9 @@ export interface SalaryScheme {
 export interface CustomerBalance {
   id: string;
   customer: string | User;
+  debtBani?: number | null;
   balanceBani: number;
+  netBani?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1761,7 +1763,9 @@ export interface CashOperationsSelect<T extends boolean = true> {
  */
 export interface CustomerBalancesSelect<T extends boolean = true> {
   customer?: T;
+  debtBani?: T;
   balanceBani?: T;
+  netBani?: T;
   updatedAt?: T;
   createdAt?: T;
 }

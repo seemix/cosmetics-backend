@@ -255,6 +255,25 @@ describe('Баланс клієнта: аванс і розподіл оплат
     expect(await advanceOf(customer)).toBe(0)
   })
 
+  it('баланс: борг, аванс і сальдо; клієнт у кредит без оплат теж має документ балансу', async () => {
+    const customer = await newCustomer()
+    const balanceOf = async () => {
+      const { docs } = await payload.find({ collection: 'customer-balances', where: { customer: { equals: customer } }, depth: 0 })
+      return docs[0] && { debt: docs[0].debtBani, advance: docs[0].balanceBani, net: docs[0].netBani }
+    }
+
+    const [first, second] = [await newOrder(customer), await newOrder(customer)]
+    expect(await balanceOf()).toEqual({ debt: 20000, advance: 0, net: 20000 })
+
+    await pay('customer_receipt', 25000, { customer })
+    expect(await balanceOf()).toEqual({ debt: 0, advance: 5000, net: -5000 })
+
+    await pay('customer_refund', 5000, { customer })
+    await payload.update({ collection: 'orders', id: second.id, user: admin, data: { status: 'cancelled' }, depth: 0 })
+    expect(await balanceOf()).toEqual({ debt: 0, advance: 10000, net: -10000 })
+    expect(await paymentOf(first)).toEqual({ paidBani: 10000, paymentState: 'paid' })
+  })
+
   it('скасування оплаченого замовлення повертає оплату на аванс і гасить інший борг', async () => {
     const customer = await newCustomer()
     const [paid, unpaid] = [await newOrder(customer), await newOrder(customer, 50)]

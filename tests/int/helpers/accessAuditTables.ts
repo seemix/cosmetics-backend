@@ -240,6 +240,15 @@ export const ENDPOINTS: EndpointCase[] = [
     garbage: { method: 'POST', path: '/cash/cache-rebuild', body: { garbage: true } },
   },
   {
+    key: 'GET /customer-balances/:id/statement',
+    access: 'admin',
+    why: 'розд. 6.5: виписка по клієнту (.xlsx) з сумами, лише admin; роль перевіряється першою (requireAdmin)',
+    request: () => ({ method: 'GET', path: '/customer-balances/000000000000000000000000/statement?from=2003-01-01&to=2003-01-31' }),
+    // Неіснуючий баланс: admin отримує 404; успішний шлях покрито в customerStatement.int.spec.ts.
+    expect: adminOnly(404),
+    garbage: { method: 'GET', path: '/customer-balances/x/statement?from=abc&to=-1' },
+  },
+  {
     key: 'GET /stock/product/:id',
     access: 'staff',
     why: 'В11: admin бачить залишки з вартістю, manager лише кількість; customer 403',
@@ -547,4 +556,6 @@ export const LOCAL_API_REVIEW: Record<string, LocalApiClass> = {
   'services/documents/documentLifecycle.ts:count:(змінна)#1': 'service',
   'services/documents/documentLifecycle.ts:findByID:(змінна)#1': 'service',
   'services/reports/common.ts:findGlobal:accounting-settings#1': 'admin',
+  'services/finance/customerBalance.service.ts:findByID:users#1': 'service',
+  'services/finance/customerBalance.service.ts:create:customer-moves#1': 'service',
 }

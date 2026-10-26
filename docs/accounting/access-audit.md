@@ -264,7 +264,7 @@
 | expense-categories | create: A; read: A; update: A; delete: A. розд. 11 | `B. матриця ресурсів` › «expense-categories: …» |
 | cash-moves | create: нікому; read: A; update: нікому; delete: нікому. журнал пише лише код | `B. матриця ресурсів` › «cash-moves: …» |
 | cash-operations | create: A; read: A; update: A; delete: A. розд. 11 | `B. матриця ресурсів` › «cash-operations: …» |
-| customer-balances | create: нікому; read: A; update: нікому; delete: нікому. кеш авансу клієнта пише лише код (розд. 6.4) | `B. матриця ресурсів` › «customer-balances: …» |
+| customer-balances | create: нікому; read: A; update: нікому; delete: нікому. кеш авансу, боргу й сальдо клієнта пише лише код (розд. 6.4); виписка `GET /customer-balances/:id/statement` лише admin (розд. 6.5) | `B. матриця ресурсів` › «customer-balances: …» |
 | customer-moves | create: нікому; read: A; update: нікому; delete: нікому. журнал розрахунків з клієнтами пише лише код (розд. 6.4) | `B. матриця ресурсів` › «customer-moves: …» |
 | salary-schemes | create: A; read: A; update: A; delete: A. розд. 11, В12: схеми менеджеру недоступні | `B. матриця ресурсів` › «salary-schemes: …» |
 | payrolls | create: A; read: AM; update: A; delete: A. В12: manager читає лише свої проведені розрахунки (B2), решту admin | `B. матриця ресурсів` › «payrolls: …» |

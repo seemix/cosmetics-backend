@@ -2,6 +2,8 @@ import type { Endpoint, PayloadRequest } from 'payload'
 
 import { requireAdmin } from '@/endpoints/stockCacheCheck'
 import { runInTransaction } from '@/services/documents/documentLifecycle'
+import { refreshCustomerDebt } from '@/services/finance/customerBalance.service'
+import { getCustomerDebts } from '@/services/finance/debts.service'
 import {
   getOrderPayableCapBani,
   getOrderRevenueBani,
@@ -14,7 +16,8 @@ import { requireSession } from '@/services/stock/session'
  * `stockCacheCheck` для складу: (a) `cash-accounts.balanceBani` = Σ `cash-moves.deltaBani`,
  * (b) `orders.paidBani` = Σ `customer-moves.orderDeltaBani` замовлення (розд. 6.4),
  * (c) `payrolls.paidBani` = Σ проведених виплат зарплати з цим `payroll` (M4),
- * (d) `customer-balances.balanceBani` = Σ `customer-moves.advanceDeltaBani` клієнта. Запускати в
+ * (d) `customer-balances.balanceBani` = Σ `customer-moves.advanceDeltaBani` клієнта,
+ * (e) `customer-balances.debtBani` = Σ боргів по замовленнях клієнта, `netBani` = борг − аванс. Запускати в
  * неробочий час: проведення, що йдуть паралельно, дають розбіжності, яких насправді немає.
  */
 
@@ -66,12 +69,22 @@ export type CustomerAdvanceDiscrepancy = {
   actual: number
 }
 
+/** `expected`/`actual` — борг; розбіжність і тоді, коли `netBani` ≠ борг − аванс. */
+export type CustomerDebtDiscrepancy = {
+  type: 'customerDebt'
+  entity: 'customer'
+  id: string
+  expected: number
+  actual: number
+}
+
 export type CashCacheDiscrepancy =
   | BalanceDiscrepancy
   | NegativeBalanceDiscrepancy
   | OrderPaidDiscrepancy
   | PayrollPaidDiscrepancy
   | CustomerAdvanceDiscrepancy
+  | CustomerDebtDiscrepancy
 
 const collection = (req: PayloadRequest, slug: string) => req.payload.db.collections[slug]
 
@@ -126,8 +139,15 @@ export const checkCashCache = async (req: PayloadRequest, session?: Session): Pr
       .session(session ?? null),
   )
   const customerBalances = await collection(req, 'customer-balances')
-    .collection.find<{ customer: ObjectIdLike; balanceBani?: number }>({}, { session, projection: { customer: 1, balanceBani: 1 } })
+    .collection.find<{ customer: ObjectIdLike; balanceBani?: number; debtBani?: number; netBani?: number }>(
+      {},
+      { session, projection: { customer: 1, balanceBani: 1, debtBani: 1, netBani: 1 } },
+    )
     .toArray()
+  const debts = new Map<string, number>()
+  for (const debt of await getCustomerDebts(req)) {
+    if (debt.customer) debts.set(debt.customer, (debts.get(debt.customer) ?? 0) + debt.debtBani)
+  }
 
   const discrepancies: CashCacheDiscrepancy[] = []
 
@@ -175,6 +195,17 @@ export const checkCashCache = async (req: PayloadRequest, session?: Session): Pr
     if (actual !== expected) discrepancies.push({ type: 'customerAdvance', entity: 'customer', id, expected, actual })
   }
 
+  const byCustomer = new Map(customerBalances.map((balance) => [String(balance.customer), balance]))
+
+  for (const id of new Set([...byCustomer.keys(), ...debts.keys()])) {
+    const balance = byCustomer.get(id)
+    const expected = debts.get(id) ?? 0
+    const actual = balance?.debtBani ?? 0
+    const netMatches = (balance?.netBani ?? 0) === actual - (balance?.balanceBani ?? 0)
+
+    if (actual !== expected || !netMatches) discrepancies.push({ type: 'customerDebt', entity: 'customer', id, expected, actual })
+  }
+
   return discrepancies
 }
 
@@ -192,7 +223,7 @@ export type FixCashCacheResult = { fixed: CashCacheDiscrepancy[]; skipped: CashC
  * Перебудовує кеші з журналів в одній транзакції й логує кожну зміну. `balanceBani` виправляється
  * завжди; `paidBani` замовлень лише з `orders: true` (змінює дані замовлень, тож явний прапорець),
  * `paidBani` розрахунків зарплати лише з `payrolls: true` (сирий `updateOne`, проведений payroll незмінний),
- * аванси клієнтів лише з `customers: true`.
+ * аванси, борг і сальдо клієнтів лише з `customers: true`.
  * Від'ємний баланс не виправляється: він потребує операцій, а не перебудови кешу. Замовлення
  * змінюються сирим `updateOne`, як і в `orderPayments.service`, тому хуки Orders не спрацьовують.
  */
@@ -243,6 +274,10 @@ export const fixCashCache = (
           { $set: { balanceBani: item.expected, updatedAt: now }, $setOnInsert: { createdAt: now } },
           { session, upsert: true },
         )
+        // Сальдо залежить від авансу.
+        await refreshCustomerDebt(req, item.id)
+      } else if (item.type === 'customerDebt' && customers) {
+        await refreshCustomerDebt(req, item.id)
       } else {
         result.skipped.push(item)
         continue
@@ -270,7 +305,7 @@ export const cashCacheCheck: Endpoint = {
 
 /**
  * `POST /cash/cache-rebuild`; `?orders=true` додатково виправляє `paidBani` замовлень,
- * `?payrolls=true` — `paidBani` розрахунків зарплати, `?customers=true` — аванси клієнтів.
+ * `?payrolls=true` — `paidBani` розрахунків зарплати, `?customers=true` — аванси, борг і сальдо клієнтів.
  */
 export const cashCacheRebuild: Endpoint = {
   path: '/cash/cache-rebuild',

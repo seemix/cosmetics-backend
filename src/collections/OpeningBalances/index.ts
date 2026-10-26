@@ -17,6 +17,7 @@ import { collectionLabels, customT, label, localized, type CustomTranslationsKey
 import { documentLifecycle, type DocumentTransitionArgs } from '@/services/documents/documentLifecycle'
 import {
   depositToCustomer,
+  refreshCustomerDebt,
   releaseOrderPayment,
   settleCustomer,
   withdrawFromCustomer,
@@ -299,12 +300,12 @@ const lifecycle = documentLifecycle({
 })
 
 /**
- * Проведений customerDebt: аванс клієнтів гасить нові борги. Після збереження, бо ліміт оплати
- * (`getOrderPayableCapBani`) бачить лише проведені документи.
+ * Проведений customerDebt: аванс клієнтів гасить нові борги; сторнований: борг клієнтів зменшується.
+ * Після збереження, бо ліміт оплати (`getOrderPayableCapBani`) і борги бачать лише проведені документи.
  */
 const settleCustomerDebts: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req }) => {
-  if (operation !== 'update' || doc.kind !== 'customerDebt') return doc
-  if (doc.status !== 'posted' || previousDoc?.status === 'posted') return doc
+  if (operation !== 'update' || doc.kind !== 'customerDebt' || doc.status === previousDoc?.status) return doc
+  if (doc.status !== 'posted' && doc.status !== 'reversed') return doc
 
   const lines = (doc.customerLines ?? []) as CustomerLine[]
   const orders = await loadOrders(req, lines.map((line) => String(idOf(line.order))))
@@ -312,7 +313,11 @@ const settleCustomerDebts: CollectionAfterChangeHook = async ({ doc, previousDoc
   const ref = { collection: 'opening-balances', id: String(doc.id), number: String(doc.number) }
 
   for (const customer of customers) {
-    await settleCustomer(req, { customer, doc: ref, date: new Date(doc.postedAt ?? Date.now()) })
+    if (doc.status === 'posted') {
+      await settleCustomer(req, { customer, doc: ref, date: new Date(doc.postedAt ?? Date.now()) })
+    } else {
+      await refreshCustomerDebt(req, customer)
+    }
   }
 
   return doc

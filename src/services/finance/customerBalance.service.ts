@@ -12,7 +12,8 @@ import { changeOrderPaid } from './orderPayments.service'
  * Баланс клієнта (docs/accounting/design.md, розд. 6.4). Гроші клієнта спершу йдуть на аванс
  * (`customer-balances.balanceBani`), а аванс одразу гасить борги його замовлень від найстарішого.
  * Аванс змінюється сирим умовним `$inc` у сесії транзакції `req`, `orders.paidBani` лише через
- * `changeOrderPaid`, кожна зміна пишеться в журнал `customer-moves`. Гостьові замовлення (без
+ * `changeOrderPaid`, кожна зміна пишеться в журнал `customer-moves`. Наприкінці кожної зміни кеш
+ * боргу й сальдо клієнта (`debtBani`, `netBani`) перераховується повністю. Гостьові замовлення (без
  * клієнта) балансу не мають: їхня оплата йде прямо в замовлення, як і раніше.
  */
 
@@ -46,6 +47,34 @@ export const getCustomerAdvanceBani = async (req: PayloadRequest, customer: stri
   const doc = await balances(req).findOne<{ balanceBani?: number }>({ customer: toObjectId(req, customer) }, { session })
 
   return doc?.balanceBani ?? 0
+}
+
+/**
+ * Кеш боргу й сальдо клієнта: `debtBani` = Σ боргів по його замовленнях, `netBani` = борг − аванс
+ * (плюс = клієнт винен нам). Перераховується з замовлень, тож документ балансу з'являється й у
+ * клієнта без оплат, щойно в нього є борг.
+ */
+export const refreshCustomerDebt = async (req: PayloadRequest, customer: string) => {
+  const session = await requireSession(req)
+  const debtBani = (await getCustomerDebts(req, { customer })).reduce((sum, debt) => sum + debt.debtBani, 0)
+  const advance = { $ifNull: ['$balanceBani', 0] }
+  const now = new Date()
+
+  await balances(req).updateOne(
+    { customer: toObjectId(req, customer) },
+    [
+      {
+        $set: {
+          balanceBani: advance,
+          debtBani,
+          netBani: { $subtract: [debtBani, advance] },
+          updatedAt: now,
+          createdAt: { $ifNull: ['$createdAt', now] },
+        },
+      },
+    ],
+    { session, upsert: true },
+  )
 }
 
 /** Зміна авансу; зменшення лише умовним `$inc`, тож паралельні операції не уведуть його в мінус. */
@@ -111,7 +140,8 @@ export const settleCustomer = async (
   { customer, first, exclude = [], ...args }: MoveArgs & { customer: string; first?: string | null; exclude?: string[] },
 ) => {
   let advance = await getCustomerAdvanceBani(req, customer)
-  if (advance <= 0) return
+  // Без авансу розподіляти нічого, але борг міг змінитися (нове замовлення, скасування).
+  if (advance <= 0) return refreshCustomerDebt(req, customer)
 
   const rank = (orderId: string) => (orderId === first ? 0 : 1)
   const debts = (await getCustomerDebts(req, { customer }))
@@ -134,6 +164,8 @@ export const settleCustomer = async (
     await writeMove(req, args, { customer, kind: 'allocation', advanceDeltaBani: -amountBani, order: debt.orderId, orderDeltaBani: amountBani })
     advance -= amountBani
   }
+
+  await refreshCustomerDebt(req, customer)
 }
 
 /**
@@ -200,6 +232,8 @@ export const withdrawFromCustomer = async (
       true,
     )
   }
+
+  await refreshCustomerDebt(req, customer)
 }
 
 /** Повернення клієнту з авансу (без замовлення): не більше за аванс. */
@@ -211,6 +245,7 @@ export const refundCustomerAdvance = async (
 
   await changeAdvance(req, customer, -amountBani)
   await writeMove(req, args, { customer, kind: 'refund', advanceDeltaBani: -amountBani })
+  await refreshCustomerDebt(req, customer)
 }
 
 /**
@@ -223,6 +258,7 @@ export const changeOrderPayment = async (
 ) => {
   await changeOrderPaid(req, { order, deltaBani })
   await writeMove(req, args, { customer, kind, order, orderDeltaBani: deltaBani })
+  if (customer) await refreshCustomerDebt(req, customer)
 }
 
 /**
@@ -239,7 +275,8 @@ export const releaseOrderPayment = async (
     { session, projection: { paidBani: 1 } },
   )
   const paidBani = doc?.paidBani ?? 0
-  if (paidBani <= 0) return
+  // Неоплачене замовлення лише перестає боргувати.
+  if (paidBani <= 0) return refreshCustomerDebt(req, customer)
 
   await changeOrderPaid(req, { order, deltaBani: -paidBani })
   await changeAdvance(req, customer, paidBani)
