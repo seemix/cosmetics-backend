@@ -11,3 +11,7 @@ export const isManager = (user: AnyUser): boolean => checkRole(['manager'], user
 
 /** `admin.hidden` облікових колекцій і глобалів: у сайдбарі їх бачить лише admin. */
 export const hiddenUnlessAdmin = ({ user }: { user: AnyUser }): boolean => !isAdmin(user)
+
+/** `admin.hidden` для того, що manager бачить у сайдбарі (залишки, В11). */
+export const hiddenUnlessAdminOrManager = ({ user }: { user: AnyUser }): boolean =>
+  !checkRole(['admin', 'manager'], user as User)

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useConfig, useDocumentInfo, useTranslation } from '@payloadcms/ui'
 import type { UIFieldClientComponent } from 'payload'
 
-import type { ProductStock } from '@/endpoints/getProductStock'
+import type { ProductStock, ProductStockQty } from '@/endpoints/getProductStock'
 import type { CustomTranslationsKeys } from '@/i18n'
 import { customT } from '@/i18n/labels'
 import { formatMDL } from '@/utilities/money'
@@ -12,12 +12,15 @@ import { formatMDL } from '@/utilities/money'
 type State =
   | { status: 'loading' }
   | { status: 'error'; message: CustomTranslationsKeys }
-  | { status: 'ready'; stock: ProductStock }
+  | { status: 'ready'; stock: ProductStock | ProductStockQty }
 
 const cell: React.CSSProperties = { padding: '4px 12px 4px 0', textAlign: 'left' }
 const numeric: React.CSSProperties = { ...cell, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }
 
-/** Залишки по складах і середня собівартість товару. Лише перегляд, у документ нічого не пише. */
+/**
+ * Залишки по складах і середня собівартість товару. Лише перегляд, у документ нічого не пише.
+ * Manager отримує від ендпоінта лише кількість (В11), тоді блок вартості не показується.
+ */
 export const StockPanel: UIFieldClientComponent = () => {
   const { id } = useDocumentInfo()
   const { config } = useConfig()
@@ -40,7 +43,7 @@ export const StockPanel: UIFieldClientComponent = () => {
           })
           return
         }
-        setState({ status: 'ready', stock: (await response.json()) as ProductStock })
+        setState({ status: 'ready', stock: (await response.json()) as ProductStock | ProductStockQty })
       })
       .catch((error: Error) => {
         if (error.name !== 'AbortError') setState({ status: 'error', message: 'custom:stockPanel:loadFailed' })
@@ -60,7 +63,7 @@ export const StockPanel: UIFieldClientComponent = () => {
   )
 }
 
-const StockTable = ({ stock }: { stock: ProductStock }) => {
+const StockTable = ({ stock }: { stock: ProductStock | ProductStockQty }) => {
   const { t: rawT } = useTranslation()
   const t = customT(rawT)
 
@@ -86,22 +89,24 @@ const StockTable = ({ stock }: { stock: ProductStock }) => {
           <td style={{ ...numeric, fontWeight: 600 }}>{stock.totalQty}</td>
         </tr>
       </tbody>
-      <tfoot>
-        <tr>
-          <td style={cell}>{t('custom:stockPanel:avgCost')}</td>
-          <td style={numeric}>{stock.avgCostBani > 0 ? `${formatMDL(Math.round(stock.avgCostBani))} MDL` : '—'}</td>
-        </tr>
-        <tr>
-          <td style={cell}>{t('custom:stockPanel:stockValue')}</td>
-          <td style={numeric}>{formatMDL(stock.valueBani)} MDL</td>
-        </tr>
-        {stock.lastPurchaseUnitCostBani !== null && (
+      {'valueBani' in stock && (
+        <tfoot>
           <tr>
-            <td style={cell}>{t('custom:stockPanel:lastPurchaseCost')}</td>
-            <td style={numeric}>{formatMDL(Math.round(stock.lastPurchaseUnitCostBani))} MDL</td>
+            <td style={cell}>{t('custom:stockPanel:avgCost')}</td>
+            <td style={numeric}>{stock.avgCostBani > 0 ? `${formatMDL(Math.round(stock.avgCostBani))} MDL` : '—'}</td>
           </tr>
-        )}
-      </tfoot>
+          <tr>
+            <td style={cell}>{t('custom:stockPanel:stockValue')}</td>
+            <td style={numeric}>{formatMDL(stock.valueBani)} MDL</td>
+          </tr>
+          {stock.lastPurchaseUnitCostBani !== null && (
+            <tr>
+              <td style={cell}>{t('custom:stockPanel:lastPurchaseCost')}</td>
+              <td style={numeric}>{formatMDL(Math.round(stock.lastPurchaseUnitCostBani))} MDL</td>
+            </tr>
+          )}
+        </tfoot>
+      )}
     </table>
   )
 }

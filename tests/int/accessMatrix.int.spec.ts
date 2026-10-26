@@ -155,6 +155,17 @@ describe('M1: матриця прав (розд. 11)', () => {
         false,
       ])
     })
+
+    it('залишки (В11): stock-balances у сайдбарі й панель на картці товару для admin і manager', () => {
+      const collection = (slug: string) => payload.config.collections.find((c) => c.slug === slug)!
+      const hidden = collection('stock-balances').admin.hidden as (args: { user: unknown }) => boolean
+      const stockPanel = collection('products').fields.find((f) => 'name' in f && f.name === 'stockPanel')!
+      const shown = stockPanel.admin!.condition! as (data: unknown, sibling: unknown, ctx: { user: unknown }) => boolean
+
+      expect(ROLES.map((role) => !hidden({ user: userOf(role) ?? null }))).toEqual([true, true, false, false])
+      expect(ROLES.map((role) => shown({}, {}, { user: userOf(role) ?? null }))).toEqual([true, true, false, false])
+      expect((collection('product-costs').admin.hidden as typeof hidden)({ user: users.manager })).toBe(true)
+    })
   })
 
   describe('products', () => {
