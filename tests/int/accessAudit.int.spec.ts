@@ -1616,14 +1616,14 @@ describe('[FINDING-12] каталог бренду й категорії від�
 })
 
 describe('[FINDING-13] гігієна облікових записів', () => {
-  it.fails('зміна email клієнтом скидає верифікацію або вимагає підтвердження', async () => {
+  it('зміна email клієнтом скидає верифікацію або вимагає підтвердження', async () => {
     const user = await tempUser()
     const response = await ctx.http('PATCH', `/users/${user.id}`, user, { email: `${tag}-changed-${Date.now()}@example.test` })
     const saved = (await ctx.payload.findByID({ collection: 'users', id: user.id, depth: 0, overrideAccess: true })) as Record<string, any>
     expect(response.status >= 400 || saved._verified === false).toBe(true)
   })
 
-  it.fails('реєстрація не приймає службові поля автентифікації (resetPasswordToken, lockUntil, loginAttempts)', async () => {
+  it('реєстрація не приймає службові поля автентифікації (resetPasswordToken, lockUntil, loginAttempts)', async () => {
     const future = new Date(Date.now() + 3_600_000).toISOString()
     const { doc } = await registerAsGuest({ resetPasswordToken: 'attacker-reset', resetPasswordExpiration: future, loginAttempts: 7, lockUntil: future })
     expect([doc!.resetPasswordToken ?? null, doc!.loginAttempts ?? 0, doc!.lockUntil ?? null]).toEqual([null, 0, null])

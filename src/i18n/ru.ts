@@ -82,6 +82,7 @@ export const ru: CustomTranslationsObject = {
       periodLocked: 'Период закрыт до {{date}}',
       insufficientStock: 'Недостаточно товара на складе: {{product}} ({{warehouse}}), запрошено {{requested}}, доступно {{available}}',
       insufficientStockPublic: 'Некоторых товаров нет в нужном количестве',
+      emailChangeForbidden: 'Изменение email недоступно, обратитесь в поддержку',
       orderWarehouseRequired: 'Учёт склада включён, но у заказа нет склада: укажите склад по умолчанию в настройках учёта',
       postedOrderLocked: 'Проведённый заказ нельзя редактировать: позиции, сумма, скидка и клиент зафиксированы',
       cancelledOrderFinal: 'У отменённого заказа нельзя изменить статус',

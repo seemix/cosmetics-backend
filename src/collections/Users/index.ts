@@ -22,6 +22,7 @@ import { verifyEmail } from '@/email-templates/verify-email'
 import { getFavorites } from './endpoints/getFavorites'
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 import { assignCustomerManager } from './hooks/assignCustomerManager'
+import { guardAccountFields } from './hooks/guardAccountFields'
 
 /** Manager бачить себе й клієнтів: роль `customer` без ролей `admin` і `manager` (розд. 11). */
 const readUsers: Access = (args) => {
@@ -262,5 +263,5 @@ export const Users: CollectionConfig = {
 
   ],
   endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem, updateUserInfo],
-  hooks: { beforeOperation: [guardSortFields], beforeChange: [assignCustomerManager] },
+  hooks: { beforeOperation: [guardSortFields], beforeValidate: [guardAccountFields], beforeChange: [assignCustomerManager] },
 }
