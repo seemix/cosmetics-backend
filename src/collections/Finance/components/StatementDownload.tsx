@@ -13,10 +13,10 @@ const fileName = (disposition: string | null) => {
   const encoded = disposition?.match(/filename\*=UTF-8''([^;]+)/)?.[1]
   if (encoded) return decodeURIComponent(encoded)
 
-  return disposition?.match(/filename="([^"]+)"/)?.[1] ?? 'statement.xlsx'
+  return disposition?.match(/filename="([^"]+)"/)?.[1] ?? 'statement.html'
 }
 
-/** Виписка по клієнту за період: дати й кнопка завантаження .xlsx (розд. 6.5). */
+/** Виписка по клієнту за період: дати й кнопка завантаження HTML-файлу (розд. 6.5). */
 export const StatementDownload = () => {
   const { id } = useDocumentInfo()
   const { config } = useConfig()

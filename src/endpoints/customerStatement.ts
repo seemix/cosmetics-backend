@@ -3,12 +3,11 @@ import type { Endpoint, PayloadRequest } from 'payload'
 import { requireAdmin } from '@/endpoints/stockCacheCheck'
 import { customT } from '@/i18n'
 import { getCustomerStatement } from '@/services/finance/customerStatement.service'
-import { buildStatementWorkbook } from '@/services/finance/customerStatement.xlsx'
+import { buildStatementHtml } from '@/services/finance/customerStatement.html'
 import { periodBounds } from '@/utilities/period'
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 const OBJECT_ID = /^[0-9a-f]{24}$/i
-const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 const validDay = (value: string | null | undefined): value is string =>
   Boolean(value && DAY.test(value) && !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime()))
@@ -22,7 +21,7 @@ const contentDisposition = (name: string) => {
 
 /**
  * `GET /api/customer-balances/:id/statement?from=YYYY-MM-DD&to=YYYY-MM-DD`: виписка по клієнту
- * документа балансу за період у форматі .xlsx (розд. 6.5). Лише admin, роль перевіряється першою.
+ * документа балансу за період як HTML-файл (розд. 6.5). Лише admin, роль перевіряється першою.
  */
 export const customerStatement: Endpoint = {
   path: '/:id/statement',
@@ -50,14 +49,14 @@ export const customerStatement: Endpoint = {
 
     const { from: start, to: end } = periodBounds(from, to)
     const statement = await getCustomerStatement(req, { customer: String(balance.customer), from, to, start, end })
-    const file = await buildStatementWorkbook(statement, t)
+    const html = buildStatementHtml(statement, t)
     const who = statement.customer.name ?? statement.customer.email ?? statement.customer.id
 
-    return new Response(new Uint8Array(file), {
+    return new Response(html, {
       status: 200,
       headers: {
-        'Content-Type': XLSX,
-        'Content-Disposition': contentDisposition(`${t('custom:statement:title')} ${who} ${from}_${to}.xlsx`),
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': contentDisposition(`${t('custom:statement:title')} ${who} ${from}_${to}.html`),
         'Cache-Control': 'no-store',
       },
     })

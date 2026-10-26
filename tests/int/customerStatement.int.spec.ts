@@ -1,4 +1,3 @@
-import ExcelJS from 'exceljs'
 import { createLocalReq, getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
@@ -171,10 +170,11 @@ describe('Виписка по клієнту (розд. 6.5)', () => {
     expect(statement).toMatchObject({ chargedBani: 10000, paidBani: 3000, closingBani: 2000 })
   })
 
-  it('замовлення періоду з позиціями й залишком', async () => {
+  it('нараховане в періоді замовлення має позиції й залишок', async () => {
     const statement = await statementFor(today, today)
 
-    expect(statement.orders).toEqual([
+    expect(statement.lines[0]).toMatchObject({ kind: 'order', orderId: String(order.id) })
+    expect(Object.values(statement.orders)).toEqual([
       expect.objectContaining({
         number: order.orderNumber,
         totalBani: 10000,
@@ -188,7 +188,7 @@ describe('Виписка по клієнту (розд. 6.5)', () => {
 
   it('період до будь-яких рухів: порожньо, сальдо 0; період з першим надходженням починається з 0', async () => {
     const empty = await statementFor(shiftDay(twoDaysAgo, -5), shiftDay(twoDaysAgo, -1))
-    expect(empty).toMatchObject({ openingBani: 0, closingBani: 0, lines: [], orders: [] })
+    expect(empty).toMatchObject({ openingBani: 0, closingBani: 0, lines: [], orders: {} })
 
     const full = await statementFor(twoDaysAgo, today)
     expect(full.openingBani).toBe(0)
@@ -197,20 +197,28 @@ describe('Виписка по клієнту (розд. 6.5)', () => {
   })
 
   describe('ендпоінт', () => {
-    it('admin отримує .xlsx з аркушами рухів і замовлень', async () => {
+    it('admin отримує HTML-файл: одна таблиця, позиції замовлення під його рядком', async () => {
       const response = await callEndpoint({ from: shiftDay(today, -1), to: today })
 
       expect(response.status).toBe(200)
-      expect(response.headers.get('Content-Type')).toContain('spreadsheetml')
-      expect(response.headers.get('Content-Disposition')).toMatch(/attachment; filename=".+\.xlsx"/)
+      expect(response.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
+      expect(response.headers.get('Content-Disposition')).toMatch(/attachment; filename=".+\.html"/)
 
-      const workbook = new ExcelJS.Workbook()
-      await workbook.xlsx.load(await response.arrayBuffer())
-      expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual(['Movements', 'Orders'])
+      const html = await response.text()
+      expect(html.match(/<table/g)).toHaveLength(1)
+      expect(html).toContain('Opening balance')
+      expect(html).toContain('-50.00')
+      expect(html).toContain('Closing balance')
 
-      const values = workbook.worksheets[0].getSheetValues().flat().filter((value) => value !== undefined && value !== null)
-      expect(values).toEqual(expect.arrayContaining(['Opening balance', -50, 'Closing balance', 20]))
-      expect(values).toContain(`Order ${order.orderNumber}`)
+      // Рядок нарахування замовлення, одразу за ним позиція й стан оплати, потім наступний рух.
+      const orderRow = html.indexOf(`Order ${order.orderNumber}<`)
+      const item = html.indexOf('1 × 100.00 = 100.00')
+      const summary = html.indexOf('paid 80.00, left to pay 20.00')
+      const nextPayment = html.indexOf(`Payment received, order ${order.orderNumber}`)
+      expect(orderRow).toBeGreaterThan(0)
+      expect(item).toBeGreaterThan(orderRow)
+      expect(summary).toBeGreaterThan(item)
+      expect(nextPayment).toBeGreaterThan(summary)
     })
 
     it('не-admin 403, гість 401; неправильний період 400; невідомий баланс 404', async () => {

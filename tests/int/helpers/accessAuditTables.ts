@@ -242,7 +242,7 @@ export const ENDPOINTS: EndpointCase[] = [
   {
     key: 'GET /customer-balances/:id/statement',
     access: 'admin',
-    why: 'розд. 6.5: виписка по клієнту (.xlsx) з сумами, лише admin; роль перевіряється першою (requireAdmin)',
+    why: 'розд. 6.5: виписка по клієнту (HTML) з сумами, лише admin; роль перевіряється першою (requireAdmin)',
     request: () => ({ method: 'GET', path: '/customer-balances/000000000000000000000000/statement?from=2003-01-01&to=2003-01-31' }),
     // Неіснуючий баланс: admin отримує 404; успішний шлях покрито в customerStatement.int.spec.ts.
     expect: adminOnly(404),

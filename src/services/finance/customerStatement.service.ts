@@ -13,7 +13,7 @@ import { getOrderRevenueBani, type PaymentOrder } from '@/services/finance/order
 
 /**
  * Виписка по клієнту за період (docs/accounting/design.md, розд. 6.5): сальдо на початок, кожна
- * подія, що змінює його борг, і сальдо на кінець; плюс замовлення періоду з позиціями. Сальдо тут те
+ * подія, що змінює його борг, і сальдо на кінець; замовлення з рядків періоду мають позиції. Сальдо тут те
  * саме, що `customer-balances.netBani`: Σ нарахованого (замовлення, початкові борги) − Σ оплаченого
  * (надходження, початкові аванси, мінус повернення). Рахується з документів за їхніми датами, тож
  * доступне на будь-яку дату; лише читання, агрегації MongoDB у сесії `req`, якщо вона відкрита.
@@ -37,6 +37,7 @@ export type StatementLine = {
   /** Номер документа: замовлення, касова операція, початкові залишки. */
   document: string | null
   /** Замовлення, якого стосується подія (для оплати, якщо його вказано). */
+  orderId: string | null
   orderNumber: string | null
   /** Нараховано: плюс збільшує борг клієнта, мінус (скасування, сторно) зменшує. */
   chargedBani: number
@@ -70,7 +71,8 @@ export type CustomerStatement = {
   paidBani: number
   closingBani: number
   lines: StatementLine[]
-  orders: StatementOrder[]
+  /** Замовлення, нараховані в періоді (рядки `order` і `openingDebt`), за `id`. */
+  orders: Record<string, StatementOrder>
 }
 
 type OrderDoc = PaymentOrder & {
@@ -152,7 +154,7 @@ export const getCustomerStatement = async (
       const order = String(line.order)
       if (!numbers.has(order)) continue
 
-      const base = { document: doc.number ?? null, orderNumber: numbers.get(order) ?? null, paidBani: 0 }
+      const base = { document: doc.number ?? null, orderId: order, orderNumber: numbers.get(order) ?? null, paidBani: 0 }
       add(doc.postedAt, { ...base, kind: 'openingDebt', chargedBani: line.amountBani })
       if (doc.status === 'reversed') add(doc.reversedAt, { ...base, kind: 'openingDebtReversal', chargedBani: -line.amountBani })
       else activeDebt.set(order, (activeDebt.get(order) ?? 0) + line.amountBani)
@@ -161,7 +163,7 @@ export const getCustomerStatement = async (
 
   for (const order of orders) {
     const number = order.orderNumber ?? String(order._id)
-    const base = { document: number, orderNumber: number, paidBani: 0 }
+    const base = { document: number, orderId: String(order._id), orderNumber: number, paidBani: 0 }
     const stockPostedAt = order.accounting?.stockPostedAt
 
     if (stockPostedAt) {
@@ -176,7 +178,8 @@ export const getCustomerStatement = async (
 
   for (const doc of payments) {
     const receipt = doc.type === 'customer_receipt'
-    const base = { document: doc.number ?? null, orderNumber: doc.order ? (numbers.get(String(doc.order)) ?? null) : null, chargedBani: 0 }
+    const orderId = doc.order ? String(doc.order) : null
+    const base = { document: doc.number ?? null, orderId, orderNumber: orderId ? (numbers.get(orderId) ?? null) : null, chargedBani: 0 }
     const sign = receipt ? 1 : -1
 
     add(doc.operationDate, { ...base, kind: receipt ? 'receipt' : 'refund', paidBani: sign * doc.amountBani })
@@ -189,7 +192,7 @@ export const getCustomerStatement = async (
     for (const line of doc.advanceLines ?? []) {
       if (String(line.customer) !== customer) continue
 
-      const base = { document: doc.number ?? null, orderNumber: null, chargedBani: 0 }
+      const base = { document: doc.number ?? null, orderId: null, orderNumber: null, chargedBani: 0 }
       add(doc.postedAt, { ...base, kind: 'openingAdvance', paidBani: line.amountBani })
       if (doc.status === 'reversed') add(doc.reversedAt, { ...base, kind: 'openingAdvanceReversal', paidBani: -line.amountBani })
     }
@@ -208,10 +211,10 @@ export const getCustomerStatement = async (
       return { ...event, balanceBani }
     })
 
+  const charged = new Set(lines.filter((line) => line.kind === 'order' || line.kind === 'openingDebt').map((line) => line.orderId))
   const periodOrders = orders
+    .filter((order) => charged.has(String(order._id)))
     .map((order) => ({ order, at: new Date(order.accounting?.stockPostedAt ?? order.createdAt ?? 0) }))
-    .filter(({ at }) => at >= start && at <= end)
-    .sort((a, b) => a.at.getTime() - b.at.getTime())
 
   const products = await loadByIds<ProductDoc>(
     req,
@@ -237,13 +240,13 @@ export const getCustomerStatement = async (
     paidBani: lines.reduce((sum, line) => sum + line.paidBani, 0),
     closingBani: balanceBani,
     lines,
-    orders: periodOrders.map(({ order, at }) => {
+    orders: Object.fromEntries(periodOrders.map(({ order, at }): [string, StatementOrder] => {
       const id = String(order._id)
       const totalBani = getOrderRevenueBani(order)
       const paidBani = Number(order.paidBani) || 0
       const capBani = order.accounting?.stockPostedAt ? totalBani : (activeDebt.get(id) ?? 0)
 
-      return {
+      const statementOrder: StatementOrder = {
         id,
         number: order.orderNumber ?? null,
         date: at.toISOString(),
@@ -266,6 +269,8 @@ export const getCustomerStatement = async (
           }
         }),
       }
-    }),
+
+      return [id, statementOrder]
+    })),
   }
 }
