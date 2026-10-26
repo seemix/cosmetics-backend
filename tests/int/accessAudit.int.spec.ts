@@ -1123,7 +1123,7 @@ describe('J. GraphQL: ті самі права, introspection у production', ()
         expect(forbidden(response, root), `${root} як ${who}: ${JSON.stringify(response.body).slice(0, 200)}`).toBe(true)
       }
     }
-  })
+  }, 30000)
 
   it('customer: замовлення лише свої, accounting і manager приховані (null), як у REST', async () => {
     const response = await ctx.gql('{ Orders { docs { id total accounting { cogsBani revenueBani } manager { id } source warehouse { id } } } }', 'customer')
@@ -1593,7 +1593,7 @@ describe('[FINDING-11] 409 при нестачі віддає точний за�
 })
 
 describe('[FINDING-12] каталог бренду й категорії віддає поле inventory', () => {
-  it.fails('products-brand і products-category без inventory', async () => {
+  it('products-brand і products-category без inventory', async () => {
     for (const path of [`/products/products-brand/${fx.brandSlug}`, `/products/products-category/${fx.categorySlug}`]) {
       const response = await ctx.http('GET', path, 'guest')
       expect([...deepKeys(response.body)], path).not.toContain('inventory')

@@ -140,6 +140,7 @@ export async function getProductsByRelation(
       generateSlug: false,
       _status: false,
       relatedProducts: false,
+      inventory: false,
       ...filter,
     },
     where: {
