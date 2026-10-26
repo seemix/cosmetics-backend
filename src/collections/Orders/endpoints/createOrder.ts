@@ -5,7 +5,15 @@ import { getPromoBrandIds, isBrandEligibleForPromo } from '@/services/promo.serv
 import { checkPromoCode } from '@/collections/Carts/services/checkPromoCode'
 import { flushAfterCommit, openAfterCommitQueue } from '@/services/notifications/afterCommit'
 import { runInTransaction } from '@/services/documents/documentLifecycle'
+import { customT } from '@/i18n'
 import { InsufficientStockError } from '@/services/stock/errors'
+
+/**
+ * Залишок у відповіді 409 (В4, Q1): гостю кількість не показуємо, авторизованому лише наближену:
+ * округлення донизу до кратного 5, але не менше 1, якщо товар ще є.
+ */
+const roundAvailable = (available: number): number =>
+  available <= 0 ? 0 : Math.max(1, Math.floor(available / 5) * 5)
 
 export const createOrder: Endpoint = {
   path: '/create',
@@ -182,8 +190,13 @@ export const createOrder: Endpoint = {
           {
             success: false,
             code: 'INSUFFICIENT_STOCK',
-            message: error.message,
-            items: error.items.map(({ product, requested, available }) => ({ product, requested, available })),
+            // Службове повідомлення містить склад і точний залишок: клієнту віддаємо загальне.
+            message: customT(req.t)('custom:error:insufficientStockPublic'),
+            items: error.items.map(({ product, requested, available }) => ({
+              product,
+              requested,
+              ...(req.user ? { available: roundAvailable(available) } : {}),
+            })),
           },
           { status: 409 },
         )

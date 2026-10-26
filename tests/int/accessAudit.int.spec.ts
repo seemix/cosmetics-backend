@@ -1568,18 +1568,15 @@ describe('[FINDING-10] versions: будь-який авторизований ч
   })
 })
 
-describe('[FINDING-11] 409 при нестачі віддає точний залишок будь-кому (питання власнику, В4)', () => {
-  it.fails('відповідь 409 не містить available', async () => {
+describe('[FINDING-11] 409 при нестачі: гість без кількості, авторизований з округленням (Q1, В4)', () => {
+  const shortage = async (who: Who, requested: number) => {
     const before = await ctx.payload.findGlobal({ slug: 'accounting-settings', depth: 0 })
     try {
       await ctx.payload.updateGlobal({ slug: 'accounting-settings', data: { stockControlEnabled: true, defaultWebWarehouse: f.warehouse } as never })
-      await stockUp(ctx.payload, f.pub2, f.warehouse, 3, 3000)
-      const response = await ctx.http('POST', '/orders/create', 'guest', {
-        items: [{ product: f.pub2, quantity: 5 }],
+      return await ctx.http('POST', '/orders/create', who, {
+        items: [{ product: f.pub2, quantity: requested }],
         shippingAddress: { name: 'T', phone: '1', email: 'b@example.test', city: 'C', address: 'A' },
       })
-      expect(response.status).toBe(409)
-      expect(JSON.stringify(response.body)).not.toContain('available')
     } finally {
       await ctx.payload.updateGlobal({
         slug: 'accounting-settings',
@@ -1589,6 +1586,23 @@ describe('[FINDING-11] 409 при нестачі віддає точний за�
         } as never,
       })
     }
+  }
+
+  it('гість: 409 без available і без точної кількості', async () => {
+    await stockUp(ctx.payload, f.pub2, f.warehouse, 3, 3000)
+    const response = await shortage('guest', 5)
+    expect(response.status).toBe(409)
+    expect(response.body.items).toEqual([{ product: f.pub2, requested: 5 }])
+    expect(JSON.stringify(response.body)).not.toContain('"available"')
+  })
+
+  it('авторизований: available округлено донизу до кратного 5 (мінімум 1)', async () => {
+    const small = await shortage('customer', 5) // залишок 3 -> 1
+    expect(small.body.items[0].available).toBe(1)
+    await stockUp(ctx.payload, f.pub2, f.warehouse, 10, 10000) // разом 13 -> 10
+    const rounded = await shortage('customer', 50)
+    expect(rounded.status).toBe(409)
+    expect(rounded.body.items[0].available).toBe(10)
   })
 })
 

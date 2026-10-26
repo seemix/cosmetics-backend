@@ -183,7 +183,7 @@ describe('S2.3/S2.4: списання при створенні замовлен
       success: false,
       code: 'INSUFFICIENT_STOCK',
       message: expect.any(String),
-      items: [{ product: scarce, requested: 2, available: 1 }],
+      items: [{ product: scarce, requested: 2 }], // гість: кількість у відповіді не показуємо (В4)
     })
     expect(await ordersWith(enough)).toBe(0)
     expect(await qtyAt(payload, enough, webWarehouse)).toBe(5)
