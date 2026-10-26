@@ -1474,7 +1474,7 @@ describe('[FINDING-4] forms: customer створює форми, що розси
 })
 
 describe('[FINDING-5] users.unlock: будь-який авторизований розблоковує чужі акаунти', () => {
-  it.fails('customer не розблоковує чужий акаунт', async () => {
+  it('customer не розблоковує чужий акаунт', async () => {
     const response = await ctx.http('POST', '/users/unlock', 'customer', { email: ctx.actors.customer2.email })
     expect(response.status).toBe(403)
   })

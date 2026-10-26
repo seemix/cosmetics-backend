@@ -43,6 +43,8 @@ export const Users: CollectionConfig = {
     delete: adminOnly,
     read: readUsers,
     update: adminOrSelf,
+    // Без правила діяв дефолт «будь-який авторизований»: customer знімав блокування чужих акаунтів.
+    unlock: adminOnly,
 
   },
   admin: {

@@ -163,7 +163,6 @@ export const DEFAULT_ACCESS_ALLOWLIST: Record<string, string> = {
 
 /** Відомі випадки дефолтного access, які є знахідками (не винятки): ключ `slug.операція` -> номер знахідки. */
 export const DEFAULT_ACCESS_FINDINGS: Record<string, number> = {
-  'users.unlock': 5,
   'forms.create': 4,
   'forms.update': 4,
   'forms.delete': 4,
