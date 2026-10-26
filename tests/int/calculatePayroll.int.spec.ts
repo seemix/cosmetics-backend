@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@/payload.config'
 import { applyCashMoves } from '@/services/finance/cashLedger.service'
 import { calculatePayroll, type PayrollOrderData } from '@/services/salary/calculatePayroll'
-import { endOfDay, periodBounds, startOfDay } from '@/services/salary/period'
+import { endOfDay, periodBounds, startOfDay } from '@/utilities/period'
 import { pickScheme } from '@/services/salary/pickScheme'
 import { selectPayrollOrders, type PayrollSelectionScheme } from '@/services/salary/selectPayrollOrders'
 

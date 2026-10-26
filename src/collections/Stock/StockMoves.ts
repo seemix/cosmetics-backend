@@ -46,6 +46,8 @@ export const StockMoves: CollectionConfig = {
     { fields: ['product', 'warehouse', 'date'] },
     { fields: ['docCollection', 'docId'] },
     { fields: ['date', 'moveType'] },
+    // Звіт прибутку (R1): втрати складу = рухи `stock-adjustments` за період.
+    { fields: ['docCollection', 'date'] },
   ],
   fields: [
     { name: 'date', label: label('custom:term:date'), type: 'date', required: true, index: true },

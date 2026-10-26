@@ -1,7 +1,8 @@
 import type { PayloadRequest } from 'payload'
 
+import type { PeriodBounds } from '@/utilities/period'
+
 import type { PayrollOrderData } from './calculatePayroll'
-import type { PeriodBounds } from './period'
 
 /**
  * Вибірка замовлень для розрахунку зарплати (docs/accounting/design.md, розд. 7.2): одна агрегація

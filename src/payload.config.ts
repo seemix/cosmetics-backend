@@ -46,6 +46,7 @@ import { getMenu } from '@/endpoints/getMenu'
 import { cashCacheCheck, cashCacheRebuild } from '@/endpoints/cashCacheCheck'
 import { stockCacheCheck, stockCacheRebuild } from '@/endpoints/stockCacheCheck'
 import { getProductStock } from '@/endpoints/getProductStock'
+import { reportEndpoints } from '@/endpoints/reports'
 import sharp from 'sharp'
 import payloadSidebar from 'payload-sidebar-plugin'
 import { en } from '@payloadcms/translations/languages/en'
@@ -168,7 +169,7 @@ export default buildConfig({
         apiKey: process.env.RESEND_API_KEY,
       })
     : undefined,
-  endpoints: [getMenu, stockCacheCheck, stockCacheRebuild, cashCacheCheck, cashCacheRebuild, getProductStock],
+  endpoints: [getMenu, stockCacheCheck, stockCacheRebuild, cashCacheCheck, cashCacheRebuild, getProductStock, ...reportEndpoints],
   //globals: [Header, Footer],
   globals: [AccountingSettings],
   plugins: [

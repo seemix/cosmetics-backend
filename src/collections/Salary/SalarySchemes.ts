@@ -6,7 +6,7 @@ import { managerField } from '@/collections/Salary/managerField'
 import { moneyField } from '@/fields/money'
 import { percentBpField } from '@/fields/percentBp'
 import { collectionLabels, customT, description, label, localized, type CustomTranslationsKeys } from '@/i18n'
-import { dayKey } from '@/services/salary/period'
+import { dayKey } from '@/utilities/period'
 import { findOverlappingScheme } from '@/services/salary/pickScheme'
 
 const idOf = (value: unknown) =>

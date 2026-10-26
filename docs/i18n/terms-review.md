@@ -22,3 +22,10 @@
 | `custom:field:attribution` | Sales attribution | Принадлежность продаж | Atribuirea vânzărilor | Чий продаж: менеджер на момент замовлення (знімок) чи поточний менеджер клієнта |
 | `custom:option:basePaidRevenue` | Paid revenue | Оплаченная выручка | Venituri încasate | — |
 | `custom:option:customersRetail` | Retail (including guests) | Розничные (включая гостей) | Cu amănuntul (inclusiv vizitatori) | RO: «vizitatori» для гостьових замовлень; альтернатива — «clienți neînregistrați» |
+| `custom:term:report` | Report | Отчёт | Raport | — |
+| `custom:term:revenue` | Revenue | Выручка | Venituri | RO: «Cifra de afaceri» (оборот) — бухгалтерський термін; «Venituri» ширше (будь-які доходи) |
+| `custom:term:cogs` | Cost of goods sold | Себестоимость продаж | Costul mărfurilor vândute | RU: коротше «Себестоимость», але вона ж `custom:term:cost` (собівартість одиниці/залишку); тут саме собівартість проданого |
+| `custom:term:grossProfit` | Gross profit | Валовая прибыль | Profit brut | — |
+| `custom:term:profit` | Profit | Прибыль | Profit | Без податків і ПДВ (П4): власнику варто знати, що це «операційний» прибуток касово-облікового методу |
+| `custom:term:warehouseLosses` | Warehouse losses | Потери склада | Pierderi de stoc | Включає списання й нестачі інвентаризації мінус надлишки; альтернатива RU «Списания и недостачи» |
+| `custom:term:expenses` | Expenses | Расходы | Cheltuieli | Касовий метод: лише проведені витрати з каси, без оплат постачальникам |
