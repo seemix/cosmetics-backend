@@ -49,6 +49,17 @@ const restrictSeoEndpoints: Plugin = (config) => ({
   ),
 })
 
+/**
+ * GraphQL не використовується: вимикаємо його для всіх колекцій і глобалів. Частково вимкнути не можна:
+ * зв'язки (наприклад, `orders.warehouse`) посилаються на вимкнені колекції, і схема не збирається.
+ * Плагін має стояти останнім серед плагінів, що додають колекції.
+ */
+const disableGraphQL: Plugin = (config) => ({
+  ...config,
+  collections: (config.collections ?? []).map((collection) => ({ ...collection, graphQL: false })),
+  globals: (config.globals ?? []).map((global) => ({ ...global, graphQL: false })),
+})
+
 export const plugins: Plugin[] = [
   seoPlugin({
     generateTitle,
@@ -102,4 +113,5 @@ export const plugins: Plugin[] = [
       transactionsCollectionOverride: TransactionsCollection,
     },
   }),
+  disableGraphQL,
 ]

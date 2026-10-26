@@ -1097,97 +1097,37 @@ describe('E. Local API: overrideAccess і джерело параметрів', 
 // J. GraphQL
 // ---------------------------------------------------------------------------
 
-describe('J. GraphQL: ті самі права, introspection у production', () => {
-  const forbidden = (response: { body: any }, root: string) =>
-    response.body?.data?.[root] === null && response.body?.errors?.[0]?.extensions?.name === 'Forbidden'
-
+describe('J. GraphQL вимкнено (не використовується)', () => {
   it('introspection і playground вимкнено в production (дефолт Payload 3.65.0, не перевизначений)', () => {
     expect(ctx.payload.config.graphQL.disableIntrospectionInProduction).toBe(true)
     expect(ctx.payload.config.graphQL.disablePlaygroundInProduction).toBe(true)
   })
 
-  it('облікові колекції недоступні customer, гостю й manager (як у REST)', async () => {
-    const queries: Array<[string, string, Who[]]> = [
-      ['StockMoves', '{ StockMoves { docs { id } } }', ['guest', 'customer', 'manager']],
-      ['ProductCosts', '{ ProductCosts { docs { id } } }', ['guest', 'customer', 'manager']],
-      ['CashOperations', '{ CashOperations { docs { id } } }', ['guest', 'customer', 'manager']],
-      ['SalarySchemes', '{ SalarySchemes { docs { id } } }', ['guest', 'customer', 'manager']],
-      ['Suppliers', '{ Suppliers { docs { id } } }', ['guest', 'customer', 'manager']],
-      ['PromoCodes', '{ PromoCodes { docs { id } } }', ['guest', 'customer', 'manager']],
-      ['Payrolls', '{ Payrolls { docs { id } } }', ['guest', 'customer']],
-      ['AccountingSetting', '{ AccountingSetting { stockControlEnabled } }', ['guest', 'customer', 'manager']],
+  it('усі колекції й глобали проєкту мають graphQL: false (частково вимкнути не можна: зв’язки ламають схему)', () => {
+    const enabled = inventoryEntities(ctx.payload.config)
+      .filter((entity) => !entity.slug.startsWith('payload-') && entity.graphQL === 'on')
+      .map((entity) => entity.slug)
+    expect(enabled).toEqual([])
+  })
+
+  it('жоден GraphQL-запит не повертає даних ні гостю, ні customer, ні manager, ні admin', async () => {
+    const queries = [
+      '{ __typename }',
+      '{ Orders { docs { id } } }',
+      '{ Users { docs { id } } }',
+      '{ Products { docs { id } } }',
+      '{ __schema { queryType { fields { name } } } }',
+      'mutation { loginUser(email: "a@b.c", password: "x") { token } }',
     ]
-    for (const [root, query, roles] of queries) {
-      for (const who of roles) {
+    for (const who of WHO) {
+      for (const query of queries) {
         const response = await ctx.gql(query, who)
-        expect(forbidden(response, root), `${root} як ${who}: ${JSON.stringify(response.body).slice(0, 200)}`).toBe(true)
+        const data = (response.body as { data?: unknown } | null)?.data
+        expect(data ?? null, `${who}: ${query}`).toBeNull()
+        expect(response.status, `${who}: ${query}`).toBeGreaterThanOrEqual(400)
       }
     }
   }, 30000)
-
-  it('customer: замовлення лише свої, accounting і manager приховані (null), як у REST', async () => {
-    const response = await ctx.gql('{ Orders { docs { id total accounting { cogsBani revenueBani } manager { id } source warehouse { id } } } }', 'customer')
-    expect(response.status).toBe(200)
-    const docs = response.body.data.Orders.docs
-    expect(docs.length).toBeGreaterThan(0)
-    expect(docs.map((doc: { id: string }) => String(doc.id))).not.toContain(f.orderOther)
-    for (const doc of docs) {
-      expect(doc.accounting?.cogsBani ?? null).toBeNull()
-      expect(doc.accounting?.revenueBani ?? null).toBeNull()
-      expect(doc.manager).toBeNull()
-      expect(doc.source ?? null).toBeNull()
-      expect(doc.warehouse ?? null).toBeNull()
-    }
-  })
-
-  it('manager: accounting у замовленнях null; клієнти без roles', async () => {
-    const orders = await ctx.gql('{ Orders { docs { id accounting { cogsBani } } } }', 'manager')
-    for (const doc of orders.body.data.Orders.docs) expect(doc.accounting?.cogsBani ?? null).toBeNull()
-    const users = await ctx.gql('{ Users { docs { id roles } } }', 'manager')
-    for (const doc of users.body.data.Users.docs) expect(doc.roles ?? null).toBeNull()
-  })
-
-  it('customer бачить у Users лише себе без roles і manager', async () => {
-    const response = await ctx.gql('{ Users { docs { id roles manager { id } } } }', 'customer')
-    expect(response.body.data.Users.docs.map((doc: { id: string }) => String(doc.id))).toEqual([String(ctx.actors.customer.id)])
-    expect(response.body.data.Users.docs[0].roles ?? null).toBeNull()
-  })
-
-  it('гість: чернеток і оптової ціни немає', async () => {
-    const response = await ctx.gql(`{ Products(where: { brand: { equals: "${f.brand}" } }, limit: 50) { docs { id title wholesalePrice } } }`, 'guest')
-    const docs = response.body.data.Products.docs
-    expect(docs.map((doc: { id: string }) => String(doc.id))).not.toContain(f.draft)
-    for (const doc of docs) expect(doc.wholesalePrice ?? null).toBeNull()
-  })
-
-  it('мутації: customer не змінює й не видаляє замовлення, не створює склад', async () => {
-    const update = await ctx.gql(`mutation { updateOrder(id: "${f.orderOwn}", data: { comment: "x" }) { id } }`, 'customer')
-    expect(update.body.errors?.[0]?.extensions?.name).toBe('Forbidden')
-    const del = await ctx.gql(`mutation { deleteOrder(id: "${f.orderOwn}") { id } }`, 'customer')
-    expect(del.body.errors?.[0]?.extensions?.name).toBe('Forbidden')
-    const create = await ctx.gql('mutation { createWarehouse(data: { name: "x", code: "x" }) { id } }', 'customer')
-    expect(create.body.errors?.[0]?.extensions?.name).toBe('Forbidden')
-    expect((await ctx.payload.findByID({ collection: 'orders', id: f.orderOwn, depth: 0, overrideAccess: true })).comment ?? null).toBeNull()
-  })
-
-  it('versions у graphQL: гість отримує відмову', async () => {
-    const response = await ctx.gql('{ versionsProducts { totalDocs } }', 'guest')
-    expect(response.body.errors?.[0]?.extensions?.name).toBe('Forbidden')
-  })
-
-  it('ескалація через graphQL: updateUser на себе не змінює roles і manager', async () => {
-    const { customer } = ctx.actors
-    await ctx.gql(`mutation { updateUser(id: "${customer.id}", data: { roles: [admin], manager: "${ctx.actors.manager.id}" }) { id } }`, 'customer')
-    const saved = await ctx.payload.findByID({ collection: 'users', id: customer.id, depth: 0, overrideAccess: true })
-    expect(saved.roles).toEqual(['customer'])
-    expect(saved.manager ?? null).toBeNull()
-  })
-
-  it('обмеження складності запиту діє (дуже великий запит відхиляється)', async () => {
-    const query = '{ ' + Array.from({ length: 1500 }, (_, i) => `a${i}: Products { totalDocs }`).join(' ') + ' }'
-    const response = await ctx.gql(query, 'guest')
-    expect(response.body.errors?.length ?? 0).toBeGreaterThan(0)
-  })
 })
 
 // ---------------------------------------------------------------------------
@@ -1561,11 +1501,6 @@ describe('[FINDING-10] versions: будь-який авторизований ч
     expect(version).toBeDefined()
     expect((await ctx.http('GET', `/products/versions/${version.id}`, 'customer')).status).toBe(403)
   })
-
-  it('customer не читає список версій через GraphQL', async () => {
-    const response = await ctx.gql('{ versionsProducts { totalDocs } }', 'customer')
-    expect(response.body.errors?.[0]?.extensions?.name).toBe('Forbidden')
-  })
 })
 
 describe('[FINDING-11] 409 при нестачі: гість без кількості, авторизований з округленням (Q1, В4)', () => {
@@ -1671,15 +1606,10 @@ describe('[FINDING-17] кошики: відповідь розкриває іс�
   })
 })
 
-describe('[FINDING-18] graphQL увімкнено для внутрішніх облікових колекцій (рекомендація)', () => {
-  it.fails('облікові колекції й глобал мають graphQL: false', () => {
-    const internal = [
-      'stock-moves', 'stock-balances', 'product-costs', 'purchases', 'stock-transfers', 'stock-adjustments', 'opening-balances',
-      'cash-accounts', 'expense-categories', 'cash-moves', 'cash-operations', 'salary-schemes', 'payrolls', 'suppliers', 'warehouses',
-      'promo-codes', 'transactions', 'accounting-settings',
-    ]
+describe('[FINDING-18] graphQL вимкнено', () => {
+  it('перевірка в блоці J: усі колекції й глобали проєкту мають graphQL: false', () => {
     const enabled = inventoryEntities(ctx.payload.config)
-      .filter((entity) => internal.includes(entity.slug) && entity.graphQL === 'on')
+      .filter((entity) => !entity.slug.startsWith('payload-') && entity.graphQL === 'on')
       .map((entity) => entity.slug)
     expect(enabled).toEqual([])
   })
