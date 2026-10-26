@@ -20,6 +20,7 @@ import { getSingleProduct } from '@/collections/Products/endpoints/getSingleProd
 import { setTitleWithArticle } from '@/collections/Products/hooks/setTitleWithArticle'
 import { guardManagerPublish } from '@/collections/Products/hooks/guardManagerPublish'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
+import { guardSortFields } from '@/hooks/guardSortFields'
 import { adminOrManager } from '@/access/adminOrManager'
 import { adminOrManagerField } from '@/access/adminOrManagerField'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
@@ -288,7 +289,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ],
   endpoints: [getProductsByCategory, getProductsByBrand, searchProducts, getBestSellers, getSingleProduct],
   hooks: {
-   beforeOperation: [guardManagerPublish],
+   beforeOperation: [guardManagerPublish, guardSortFields],
    afterRead: [populateRelatedProducts],
    afterChange: [autoTranslate],
   },

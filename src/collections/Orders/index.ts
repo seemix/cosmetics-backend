@@ -15,6 +15,7 @@ import { guardManagerOrderUpdate } from '@/collections/Orders/hooks/guardManager
 import { guardPostedOrder } from '@/collections/Orders/hooks/guardPostedOrder'
 import { populatePricesAndTotal } from '@/collections/Orders/hooks/populatePricesAndTotal' // Імпортуємо наш новий хук
 import { adminOnly } from '@/access/adminOnly'
+import { guardSortFields } from '@/hooks/guardSortFields'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { adminOrCustomerOwner } from '@/access/adminOrCustomerOwner'
 import { adminOrManager } from '@/access/adminOrManager'
@@ -277,6 +278,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   indexes: [{ fields: ['manager', 'createdAt'] }],
   endpoints: [createOrder, getMyOrders],
   hooks: {
+    beforeOperation: [guardSortFields],
     // Додаємо хук перед збереженням замовлення.
     // Важливо: setOrderNumber має виконуватись або до, або після, порядок можна скоригувати за потреби.
     beforeChange: [

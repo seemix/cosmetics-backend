@@ -1518,17 +1518,17 @@ describe('[FINDING-7] sort за полями без права читання в
   const noOracle = (asc: { status: number; ids: string[] }, desc: { status: number; ids: string[] }) =>
     asc.status === 400 || desc.status === 400 || JSON.stringify(asc.ids) === JSON.stringify(desc.ids)
 
-  it.fails('customer: сортування своїх замовлень за accounting.cogsBani не залежить від значень', async () => {
+  it('customer: сортування своїх замовлень за accounting.cogsBani не залежить від значень', async () => {
     const ids = [f.orderOwn, f.orderOwnLow]
     expect(noOracle(await orderOf('customer', ids, 'accounting.cogsBani'), await orderOf('customer', ids, '-accounting.cogsBani'))).toBe(true)
   })
 
-  it.fails('manager: сортування замовлень за accounting.cogsBani не залежить від значень', async () => {
+  it('manager: сортування замовлень за accounting.cogsBani не залежить від значень', async () => {
     const ids = [f.orderOwn, f.orderOwnLow, f.orderOther, f.orderOfManager2]
     expect(noOracle(await orderOf('manager', ids, 'accounting.cogsBani'), await orderOf('manager', ids, '-accounting.cogsBani'))).toBe(true)
   })
 
-  it.fails('гість і customer: сортування товарів за wholesalePrice не залежить від значень', async () => {
+  it('гість і customer: сортування товарів за wholesalePrice не залежить від значень', async () => {
     for (const who of ['guest', 'customer'] as const) {
       const run = async (sort: string) => {
         const response = await ctx.http('GET', `/products?where[id][in]=${f.pub},${f.pub2}&sort=${sort}`, who)

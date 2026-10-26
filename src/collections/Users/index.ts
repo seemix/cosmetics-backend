@@ -7,6 +7,7 @@ import { adminOrSelf } from '@/access/adminOrSelf'
 import { isManager } from '@/access/isAdmin'
 import { publicAccess } from '@/access/publicAccess'
 import { checkRole } from '@/access/utilities'
+import { guardSortFields } from '@/hooks/guardSortFields'
 import { collectionLabels, customT, description, label, localized } from '@/i18n'
 
 import { addFavoritesItem } from '@/collections/Users/endpoints/addFavoritesItem'
@@ -261,5 +262,5 @@ export const Users: CollectionConfig = {
 
   ],
   endpoints: [addFavoritesItem, getMyFavorites, getFavorites, removeFavoritesItem, updateUserInfo],
-  hooks: { beforeChange: [assignCustomerManager] },
+  hooks: { beforeOperation: [guardSortFields], beforeChange: [assignCustomerManager] },
 }
