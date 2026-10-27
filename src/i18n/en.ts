@@ -486,6 +486,8 @@ export const en = {
       salarySchemeManager: 'Leave empty for the default scheme of all managers',
       salarySchemeValidTo: 'Leave empty for an open-ended scheme',
       salarySchemePaidRevenue: '“Paid revenue” counts only fully paid orders and requires the payment date basis',
+      salarySchemeAttribution:
+        '“Created by the manager”: every order the manager created, whoever the customer is, plus website orders placed by customers assigned to the manager',
       payrollScheme: 'Picked automatically: the manager’s scheme valid at the period end, otherwise the default one. A draft may use another valid scheme of this manager',
       payrollAdjustment: 'Bonus (positive) or penalty (negative); requires a comment',
       salaryPayroll: 'Posted payroll of this manager; leave empty for an advance without a payroll',
@@ -537,6 +539,7 @@ export const en = {
       dateBasisPayment: 'Payment date (last payment)',
       attributionSnapshot: 'Manager at order creation',
       attributionCurrent: 'Current customer manager',
+      attributionCreator: 'Created by the manager + website orders of their customers',
       customersAll: 'All',
       customersRetail: 'Retail (including guests)',
       customersWholesale: 'Wholesale',

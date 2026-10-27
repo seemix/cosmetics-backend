@@ -484,6 +484,8 @@ export const ro: CustomTranslationsObject = {
       salarySchemeManager: 'Gol: schema implicită pentru toți managerii',
       salarySchemeValidTo: 'Gol: schemă fără termen',
       salarySchemePaidRevenue: '„Venituri încasate” include doar comenzile achitate integral și necesită baza „data plății”',
+      salarySchemeAttribution:
+        '„Create de manager”: toate comenzile create de manager, indiferent de client, plus comenzile de pe site ale clienților atribuiți managerului',
       payrollScheme: 'Se alege automat: schema managerului valabilă la sfârșitul perioadei, altfel cea implicită. În ciornă se poate alege altă schemă valabilă a acestui manager',
       payrollAdjustment: 'Primă (plus) sau penalitate (minus); necesită comentariu',
       salaryPayroll: 'Calculul înregistrat al acestui manager; gol pentru un avans fără calcul',
@@ -535,6 +537,7 @@ export const ro: CustomTranslationsObject = {
       dateBasisPayment: 'Data plății (ultima plată)',
       attributionSnapshot: 'Managerul la momentul comenzii',
       attributionCurrent: 'Managerul actual al clientului',
+      attributionCreator: 'Create de manager + comenzile de pe site ale clienților săi',
       customersAll: 'Toți',
       customersRetail: 'Cu amănuntul (inclusiv vizitatori)',
       customersWholesale: 'Angro',

@@ -126,7 +126,9 @@ export const SalarySchemes: CollectionConfig = {
       options: [
         { label: label('custom:option:attributionSnapshot'), value: 'snapshot' },
         { label: label('custom:option:attributionCurrent'), value: 'current' },
+        { label: label('custom:option:attributionCreator'), value: 'creator' },
       ],
+      admin: { description: description('custom:desc:salarySchemeAttribution') },
     },
     {
       name: 'customerFilter',

@@ -1040,7 +1040,7 @@ export interface SalaryScheme {
   percentBp: number;
   base: 'revenue' | 'gross_profit' | 'paid_revenue';
   dateBasis: 'order_date' | 'payment_date';
-  attribution: 'snapshot' | 'current';
+  attribution: 'snapshot' | 'current' | 'creator';
   customerFilter?: ('all' | 'retail' | 'wholesale') | null;
   period?: 'month' | null;
   updatedAt: string;

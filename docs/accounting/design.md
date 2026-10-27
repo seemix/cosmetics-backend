@@ -276,7 +276,7 @@ salary-schemes       orders (продаж)    ─┤
 | percent | number (0–100, 2 знаки) | |
 | base | select R | `revenue` (виручка), `gross_profit` (виручка − собівартість), `paid_revenue` (лише повністю оплачені) |
 | dateBasis | select R | `order_date` (stockPostedAt) / `payment_date` (дата останньої оплати) |
-| attribution | select R | `snapshot` (Orders.manager) / `current` (поточний Users.manager клієнта) |
+| attribution | select R | `snapshot` (Orders.manager) / `current` (поточний Users.manager клієнта) / `creator` (Orders.createdBy, плюс замовлення сайту за Orders.manager), В18 |
 | customerFilter | select | `all` / `retail` / `wholesale` |
 | period | select | `month` (поки єдине) |
 
@@ -547,7 +547,8 @@ createdBy = req.user?.id ?? null; source = (виклик із createOrder) ? 'we
 ```
 payroll(manager, from, to): scheme = активна схема менеджера на to, інакше за замовчуванням
 orders = orders where stockPostedAt != null and status != cancelled
-         and attribution(snapshot: order.manager = M | current: customer.manager = M)
+         and attribution(snapshot: order.manager = M | current: customer.manager = M
+                         | creator: order.createdBy = M or (source = web and order.manager = M))
          and dateBasis(order_date: stockPostedAt ∈ [from,to] | payment_date: paymentState=paid і остання оплата ∈ [from,to])
          and customerFilter
 for o in orders:

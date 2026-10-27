@@ -12,7 +12,7 @@ import type { PayrollOrderData } from './calculatePayroll'
 
 export type PayrollSelectionScheme = {
   dateBasis: 'order_date' | 'payment_date'
-  attribution: 'snapshot' | 'current'
+  attribution: 'snapshot' | 'current' | 'creator'
   customerFilter?: 'all' | 'retail' | 'wholesale' | null
 }
 
@@ -35,7 +35,9 @@ const readSession = async (req: PayloadRequest) => {
 /**
  * Замовлення менеджера за період: проведені (`accounting.stockPostedAt`), не скасовані.
  * - `attribution`: `snapshot` → `orders.manager = M` (індекс `{manager, createdAt}`);
- *   `current` → поточний `users.manager` клієнта = M, гостьові замовлення не входять.
+ *   `current` → поточний `users.manager` клієнта = M, гостьові замовлення не входять;
+ *   `creator` → замовлення, які оформив M (`orders.createdBy = M`, будь-чий клієнт), і замовлення
+ *   сайту, закріплені за M (`source = web`, `orders.manager = M`).
  * - `dateBasis`: `order_date` → `stockPostedAt ∈ [from, to]` (індекс `{accounting.stockPostedAt}`);
  *   `payment_date` → `paymentState = paid` і найпізніша дата надходження грошей на замовлення
  *   (`customer-moves` з `orderDeltaBani > 0`: надходження, зарахування авансу) ∈ [from, to]
@@ -53,6 +55,8 @@ export const selectPayrollOrders = async (
 
   if (scheme.attribution === 'snapshot') {
     match.manager = managerId
+  } else if (scheme.attribution === 'creator') {
+    match.$or = [{ createdBy: managerId }, { source: 'web', manager: managerId }]
   } else {
     // Клієнти менеджера (індекс `users.manager`): їх небагато, а гості відпадають самі.
     const customers = await model(req, 'users')

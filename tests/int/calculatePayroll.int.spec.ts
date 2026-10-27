@@ -221,6 +221,27 @@ describe('M4 (1/2): схеми й розрахунок зарплати', () => 
       expect(await select(m, { attribution: 'current' })).toEqual([])
     })
 
+    it('creator: оформлені менеджером (будь-чий клієнт) + замовлення сайту його клієнтів', async () => {
+      const [m1, m2] = [await manager(), await manager()]
+      const ownCustomer = await makeUser(payload, data, ['customer'], { manager: String(m1.id) })
+      const otherCustomer = await makeUser(payload, data, ['customer'], { manager: String(m2.id) })
+      const at = { stockPostedAt: MID_SEPTEMBER, revenueBani: 100 }
+
+      // m1 оформив замовлення клієнту m2: знімок за m2, але зарплата m1.
+      const forOther = await order({ ...at, createdBy: String(m1.id), manager: String(m2.id), customer: String(otherCustomer.id) })
+      const forOwn = await order({ ...at, createdBy: String(m1.id), manager: String(m1.id), customer: String(ownCustomer.id) })
+      // Клієнт m1 замовив на сайті сам.
+      const web = await order({ ...at, source: 'web', manager: String(m1.id), customer: String(ownCustomer.id) })
+      // Клієнту m1 замовлення оформив m2: зарплата m2, не m1.
+      const byOther = await order({ ...at, createdBy: String(m2.id), manager: String(m1.id), customer: String(ownCustomer.id) })
+      // Сайт, клієнт m2: не m1.
+      const otherWeb = await order({ ...at, source: 'web', manager: String(m2.id), customer: String(otherCustomer.id) })
+
+      expect(await select(m1, { attribution: 'creator' })).toEqual(sorted(forOther, forOwn, web))
+      expect(await select(m2, { attribution: 'creator' })).toEqual(sorted(byOther, otherWeb))
+      expect(await select(m1, { attribution: 'snapshot' })).toEqual(sorted(forOwn, web, byOther))
+    })
+
     it('customerFilter: all, retail (з гостями), wholesale — за поточною ознакою Users.wholesale', async () => {
       const m = await manager()
       const retailCustomer = await makeUser(payload, data, ['customer'])

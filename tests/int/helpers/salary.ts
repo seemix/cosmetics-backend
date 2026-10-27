@@ -27,6 +27,8 @@ export const makeUser = async (
 
 export type RawOrder = {
   manager?: string | null
+  createdBy?: string | null
+  source?: 'web' | 'admin'
   customer?: string | null
   /** `null` = замовлення не проведене (склад не списано). */
   stockPostedAt?: Date | null
@@ -52,7 +54,8 @@ export const insertOrder = async (payload: Payload, order: RawOrder): Promise<st
     total: revenueBani / 100,
     customer: objectId(order.customer),
     manager: objectId(order.manager),
-    source: 'admin',
+    createdBy: objectId(order.createdBy),
+    source: order.source ?? 'admin',
     items: [],
     paidBani: order.paymentState === 'paid' ? revenueBani : 0,
     paymentState: order.paymentState ?? 'unpaid',
