@@ -49,43 +49,22 @@ const describe = (t: T, line: StatementLine) => {
   return t(KIND_KEYS[line.kind], { order })
 }
 
-const statusKey = (status: string | null): CustomTranslationsKeys | null =>
-  status === 'pending' || status === 'paid' || status === 'shipped' || status === 'cancelled' ? `custom:status:${status}` : null
+/** Рядки деталізації замовлення: його позиції. */
+const orderDetails = (t: T, order: StatementOrder) =>
+  order.items
+    .map((item, index) => {
+      const article = item.article ? ` <span class="muted">(${escape(t('custom:statement:article', { article: item.article }))})</span>` : ''
+      const amount = `${item.quantity} × ${formatMDL(item.priceBani)} = ${formatMDL(item.amountBani)}`
+      const last = index === order.items.length - 1 ? ' detail-last' : ''
 
-const paymentKey = (state: string | null): CustomTranslationsKeys | null =>
-  state === 'unpaid'
-    ? 'custom:option:paymentUnpaid'
-    : state === 'partial'
-      ? 'custom:option:paymentPartial'
-      : state === 'paid'
-        ? 'custom:option:paymentPaid'
-        : null
-
-/** Рядки деталізації замовлення: позиції, потім поточний стан оплати. */
-const orderDetails = (t: T, order: StatementOrder) => {
-  const items = order.items.map((item) => {
-    const article = item.article ? ` <span class="muted">(${escape(t('custom:statement:article', { article: item.article }))})</span>` : ''
-    const amount = `${item.quantity} × ${formatMDL(item.priceBani)} = ${formatMDL(item.amountBani)}`
-
-    return `<tr class="detail"><td></td><td></td><td>${escape(item.title)}${article}</td><td colspan="3" class="detail-amount">${escape(amount)}</td></tr>`
-  })
-
-  const status = statusKey(order.status)
-  const payment = paymentKey(order.paymentState)
-  const state = [status && t(status), payment && t(payment)].filter(Boolean).join(', ')
-  const summary = t('custom:statement:orderSummary', {
-    state,
-    paid: formatMDL(order.paidBani),
-    due: formatMDL(order.dueBani),
-  })
-
-  return [...items, `<tr class="detail detail-last"><td></td><td></td><td colspan="4" class="muted">${escape(summary)}</td></tr>`].join('\n')
-}
+      return `<tr class="detail${last}"><td></td><td>${escape(item.title)}${article}</td><td colspan="3" class="detail-amount">${escape(amount)}</td></tr>`
+    })
+    .join('\n')
 
 const STYLE = `
   :root { color-scheme: light; }
   body { font: 14px/1.45 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #1f2328; margin: 32px auto; max-width: 960px; padding: 0 16px; }
-  h1 { font-size: 22px; margin: 0 0 12px; }
+  h1 { font-size: 22px; margin: 0 0 12px; text-align: center; }
   dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0 0 20px; }
   dl.meta dt { color: #59636e; }
   dl.meta dd { margin: 0; }
@@ -95,7 +74,7 @@ const STYLE = `
   tbody tr.line td { border-top: 1px solid #e3e8ee; }
   td.num, th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   tr.detail td { font-size: 12.5px; color: #3d444d; padding-top: 1px; padding-bottom: 1px; }
-  tr.detail td:nth-child(3) { padding-left: 24px; }
+  tr.detail td:nth-child(2) { padding-left: 24px; }
   tr.detail-last td { padding-bottom: 6px; }
   td.detail-amount { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   tr.total td { font-weight: 600; border-top: 2px solid #c8d1db; }
@@ -103,7 +82,6 @@ const STYLE = `
   .neg { color: #b42318; }
   .muted { color: #6e7781; }
   .empty { font-style: italic; color: #6e7781; }
-  p.hint { color: #6e7781; font-style: italic; margin-top: 16px; }
   @media print { body { margin: 0; max-width: none; } thead { display: table-header-group; } tr { break-inside: avoid; } }
 `
 
@@ -115,7 +93,6 @@ export const buildStatementHtml = (statement: CustomerStatement, t: T, generated
   const rows = statement.lines.flatMap((line) => {
     const row = `<tr class="line">
       <td>${day(line.date)}</td>
-      <td>${escape(line.document ?? '')}</td>
       <td>${escape(describe(t, line))}</td>
       <td class="num">${money(line.chargedBani, { blankZero: true })}</td>
       <td class="num">${money(line.paidBani, { blankZero: true })}</td>
@@ -150,7 +127,6 @@ ${meta.map(([term, value]) => `  <dt>${escape(term)}</dt><dd>${escape(value)}</d
 <thead>
   <tr>
     <th>${escape(t('custom:statement:colDate'))}</th>
-    <th>${escape(t('custom:statement:colDocument'))}</th>
     <th>${escape(t('custom:statement:colDescription'))}</th>
     <th class="num">${escape(t('custom:statement:colCharged'))}</th>
     <th class="num">${escape(t('custom:statement:colPaid'))}</th>
@@ -158,13 +134,12 @@ ${meta.map(([term, value]) => `  <dt>${escape(term)}</dt><dd>${escape(value)}</d
   </tr>
 </thead>
 <tbody>
-  <tr class="edge"><td></td><td></td><td>${escape(t('custom:statement:opening'))}</td><td></td><td></td><td class="num">${money(statement.openingBani)}</td></tr>
-${rows.length > 0 ? rows.join('\n') : `  <tr><td></td><td></td><td colspan="4" class="empty">${escape(t('custom:statement:noMoves'))}</td></tr>`}
-  <tr class="total"><td></td><td></td><td>${escape(t('custom:statement:totalPeriod'))}</td><td class="num">${money(statement.chargedBani)}</td><td class="num">${money(statement.paidBani)}</td><td></td></tr>
-  <tr class="edge"><td></td><td></td><td>${escape(t('custom:statement:closing'))}</td><td></td><td></td><td class="num">${money(statement.closingBani)}</td></tr>
+  <tr class="edge"><td></td><td>${escape(t('custom:statement:opening'))}</td><td></td><td></td><td class="num">${money(statement.openingBani)}</td></tr>
+${rows.length > 0 ? rows.join('\n') : `  <tr><td></td><td colspan="4" class="empty">${escape(t('custom:statement:noMoves'))}</td></tr>`}
+  <tr class="total"><td></td><td>${escape(t('custom:statement:totalPeriod'))}</td><td class="num">${money(statement.chargedBani)}</td><td class="num">${money(statement.paidBani)}</td><td></td></tr>
+  <tr class="edge"><td></td><td>${escape(t('custom:statement:closing'))}</td><td></td><td></td><td class="num">${money(statement.closingBani)}</td></tr>
 </tbody>
 </table>
-<p class="hint">${escape(t('custom:statement:hint'))}</p>
 </body>
 </html>
 `
