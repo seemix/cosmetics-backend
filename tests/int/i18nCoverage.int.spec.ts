@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { pluginEcommerceRo, pluginEcommerceRu } from '@/i18n'
 import config from '@/payload.config'
 
-import { en as pluginEn } from '@payloadcms/plugin-ecommerce/translations'
+import { en as pluginEn } from '@payloadcms/plugin-ecommerce/translations/languages/en'
 
 let payload: Payload
 
@@ -110,7 +110,7 @@ describe('I2: усі label мають переклад (en, ru, ro)', () => {
   })
 
   it('plugin-ecommerce: ru і ro мають усі ключі англійського набору плагіна', () => {
-    const keys = Object.keys(pluginEn['plugin-ecommerce']).sort()
+    const keys = Object.keys(pluginEn.translations['plugin-ecommerce']).sort()
 
     expect(Object.keys(pluginEcommerceRu['plugin-ecommerce']).sort()).toEqual(keys)
     expect(Object.keys(pluginEcommerceRo['plugin-ecommerce']).sort()).toEqual(keys)

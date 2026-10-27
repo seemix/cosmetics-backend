@@ -134,7 +134,6 @@ export const DEFAULT_ACCESS_ALLOWLIST: Record<string, string> = {
   'payload-locked-documents.read': 'системна колекція Payload (блокування документів в адмінці), hidden, керується ядром',
   'payload-locked-documents.update': 'системна колекція Payload (блокування документів в адмінці), hidden, керується ядром',
   'payload-locked-documents.delete': 'системна колекція Payload (блокування документів в адмінці), hidden, керується ядром',
-  'addresses.create': 'плагін ecommerce: клієнт створює власну адресу; читання й зміну обмежує adminOrCustomerOwner',
   'payload-preferences.create': 'системна колекція Payload: ядро саме прив’язує запис до користувача',
   'payload-preferences.update': 'системна колекція Payload: ядро саме прив’язує запис до користувача',
   'payload-migrations.create': 'системна колекція Payload: REST і graphQL вимкнено ядром (відповідь 501)',

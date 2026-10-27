@@ -18,5 +18,7 @@ export default defineConfig({
     },
     // Тести ділять одну БД, тому файли йдуть послідовно.
     fileParallelism: false,
+    // @payloadcms/ui 3.75 підтягує CSS з react-image-crop (через payload-sidebar-plugin); Node не вміє його імпортувати, тож ганяємо через Vite.
+    server: { deps: { inline: [/react-image-crop/, /@payloadcms\/ui/, /payload-sidebar-plugin/] } },
   },
 })
