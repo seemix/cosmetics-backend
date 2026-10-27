@@ -675,11 +675,14 @@ total = fixedBani + Σ lines + adjustmentsBani
 | users (клієнти): read | так | роль customer, без `roles` | себе | — |
 | users: create клієнта | так | так, `manager` = він сам (В10) | реєстрація | реєстрація |
 | users.manager, roles, wholesale, brandDiscounts: update | так | ні | ні | ні |
-| warehouses, suppliers, cash-accounts, expense-categories | так | ні | ні | ні |
+| warehouses, suppliers | так | ні | ні | ні |
+| cash-accounts | так | read без `balanceBani` (В19) | ні | ні |
+| expense-categories | так | read статей без `isSalary` (В19) | ні | ні |
 | stock-balances | так | read без вартості (В11, за замовч. ні) | ні | ні |
-| purchases, transfers, adjustments, opening, cash-operations, payrolls, salary-schemes | так | ні | ні | ні |
+| cash-operations | так | `expense` (без зарплати) і `customer_receipt`: створює й проводить; бачить і змінює лише свої, чернетки (В19) | ні | ні |
+| purchases, transfers, adjustments, opening, payrolls, salary-schemes | так | ні | ні | ні |
 | Звіти | усі | ні; зарплата: лише свої затверджені payroll (В12) | ні | ні |
-| Проведення / сторно | так | ні | — | — |
+| Проведення / сторно | так | проведення лише своїх касових операцій (В19); сторно ні | — | — |
 
 Реалізація: хелпери `adminOrManager` (Access, boolean) і `adminOrManagerField` (FieldAccess); нові ендпоінти явно перевіряють роль (D7). Колекції з `access` лише через ці хелпери.
 

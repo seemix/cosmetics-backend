@@ -1,5 +1,6 @@
 import { APIError, type Endpoint, type PayloadRequest } from 'payload'
 
+import { isManager } from '@/access/isAdmin'
 import { checkRole } from '@/access/utilities'
 import { customT, type CustomTranslationsKeys } from '@/i18n'
 import { getOrderRevenueBani } from '@/services/finance/orderPayments.service'
@@ -19,8 +20,9 @@ const fail = (req: PayloadRequest, key: CustomTranslationsKeys, status: number, 
 /**
  * Кнопка «Прийняти оплату» в замовленні: створює чернетку `customer_receipt` (розд. 6.2) з готовими
  * касою (за `paymentType`: готівка → каса `cash`, переказ → `bank`), замовленням, клієнтом і сумою
- * залишку. Проводить її адмін сам, тож оплата лишається підтвердженою людиною. Якщо чернетка
- * надходження по цьому замовленню вже є, повертає її, а не створює дубль.
+ * залишку. Проводить її admin або manager (В19) сам, тож оплата лишається підтвердженою людиною.
+ * Якщо своя чернетка надходження по цьому замовленню вже є, повертає її, а не створює дубль:
+ * manager бачить лише свої операції, тож чужу чернетку він би не відкрив.
  */
 export const acceptPayment: Endpoint = {
   path: '/:id/accept-payment',
@@ -28,7 +30,7 @@ export const acceptPayment: Endpoint = {
 
   handler: async (req: PayloadRequest): Promise<Response> => {
     try {
-      if (!checkRole(['admin'], req.user)) return Response.json({ message: 'Forbidden' }, { status: 403 })
+      if (!checkRole(['admin', 'manager'], req.user)) return Response.json({ message: 'Forbidden' }, { status: 403 })
 
       const id = String(req.routeParams?.id ?? '')
       const order = await req.payload.findByID({ collection: 'orders', id, depth: 0, req })
@@ -38,7 +40,12 @@ export const acceptPayment: Endpoint = {
 
       const existing = await req.payload.find({
         collection: 'cash-operations',
-        where: { order: { equals: id }, type: { equals: 'customer_receipt' }, status: { equals: 'draft' } },
+        where: {
+          order: { equals: id },
+          type: { equals: 'customer_receipt' },
+          status: { equals: 'draft' },
+          ...(isManager(req.user) ? { createdBy: { equals: req.user?.id } } : {}),
+        },
         limit: 1,
         depth: 0,
         req,

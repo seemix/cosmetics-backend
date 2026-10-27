@@ -1,6 +1,8 @@
 import type { CollectionConfig, Where } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
+import { adminOrManager } from '@/access/adminOrManager'
 import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { moneyField } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
@@ -13,7 +15,8 @@ export const CashAccounts: CollectionConfig = {
   slug: 'cash-accounts',
   labels: collectionLabels('custom:collection:cashAccounts:singular', 'custom:collection:cashAccounts:plural'),
   access: {
-    read: adminOnly,
+    // В19: manager обирає касу у своїй касовій операції, залишку не бачить.
+    read: adminOrManager,
     create: adminOnly,
     update: adminOnly,
     delete: adminOnly,
@@ -53,7 +56,7 @@ export const CashAccounts: CollectionConfig = {
       label: label('custom:field:balanceBani'),
       defaultValue: 0,
       // Кеш Σ cash-moves: ні REST, ні адмінка його не змінюють, лише сервіс `cashLedger`.
-      access: { create: () => false, update: () => false },
+      access: { read: adminOnlyFieldAccess, create: () => false, update: () => false },
       admin: { readOnly: true, description: description('custom:desc:balanceCache') },
     }),
     {

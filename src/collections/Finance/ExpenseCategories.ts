@@ -1,11 +1,18 @@
-import type { CollectionConfig, Where } from 'payload'
+import type { Access, CollectionConfig, Where } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
-import { hiddenUnlessAdmin } from '@/access/isAdmin'
+import { hiddenUnlessAdmin, isAdmin, isManager } from '@/access/isAdmin'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
 /** `filterOptions` для relationship-полів на `expense-categories` у документах: лише активні статті. */
 export const activeExpenseCategoriesOnly: Where = { isActive: { equals: true } }
+
+/** В19: manager бачить статті для своїх витрат, тобто всі, крім статей зарплати. */
+const readCategories: Access = ({ req: { user } }) => {
+  if (isAdmin(user)) return true
+  if (isManager(user)) return { isSalary: { not_equals: true } }
+  return false
+}
 
 /** Статті витрат, див. docs/accounting/design.md, розд. 2.1. */
 export const ExpenseCategories: CollectionConfig = {
@@ -15,7 +22,7 @@ export const ExpenseCategories: CollectionConfig = {
     'custom:collection:expenseCategories:plural',
   ),
   access: {
-    read: adminOnly,
+    read: readCategories,
     create: adminOnly,
     update: adminOnly,
     delete: adminOnly,

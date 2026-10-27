@@ -978,6 +978,7 @@ export interface CashOperation {
   category?: (string | null) | ExpenseCategory;
   manager?: (string | null) | User;
   payroll?: (string | null) | Payroll;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -1754,6 +1755,7 @@ export interface CashOperationsSelect<T extends boolean = true> {
   category?: T;
   manager?: T;
   payroll?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

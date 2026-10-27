@@ -45,6 +45,8 @@ export type DocumentLifecycleOptions = {
   counterKey: string
   /** Поле дати документа: `documentDate` (за замовчуванням) або, наприклад, `operationDate`. */
   dateField?: { name: string; label: string | LabelFunction }
+  /** Хто може проводити, крім admin (наприклад, manager свої касові операції). Сторнує лише admin. */
+  canPost?: (req: PayloadRequest) => boolean
   onPost?: (args: DocumentTransitionArgs) => Promise<void> | void
   onReverse?: (args: DocumentTransitionArgs) => Promise<void> | void
 }
@@ -152,6 +154,7 @@ export const documentLifecycle = ({
   prefix,
   counterKey,
   dateField = { name: 'documentDate', label: label('custom:field:documentDate') },
+  canPost,
   onPost,
   onReverse,
 }: DocumentLifecycleOptions) => {
@@ -201,7 +204,7 @@ export const documentLifecycle = ({
     for (const field of SYSTEM_FIELDS) data[field] = original[field] ?? null
 
     if (from === 'draft' && to === 'posted') {
-      assertAdmin(req, 'post')
+      if (!canPost?.(req)) assertAdmin(req, 'post')
       const date = new Date()
       await assertPeriodOpen(req, date)
 

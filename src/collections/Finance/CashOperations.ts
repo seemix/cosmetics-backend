@@ -1,7 +1,7 @@
-import { APIError, type CollectionBeforeChangeHook, type CollectionConfig, type PayloadRequest } from 'payload'
+import { APIError, type Access, type CollectionBeforeChangeHook, type CollectionConfig, type PayloadRequest } from 'payload'
 
-import { adminOnly } from '@/access/adminOnly'
-import { hiddenUnlessAdmin } from '@/access/isAdmin'
+import { adminOrManager } from '@/access/adminOrManager'
+import { hiddenUnlessAdminOrManager, isAdmin, isManager } from '@/access/isAdmin'
 import { activeCashAccountsOnly } from '@/collections/Finance/CashAccounts'
 import { activeExpenseCategoriesOnly } from '@/collections/Finance/ExpenseCategories'
 import { activeSuppliersOnly } from '@/collections/Suppliers'
@@ -71,6 +71,23 @@ const FIELDS_BY_TYPE: Record<string, CashOperationType[]> = {
 
 /** Розрахунки з покупцем (розд. 6.2, 6.4): надходження й повернення. */
 const PAYMENT_TYPES = new Set<CashOperationType>(['customer_receipt', 'customer_refund'])
+
+/** В19: типи, які manager створює й проводить сам (без статей зарплати). */
+const MANAGER_TYPES = new Set<CashOperationType>(['expense', 'customer_receipt'])
+
+/** В19: manager бачить лише створені ним операції. */
+const readOperations: Access = ({ req: { user } }) => {
+  if (isAdmin(user)) return true
+  if (isManager(user)) return { createdBy: { equals: user?.id } }
+  return false
+}
+
+/** В19: manager змінює й видаляє лише свої чернетки; проведене сторнує admin. */
+const changeOperations: Access = ({ req: { user } }) => {
+  if (isAdmin(user)) return true
+  if (isManager(user)) return { createdBy: { equals: user?.id }, status: { equals: 'draft' } }
+  return false
+}
 
 const docRef = ({ id, data, originalDoc }: DocumentTransitionArgs) => ({
   collection: 'cash-operations',
@@ -187,16 +204,27 @@ const lifecycle = documentLifecycle({
   prefix: 'CSH',
   counterKey: 'cashNumber',
   dateField: { name: 'operationDate', label: label('custom:field:operationDate') },
+  // Тип і статтю manager перевіряє `validateOperation`, що йде раніше.
+  canPost: (req) => isManager(req.user),
   onPost: postOperation,
   onReverse: reverseOperation,
 })
 
-/** Обов'язкові зв'язки за типом (розд. 2.4, 6.2): перевіряються в чернетці й ще раз при проведенні. */
-const validateOperation: CollectionBeforeChangeHook = async ({ data, originalDoc, req }) => {
+/**
+ * Обов'язкові зв'язки за типом (розд. 2.4, 6.2): перевіряються в чернетці й ще раз при проведенні.
+ * Автор (`createdBy`) ставиться на create і далі не змінюється. Для manager (В19) лише `MANAGER_TYPES`
+ * і статті без `isSalary`; менеджер і розрахунок зарплати в його операції очищаються.
+ */
+const validateOperation: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+  data.createdBy = operation === 'create' ? (req.user?.id ?? null) : (idOf(originalDoc?.createdBy) ?? null)
+
   if ((originalDoc?.status ?? 'draft') !== 'draft') return data
 
   const value = (field: string) => (data[field] !== undefined ? data[field] : originalDoc?.[field]) as Relation | null
   const type = (value('type') ?? 'expense') as unknown as CashOperationType
+  const byManager = isManager(req.user)
+
+  if (byManager && !MANAGER_TYPES.has(type)) fail(req, 'custom:error:managerCashOperationType', 403)
 
   await assertOperationDate(req, value('operationDate'))
 
@@ -236,6 +264,10 @@ const validateOperation: CollectionBeforeChangeHook = async ({ data, originalDoc
       depth: 0,
       req,
     })
+    if (byManager) {
+      if (isSalary) fail(req, 'custom:error:managerSalaryExpense', 403)
+      data.manager = null
+    }
     if (isSalary && !idOf(value('manager'))) fail(req, 'custom:error:salaryManagerRequired')
     // Розрахунок зарплати стосується лише статей зарплати.
     if (!isSalary) data.payroll = null
@@ -252,20 +284,25 @@ export const CashOperations: CollectionConfig = {
   slug: 'cash-operations',
   labels: collectionLabels('custom:collection:cashOperations:singular', 'custom:collection:cashOperations:plural'),
   access: {
-    read: adminOnly,
-    create: adminOnly,
-    update: adminOnly,
-    delete: adminOnly,
+    read: readOperations,
+    create: adminOrManager,
+    update: changeOperations,
+    delete: changeOperations,
   },
   admin: {
-    hidden: hiddenUnlessAdmin,
+    hidden: hiddenUnlessAdminOrManager,
     useAsTitle: 'number',
     defaultColumns: ['number', 'status', 'type', 'account', 'amountBani', 'postedAt'],
     listSearchableFields: ['number'],
     group: localized('custom:group:finance'),
   },
   defaultSort: '-createdAt',
-  indexes: [{ fields: ['type', 'status', 'operationDate'] }, { fields: ['order'] }, { fields: ['manager', 'category'] }],
+  indexes: [
+    { fields: ['type', 'status', 'operationDate'] },
+    { fields: ['order'] },
+    { fields: ['manager', 'category'] },
+    { fields: ['createdBy', 'createdAt'] },
+  ],
   hooks: {
     beforeValidate: lifecycle.hooks.beforeValidate,
     // Спершу типові правила, потім статуси: проведення бачить очищені поля.
@@ -287,6 +324,10 @@ export const CashOperations: CollectionConfig = {
         { label: label('custom:option:opCustomerReceipt'), value: 'customer_receipt' },
         { label: label('custom:option:opCustomerRefund'), value: 'customer_refund' },
       ],
+      filterOptions: ({ options, req }) =>
+        isManager(req.user)
+          ? options.filter((option) => MANAGER_TYPES.has((typeof option === 'string' ? option : option.value) as CashOperationType))
+          : options,
     },
     {
       type: 'row',
@@ -357,7 +398,9 @@ export const CashOperations: CollectionConfig = {
           label: label('custom:field:expenseCategory'),
           type: 'relationship',
           relationTo: 'expense-categories',
-          filterOptions: activeExpenseCategoriesOnly,
+          // Статті зарплати manager не бачить і так (read), тут вони ховаються зі списку явно.
+          filterOptions: ({ req }) =>
+            isManager(req.user) ? { and: [activeExpenseCategoriesOnly, { isSalary: { not_equals: true } }] } : activeExpenseCategoriesOnly,
           admin: { condition: onlyFor('expense') },
         },
         {
@@ -366,7 +409,10 @@ export const CashOperations: CollectionConfig = {
           type: 'relationship',
           relationTo: 'users',
           filterOptions: { roles: { in: ['manager'] } },
-          admin: { condition: onlyFor('expense'), description: description('custom:desc:salaryCategory') },
+          admin: {
+            condition: (data, _siblingData, { user }) => onlyFor('expense')(data) && !isManager(user),
+            description: description('custom:desc:salaryCategory'),
+          },
         },
       ],
     },
@@ -386,6 +432,14 @@ export const CashOperations: CollectionConfig = {
         condition: (data) => data?.type === 'expense' && Boolean(data?.manager),
         description: description('custom:desc:salaryPayroll'),
       },
+    },
+    {
+      name: 'createdBy',
+      label: label('custom:field:createdBy'),
+      type: 'relationship',
+      relationTo: 'users',
+      // Ставить `validateOperation`; за ним manager бачить свої операції (В19).
+      admin: { readOnly: true, position: 'sidebar' },
     },
   ],
 }

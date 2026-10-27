@@ -1,12 +1,14 @@
 import { createLocalReq, getPayload, initTransaction, killTransaction, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { acceptPayment } from '@/collections/Orders/endpoints/acceptPayment'
 import config from '@/payload.config'
 import type { CashOperation, User } from '@/payload-types'
 import { applyCashMoves } from '@/services/finance/cashLedger.service'
 import { InsufficientCashError } from '@/services/finance/errors'
 
 import { TestData } from './helpers/fixtures'
+import { insertOrder } from './helpers/salary'
 import { type AuthUser, createAdmin, deleteDocumentsDirectly, inTransaction } from './helpers/stock'
 
 let payload: Payload
@@ -22,6 +24,7 @@ const tag = `CSHO-${Date.now()}`
 const accounts: string[] = []
 const categories: string[] = []
 const operations: Array<number | string> = []
+const orders: string[] = []
 const fundingDoc = { collection: 'test-docs', id: 'cash-operations-funding' }
 
 const asAdmin = {
@@ -113,6 +116,7 @@ describe('C2: касові операції', () => {
   afterAll(async () => {
     await setLockedUntil(lockedUntilBefore ?? null)
     await deleteDocumentsDirectly(payload, 'cash-operations', operations)
+    await deleteDocumentsDirectly(payload, 'orders', orders)
     await payload.delete({ collection: 'cash-moves', where: { account: { in: accounts } } })
     await payload.delete({ collection: 'cash-accounts', where: { id: { in: accounts } } })
     await payload.delete({ collection: 'expense-categories', where: { id: { in: categories } } })
@@ -415,6 +419,158 @@ describe('C2: касові операції', () => {
       ).rejects.toThrow()
       await expect(payload.delete({ collection: 'cash-operations', id: doc.id, ...asAdmin })).rejects.toThrow()
       expect(await balanceOf(account)).toBe(900)
+    })
+  })
+
+  describe('manager (В19)', () => {
+    let other: User
+    let customer: string
+
+    const as = (user: User) => ({ user: { ...user, collection: 'users' } as User, overrideAccess: false }) as const
+
+    const managerDraft = async (fields: DraftData, user = manager) => {
+      const doc = await payload.create({
+        collection: 'cash-operations',
+        data: { status: 'draft', operationDate: '2026-10-25T00:00:00.000Z', ...fields },
+        ...as(user),
+      })
+      operations.push(doc.id)
+      return doc
+    }
+
+    const managerPost = (id: number | string, user = manager) =>
+      payload.update({ collection: 'cash-operations', id, data: { status: 'posted' }, ...as(user) })
+
+    beforeAll(async () => {
+      other = await payload.update({ collection: 'users', id: (await data.user()).id, data: { roles: ['manager'] } })
+      customer = String((await data.user()).id)
+    })
+
+    afterAll(async () => {
+      await payload.delete({ collection: 'customer-moves', where: { customer: { equals: customer } } })
+      await payload.delete({ collection: 'customer-balances', where: { customer: { equals: customer } } })
+    })
+
+    it('проводить витрату й надходження від клієнта; автор = manager; сторнувати не може', async () => {
+      const account = await newAccount('manager')
+      await fund(account, 10000)
+
+      const expense = await managerDraft({ type: 'expense', account, amountBani: 1500, category: rent })
+      expect(expense.createdBy).toEqual(expect.objectContaining({ id: manager.id }))
+      expect((await managerPost(expense.id)).status).toBe('posted')
+
+      const receipt = await managerDraft({ type: 'customer_receipt', account, amountBani: 4000, customer })
+      expect((await managerPost(receipt.id)).status).toBe('posted')
+
+      expect(await balanceOf(account)).toBe(12500)
+
+      await expect(
+        payload.update({
+          collection: 'cash-operations',
+          id: expense.id,
+          data: { status: 'reversed', reversalReason: 'mistake' },
+          ...as(manager),
+        }),
+      ).rejects.toThrow()
+      expect(await statusOf(expense.id)).toBe('posted')
+    })
+
+    it('інші типи й статті зарплати заборонені', async () => {
+      const account = await newAccount('manager-denied')
+      const toAccount = await newAccount('manager-denied-to')
+
+      for (const fields of [
+        { type: 'transfer', account, toAccount, amountBani: 100 },
+        { type: 'supplier_payment', account, supplier, amountBani: 100 },
+        { type: 'customer_refund', account, customer, amountBani: 100 },
+      ] as DraftData[]) {
+        await expect(managerDraft(fields), fields.type).rejects.toThrow(/only expenses and customer receipts/)
+      }
+
+      await expect(managerDraft({ type: 'expense', account, amountBani: 100, category: salary })).rejects.toThrow()
+
+      // Чернетку admin зі статтею зарплати manager не проведе й не побачить.
+      const salaryDraft = await draft({ type: 'expense', account, amountBani: 100, category: salary, manager: manager.id })
+      await expect(managerPost(salaryDraft.id)).rejects.toThrow()
+      expect(await statusOf(salaryDraft.id)).toBe('draft')
+    })
+
+    it('бачить і змінює лише свої чернетки; admin бачить усі', async () => {
+      const account = await newAccount('manager-own')
+      const own = await managerDraft({ type: 'expense', account, amountBani: 100, category: rent })
+      const foreign = await managerDraft({ type: 'expense', account, amountBani: 200, category: rent }, other)
+      const byAdmin = await draft({ type: 'expense', account, amountBani: 300, category: rent })
+
+      const visible = async (user: User) =>
+        (
+          await payload.find({ collection: 'cash-operations', where: { account: { equals: account } }, depth: 0, ...as(user) })
+        ).docs.map((doc) => doc.id)
+
+      expect(await visible(manager)).toEqual([own.id])
+      expect((await visible(admin)).sort()).toEqual([own.id, foreign.id, byAdmin.id].sort())
+
+      await expect(
+        payload.update({ collection: 'cash-operations', id: foreign.id, data: { amountBani: 1 }, ...as(manager) }),
+      ).rejects.toThrow()
+      await expect(payload.delete({ collection: 'cash-operations', id: foreign.id, ...as(manager) })).rejects.toThrow()
+
+      await payload.update({ collection: 'cash-operations', id: own.id, data: { amountBani: 150 }, ...as(manager) })
+      await payload.delete({ collection: 'cash-operations', id: own.id, ...as(manager) })
+      await expect(payload.findByID({ collection: 'cash-operations', id: own.id })).rejects.toThrow()
+    })
+
+    it('«Прийняти оплату»: manager отримує свою чернетку надходження, повторно ту саму, і проводить її', async () => {
+      const account = await newAccount('manager-accept')
+      const order = await insertOrder(payload, { customer, revenueBani: 2500, stockPostedAt: new Date() })
+      orders.push(order)
+
+      const accept = async (user: User) => {
+        const req = await createLocalReq({ user: { ...user, collection: 'users' } as User }, payload)
+        req.routeParams = { id: order }
+        return acceptPayment.handler(req)
+      }
+
+      const first = await accept(manager)
+      expect(first.status).toBe(201)
+      const { id } = (await first.json()) as { id: string }
+      operations.push(id)
+
+      const again = await accept(manager)
+      expect(again.status).toBe(200)
+      expect(((await again.json()) as { id: string }).id).toBe(id)
+
+      // Чужу чернетку інший менеджер не відкрив би, тож отримує свою.
+      const foreign = await accept(other)
+      expect(foreign.status).toBe(201)
+      const foreignId = ((await foreign.json()) as { id: string }).id
+      operations.push(foreignId)
+      expect(foreignId).not.toBe(id)
+
+      const receipt = await payload.findByID({ collection: 'cash-operations', id, depth: 0, ...as(manager) })
+      expect(receipt).toMatchObject({ type: 'customer_receipt', order, amountBani: 2500, createdBy: manager.id })
+
+      // Каса з налаштувань може бути іншою; для перевірки балансу ставимо свою.
+      await payload.update({ collection: 'cash-operations', id, data: { account }, ...as(manager) })
+      await managerPost(id)
+      expect(await balanceOf(account)).toBe(2500)
+      expect((await payload.findByID({ collection: 'orders', id: order, depth: 0 })).paymentState).toBe('paid')
+    })
+
+    it('каси без залишку; статті без зарплатних', async () => {
+      const account = await newAccount('manager-read')
+      await fund(account, 700)
+
+      const cash = await payload.findByID({ collection: 'cash-accounts', id: account, ...as(manager) })
+      expect(cash.name).toBe(`${tag} manager-read`)
+      expect(cash.balanceBani).toBeUndefined()
+
+      const { docs } = await payload.find({
+        collection: 'expense-categories',
+        where: { id: { in: [rent, salary] } },
+        depth: 0,
+        ...as(manager),
+      })
+      expect(docs.map((doc) => doc.id)).toEqual([rent])
     })
   })
 })

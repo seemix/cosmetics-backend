@@ -94,6 +94,8 @@ export const ro: CustomTranslationsObject = {
       postedOrderDeleteForbidden: 'Comanda operată nu poate fi ștearsă, anulați-o',
       adminOnlyPost: 'Doar un administrator poate opera documentul',
       adminOnlyReverse: 'Doar un administrator poate storna documentul',
+      managerCashOperationType: 'Managerul poate crea doar cheltuieli și încasări de la cumpărători',
+      managerSalaryExpense: 'Doar un administrator poate plăti salariile',
       createAsDraft: 'Documentul se creează ca ciornă și se operează ulterior',
       reversedFinal: 'Documentul stornat este final, creați un document nou',
       postedOnlyReverse: 'Un document operat poate fi doar stornat',

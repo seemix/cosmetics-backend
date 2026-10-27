@@ -276,10 +276,7 @@ describe('M1: матриця прав (розд. 11)', () => {
       'stock-adjustments',
       'opening-balances',
       'suppliers',
-      'cash-accounts',
-      'expense-categories',
       'cash-moves',
-      'cash-operations',
       'customer-balances',
       'customer-moves',
     ]
@@ -287,6 +284,13 @@ describe('M1: матриця прав (розд. 11)', () => {
     it.each(adminOnlyCollections)('%s: read лише admin', async (collection) => {
       await expectMatrix((role) => payload.find({ collection, limit: 1, user: userOf(role), overrideAccess: false }), ADMIN_ONLY)
     })
+
+    it.each(['cash-accounts', 'expense-categories', 'cash-operations'] as CollectionSlug[])(
+      '%s: read admin і manager (В19, вміст звужує access)',
+      async (collection) => {
+        await expectMatrix((role) => payload.find({ collection, limit: 1, user: userOf(role), overrideAccess: false }), ADMIN_MANAGER)
+      },
+    )
 
     it('accounting-settings: read і update лише admin', async () => {
       await expectMatrix(

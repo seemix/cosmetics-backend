@@ -96,6 +96,8 @@ export const en = {
       postedOrderDeleteForbidden: 'A posted order cannot be deleted, cancel it instead',
       adminOnlyPost: 'Only an admin can post a document',
       adminOnlyReverse: 'Only an admin can reverse a document',
+      managerCashOperationType: 'A manager can create only expenses and customer receipts',
+      managerSalaryExpense: 'Only an admin can pay salaries',
       createAsDraft: 'A document is created as a draft and posted afterwards',
       reversedFinal: 'A reversed document is final, create a new document instead',
       postedOnlyReverse: 'A posted document can only be reversed',

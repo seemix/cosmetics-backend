@@ -17,7 +17,7 @@ export const AcceptPaymentButton = () => {
   const [error, setError] = useState<string | null>(null)
 
   const roles = (user as { roles?: string[] } | null)?.roles
-  if (!id || !roles?.includes('admin')) return null
+  if (!id || !(roles?.includes('admin') || roles?.includes('manager'))) return null
 
   const handleClick = async () => {
     setBusy(true)
