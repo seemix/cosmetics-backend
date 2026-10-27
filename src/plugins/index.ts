@@ -68,9 +68,9 @@ export const plugins: Plugin[] = [
   restrictSeoEndpoints,
   ecommercePlugin({
     access: {
-      adminOnly,
+      isAdmin: adminOnly,
       adminOnlyFieldAccess,
-      adminOrCustomerOwner,
+      isDocumentOwner: adminOrCustomerOwner,
       adminOrPublishedStatus,
       customerOnlyFieldAccess,
     },

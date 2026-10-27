@@ -28,6 +28,7 @@ export const pluginEcommerceRu = {
     billingAddress: 'Платёжный адрес',
     cancelled: 'Отменён',
     cart: 'Корзина',
+    cartSecret: 'Секрет корзины',
     carts: 'Корзины',
     cartsCollectionDescription:
       'Корзина — это выбор товаров, которые клиент собирается купить. Она связана с клиентом, если он известен; у гостей клиента нет.',
@@ -121,6 +122,7 @@ export const pluginEcommerceRo = {
     billingAddress: 'Adresă de facturare',
     cancelled: 'Anulat',
     cart: 'Coș',
+    cartSecret: 'Secretul coșului',
     carts: 'Coșuri',
     cartsCollectionDescription:
       'Coșul reprezintă produsele pe care clientul intenționează să le cumpere. Este legat de client, când acesta este cunoscut; oaspeții nu au client asociat.',

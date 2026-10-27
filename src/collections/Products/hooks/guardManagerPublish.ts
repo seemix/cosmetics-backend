@@ -11,7 +11,7 @@ import { customT } from '@/i18n'
 export const guardManagerPublish: CollectionBeforeOperationHook = ({ args, operation, req }) => {
   if (operation !== 'update' || !isManager(req.user)) return args
 
-  if (!args?.draft || args.data?._status === 'published') {
+  if (!args?.draft || (args.data as { _status?: string } | undefined)?._status === 'published') {
     throw new APIError(customT(req.t)('custom:error:managerCannotPublish'), 403, undefined, true)
   }
 
