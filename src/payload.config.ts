@@ -54,17 +54,13 @@ import payloadSidebar from 'payload-sidebar-plugin'
 import { en } from '@payloadcms/translations/languages/en'
 import { ro } from '@payloadcms/translations/languages/ro'
 import { ru } from '@payloadcms/translations/languages/ru'
-import { customTranslations, localized } from '@/i18n'
+import { customTranslations } from '@/i18n'
+import { sidebarGroupOrder } from '@/utilities/sidebarGroupOrder'
+import { SIDEBAR_ICONS } from '@/utilities/sidebarIcons'
 
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
-
-// Порядок груп бічного меню: плагін порівнює за підписом групи, тож задаємо його для кожної мови.
-const sidebarGroupOrder: Record<string, number> = {}
-;(['ecommerce', 'stock', 'purchasing', 'finance', 'users', 'content'] as const).forEach((group, index) => {
-  for (const text of Object.values(localized(`custom:group:${group}`))) sidebarGroupOrder[text] = index + 1
-})
 
 export default buildConfig({
 
@@ -129,6 +125,11 @@ export default buildConfig({
       // Feel free to delete this at any time. Simply remove the line below and the import `BeforeDashboard` statement on line 15.
       // beforeDashboard: ['@/components/BeforeDashboard#BeforeDashboard'],
     },
+    // Картки колекцій на головній з іконками, як у бічному меню (стандартний віджет `collections` без іконок).
+    dashboard: {
+      widgets: [{ slug: 'collection-icons', ComponentPath: '@/components/CollectionIconCards#CollectionIconCards', minWidth: 'full' }],
+      defaultLayout: [{ widgetSlug: 'collection-icons', width: 'full' }],
+    },
     user: Users.slug,
   },
   collections: [Users, Pages, Posts, Categories, Brands, Media, PromoCodes, Warehouses, Suppliers, StockMoves, StockBalances, ProductCosts, Purchases, StockTransfers, StockAdjustments, OpeningBalances, CashAccounts, ExpenseCategories, CashMoves, CashOperations, CustomerBalances, CustomerMoves, SalarySchemes, Payrolls],
@@ -186,34 +187,7 @@ export default buildConfig({
     ...plugins,
     payloadSidebar({
       groupOrder: sidebarGroupOrder,
-      icons: {
-        posts: 'file-code',
-        brands: 'award',
-        carts: 'shopping-cart',
-        'promo-codes': 'tag',
-        transactions: 'credit-card',
-        products: 'package',
-        orders: 'clipboard-list',
-        users: 'users',
-        warehouses: 'building-2',
-        suppliers: 'handshake',
-        'stock-moves': 'activity',
-        'stock-balances': 'bar-chart-3',
-        'product-costs': 'dollar-sign',
-        purchases: 'receipt',
-        'stock-transfers': 'arrow-right',
-        'stock-adjustments': 'clipboard-check',
-        'opening-balances': 'bookmark',
-        'cash-accounts': 'building',
-        'expense-categories': 'list-checks',
-        'cash-moves': 'send',
-        'cash-operations': 'credit-card',
-        'customer-balances': 'contact',
-        'customer-moves': 'book-open',
-        'salary-schemes': 'file-pen',
-        payrolls: 'user-check',
-        'accounting-settings': 'sliders-horizontal',
-      },
+      icons: SIDEBAR_ICONS,
     }),
     // storage-adapter-placeholder
   ],

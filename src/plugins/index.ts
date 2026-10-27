@@ -60,6 +60,20 @@ const disableGraphQL: Plugin = (config) => ({
   globals: (config.globals ?? []).map((global) => ({ ...global, graphQL: false })),
 })
 
+/**
+ * Колекції, які мають стояти першими у своїй групі бічного меню. Плагін меню зберігає порядок колекцій
+ * конфігу, а колекції `plugin-ecommerce` додаються в кінець, тож виносимо потрібні на початок списку.
+ * Плагін має стояти після `ecommercePlugin`.
+ */
+const SIDEBAR_FIRST = ['orders', 'purchases', 'cash-operations', 'customer-balances', 'stock-balances']
+
+const sidebarFirst: Plugin = (config) => {
+  const collections = config.collections ?? []
+  const first = SIDEBAR_FIRST.flatMap((slug) => collections.filter((collection) => collection.slug === slug))
+
+  return { ...config, collections: [...first, ...collections.filter((collection) => !SIDEBAR_FIRST.includes(collection.slug))] }
+}
+
 export const plugins: Plugin[] = [
   seoPlugin({
     generateTitle,
@@ -113,5 +127,6 @@ export const plugins: Plugin[] = [
       transactionsCollectionOverride: TransactionsCollection,
     },
   }),
+  sidebarFirst,
   disableGraphQL,
 ]
