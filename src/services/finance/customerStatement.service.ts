@@ -56,6 +56,8 @@ export type StatementOrder = {
   status: string | null
   paymentState: string | null
   totalBani: number
+  /** Знижка на все замовлення (вже враховано в сумі); 0, якщо її немає. */
+  discountBani: number
   paidBani: number
   /** Залишок до оплати зараз; у скасованого 0. */
   dueBani: number
@@ -80,6 +82,7 @@ type OrderDoc = PaymentOrder & {
   createdAt?: Date
   updatedAt?: Date
   paymentState?: string | null
+  discount?: number | null
   items?: Array<{ product?: ObjectIdLike | null; quantity?: number; price?: number }> | null
   accounting?: PaymentOrder['accounting'] & { cancelledAt?: Date | null }
 }
@@ -253,6 +256,7 @@ export const getCustomerStatement = async (
         status: order.status ?? null,
         paymentState: order.paymentState ?? null,
         totalBani,
+        discountBani: Math.max(Math.round((Number(order.discount) || 0) * 100), 0),
         paidBani,
         dueBani: order.status === 'cancelled' ? 0 : Math.max(capBani - paidBani, 0),
         items: (order.items ?? []).map((item) => {

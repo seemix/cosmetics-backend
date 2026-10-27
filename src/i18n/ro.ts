@@ -684,6 +684,7 @@ export const ro: CustomTranslationsObject = {
       totalPeriod: 'Total pe perioadă',
       colDate: 'Data',
       colDescription: 'Descriere',
+      discount: 'Reducere',
       colCharged: 'Calculat',
       colPaid: 'Achitat',
       colBalance: 'Sold',

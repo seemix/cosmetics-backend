@@ -49,17 +49,26 @@ const describe = (t: T, line: StatementLine) => {
   return t(KIND_KEYS[line.kind], { order })
 }
 
-/** Рядки деталізації замовлення: його позиції. */
-const orderDetails = (t: T, order: StatementOrder) =>
-  order.items
-    .map((item, index) => {
-      const article = item.article ? ` <span class="muted">(${escape(t('custom:statement:article', { article: item.article }))})</span>` : ''
-      const amount = `${item.quantity} × ${formatMDL(item.priceBani)} = ${formatMDL(item.amountBani)}`
-      const last = index === order.items.length - 1 ? ' detail-last' : ''
+/** Рядки деталізації замовлення: його позиції й знижка, якщо вона є. */
+const orderDetails = (t: T, order: StatementOrder) => {
+  const rows = order.items.map((item) => {
+    const article = item.article ? ` <span class="muted">(${escape(t('custom:statement:article', { article: item.article }))})</span>` : ''
+    const amount = `${item.quantity} × ${formatMDL(item.priceBani)} = ${formatMDL(item.amountBani)}`
 
-      return `<tr class="detail${last}"><td></td><td>${escape(item.title)}${article}</td><td colspan="3" class="detail-amount">${escape(amount)}</td></tr>`
-    })
+    return { title: `${escape(item.title)}${article}`, amount: escape(amount) }
+  })
+
+  if (order.discountBani > 0) {
+    rows.push({ title: escape(t('custom:statement:discount')), amount: escape(`−${formatMDL(order.discountBani)}`) })
+  }
+
+  return rows
+    .map(
+      (row, index) =>
+        `<tr class="detail${index === rows.length - 1 ? ' detail-last' : ''}"><td></td><td>${row.title}</td><td colspan="3" class="detail-amount">${row.amount}</td></tr>`,
+    )
     .join('\n')
+}
 
 const STYLE = `
   :root { color-scheme: light; }

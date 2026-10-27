@@ -684,6 +684,7 @@ export const ru: CustomTranslationsObject = {
       totalPeriod: 'Итого за период',
       colDate: 'Дата',
       colDescription: 'Описание',
+      discount: 'Скидка',
       colCharged: 'Начислено',
       colPaid: 'Оплачено',
       colBalance: 'Сальдо',

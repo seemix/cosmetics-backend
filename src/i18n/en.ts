@@ -686,6 +686,7 @@ export const en = {
       totalPeriod: 'Total for the period',
       colDate: 'Date',
       colDescription: 'Description',
+      discount: 'Discount',
       colCharged: 'Charged',
       colPaid: 'Paid',
       colBalance: 'Balance',
