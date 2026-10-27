@@ -166,9 +166,7 @@ export interface Config {
     'accounting-settings': AccountingSettingsSelect<false> | AccountingSettingsSelect<true>;
   };
   locale: 'ru' | 'ro';
-  user: User & {
-    collection: 'users';
-  };
+  user: User;
   jobs: {
     tasks: unknown;
     workflows: unknown;
@@ -258,6 +256,7 @@ export interface User {
   loginAttempts?: number | null;
   lockUntil?: string | null;
   password?: string | null;
+  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -530,6 +529,7 @@ export interface Cart {
         id?: string | null;
       }[]
     | null;
+  secret?: string | null;
   customer?: (string | null) | User;
   purchasedAt?: string | null;
   status?: ('active' | 'purchased' | 'abandoned') | null;
@@ -1956,6 +1956,7 @@ export interface CartsSelect<T extends boolean = true> {
         subtotal?: T;
         id?: T;
       };
+  secret?: T;
   customer?: T;
   purchasedAt?: T;
   status?: T;
