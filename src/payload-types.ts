@@ -67,6 +67,11 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    orders: Order;
+    purchases: Purchase;
+    'cash-operations': CashOperation;
+    'customer-balances': CustomerBalance;
+    'stock-balances': StockBalance;
     users: User;
     pages: Page;
     posts: Post;
@@ -77,17 +82,13 @@ export interface Config {
     warehouses: Warehouse;
     suppliers: Supplier;
     'stock-moves': StockMove;
-    'stock-balances': StockBalance;
     'product-costs': ProductCost;
-    purchases: Purchase;
     'stock-transfers': StockTransfer;
     'stock-adjustments': StockAdjustment;
     'opening-balances': OpeningBalance;
     'cash-accounts': CashAccount;
     'expense-categories': ExpenseCategory;
     'cash-moves': CashMove;
-    'cash-operations': CashOperation;
-    'customer-balances': CustomerBalance;
     'customer-moves': CustomerMove;
     'salary-schemes': SalaryScheme;
     payrolls: Payroll;
@@ -97,7 +98,6 @@ export interface Config {
     variantOptions: VariantOption;
     products: Product;
     carts: Cart;
-    orders: Order;
     transactions: Transaction;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -118,6 +118,11 @@ export interface Config {
     };
   };
   collectionsSelect: {
+    orders: OrdersSelect<false> | OrdersSelect<true>;
+    purchases: PurchasesSelect<false> | PurchasesSelect<true>;
+    'cash-operations': CashOperationsSelect<false> | CashOperationsSelect<true>;
+    'customer-balances': CustomerBalancesSelect<false> | CustomerBalancesSelect<true>;
+    'stock-balances': StockBalancesSelect<false> | StockBalancesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
@@ -128,17 +133,13 @@ export interface Config {
     warehouses: WarehousesSelect<false> | WarehousesSelect<true>;
     suppliers: SuppliersSelect<false> | SuppliersSelect<true>;
     'stock-moves': StockMovesSelect<false> | StockMovesSelect<true>;
-    'stock-balances': StockBalancesSelect<false> | StockBalancesSelect<true>;
     'product-costs': ProductCostsSelect<false> | ProductCostsSelect<true>;
-    purchases: PurchasesSelect<false> | PurchasesSelect<true>;
     'stock-transfers': StockTransfersSelect<false> | StockTransfersSelect<true>;
     'stock-adjustments': StockAdjustmentsSelect<false> | StockAdjustmentsSelect<true>;
     'opening-balances': OpeningBalancesSelect<false> | OpeningBalancesSelect<true>;
     'cash-accounts': CashAccountsSelect<false> | CashAccountsSelect<true>;
     'expense-categories': ExpenseCategoriesSelect<false> | ExpenseCategoriesSelect<true>;
     'cash-moves': CashMovesSelect<false> | CashMovesSelect<true>;
-    'cash-operations': CashOperationsSelect<false> | CashOperationsSelect<true>;
-    'customer-balances': CustomerBalancesSelect<false> | CustomerBalancesSelect<true>;
     'customer-moves': CustomerMovesSelect<false> | CustomerMovesSelect<true>;
     'salary-schemes': SalarySchemesSelect<false> | SalarySchemesSelect<true>;
     payrolls: PayrollsSelect<false> | PayrollsSelect<true>;
@@ -148,7 +149,6 @@ export interface Config {
     variantOptions: VariantOptionsSelect<false> | VariantOptionsSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     carts: CartsSelect<false> | CartsSelect<true>;
-    orders: OrdersSelect<false> | OrdersSelect<true>;
     transactions: TransactionsSelect<false> | TransactionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -205,6 +205,52 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: string;
+  orderNumber?: string | null;
+  telegramMessageId?: string | null;
+  customer?: (string | null) | User;
+  items?:
+    | {
+        product: string | Product;
+        quantity: number;
+        price: number;
+        id?: string | null;
+      }[]
+    | null;
+  total: number;
+  status?: ('pending' | 'paid' | 'shipped' | 'cancelled') | null;
+  paymentType?: ('cash' | 'transfer') | null;
+  SRL?: string | null;
+  shippingAddress?: {
+    name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    city?: string | null;
+    address?: string | null;
+  };
+  comment?: string | null;
+  promoCodeApplied?: string | null;
+  discount?: number | null;
+  source?: ('web' | 'admin') | null;
+  warehouse?: (string | null) | Warehouse;
+  createdBy?: (string | null) | User;
+  manager?: (string | null) | User;
+  paidBani?: number | null;
+  paymentState?: ('unpaid' | 'partial' | 'paid') | null;
+  accounting?: {
+    stockPostedAt?: string | null;
+    cogsBani?: number | null;
+    revenueBani?: number | null;
+    cancelledAt?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -331,47 +377,26 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders".
+ * via the `definition` "carts".
  */
-export interface Order {
+export interface Cart {
   id: string;
-  orderNumber?: string | null;
-  telegramMessageId?: string | null;
-  customer?: (string | null) | User;
   items?:
     | {
-        product: string | Product;
+        product?: (string | null) | Product;
+        variant?: (string | null) | Variant;
         quantity: number;
-        price: number;
+        price?: number | null;
+        subtotal?: number | null;
         id?: string | null;
       }[]
     | null;
-  total: number;
-  status?: ('pending' | 'paid' | 'shipped' | 'cancelled') | null;
-  paymentType?: ('cash' | 'transfer') | null;
-  SRL?: string | null;
-  shippingAddress?: {
-    name?: string | null;
-    phone?: string | null;
-    email?: string | null;
-    city?: string | null;
-    address?: string | null;
-  };
-  comment?: string | null;
-  promoCodeApplied?: string | null;
-  discount?: number | null;
-  source?: ('web' | 'admin') | null;
-  warehouse?: (string | null) | Warehouse;
-  createdBy?: (string | null) | User;
-  manager?: (string | null) | User;
-  paidBani?: number | null;
-  paymentState?: ('unpaid' | 'partial' | 'paid') | null;
-  accounting?: {
-    stockPostedAt?: string | null;
-    cogsBani?: number | null;
-    revenueBani?: number | null;
-    cancelledAt?: string | null;
-  };
+  secret?: string | null;
+  customer?: (string | null) | User;
+  purchasedAt?: string | null;
+  status?: ('active' | 'purchased' | 'abandoned') | null;
+  subtotal?: number | null;
+  currency?: 'MDL' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -502,44 +527,6 @@ export interface Category {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "warehouses".
- */
-export interface Warehouse {
-  id: string;
-  name: string;
-  code: string;
-  isActive?: boolean | null;
-  sortOrder?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "carts".
- */
-export interface Cart {
-  id: string;
-  items?:
-    | {
-        product?: (string | null) | Product;
-        variant?: (string | null) | Variant;
-        quantity: number;
-        price?: number | null;
-        subtotal?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  secret?: string | null;
-  customer?: (string | null) | User;
-  purchasedAt?: string | null;
-  status?: ('active' | 'purchased' | 'abandoned') | null;
-  subtotal?: number | null;
-  currency?: 'MDL' | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "addresses".
  */
 export interface Address {
@@ -596,6 +583,229 @@ export interface Address {
     | 'SE'
     | 'CH';
   phone?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "warehouses".
+ */
+export interface Warehouse {
+  id: string;
+  name: string;
+  code: string;
+  isActive?: boolean | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "purchases".
+ */
+export interface Purchase {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  documentDate: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  reversalReason?: string | null;
+  comment?: string | null;
+  supplier: string | Supplier;
+  supplierInvoiceNo?: string | null;
+  warehouse: string | Warehouse;
+  allocationBase: 'amount' | 'quantity';
+  lines: {
+    product: string | Product;
+    quantity: number;
+    unitPriceBani: number;
+    amountBani?: number | null;
+    allocatedBani?: number | null;
+    landedBani?: number | null;
+    landedUnitCost?: number | null;
+    id?: string | null;
+  }[];
+  extraCosts?:
+    | {
+        description: string;
+        amountBani: number;
+        payee: string | Supplier;
+        id?: string | null;
+      }[]
+    | null;
+  goodsTotalBani?: number | null;
+  extraTotalBani?: number | null;
+  landedTotalBani?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers".
+ */
+export interface Supplier {
+  id: string;
+  name: string;
+  idno?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  contactPerson?: string | null;
+  bankDetails?: string | null;
+  isCarrier?: boolean | null;
+  isActive?: boolean | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-operations".
+ */
+export interface CashOperation {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  operationDate: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  reversalReason?: string | null;
+  comment?: string | null;
+  type: 'expense' | 'transfer' | 'supplier_payment' | 'customer_receipt' | 'customer_refund';
+  account: string | CashAccount;
+  toAccount?: (string | null) | CashAccount;
+  amountBani: number;
+  customer?: (string | null) | User;
+  order?: (string | null) | Order;
+  supplier?: (string | null) | Supplier;
+  purchase?: (string | null) | Purchase;
+  category?: (string | null) | ExpenseCategory;
+  manager?: (string | null) | User;
+  payroll?: (string | null) | Payroll;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-accounts".
+ */
+export interface CashAccount {
+  id: string;
+  name: string;
+  code: string;
+  kind: 'cash' | 'bank';
+  balanceBani?: number | null;
+  allowNegative?: boolean | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "expense-categories".
+ */
+export interface ExpenseCategory {
+  id: string;
+  name: string;
+  code: string;
+  isSalary?: boolean | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payrolls".
+ */
+export interface Payroll {
+  id: string;
+  number?: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  periodTo: string;
+  postedAt?: string | null;
+  postedBy?: (string | null) | User;
+  reversedAt?: string | null;
+  reversedBy?: (string | null) | User;
+  reversalReason?: string | null;
+  comment?: string | null;
+  manager: string | User;
+  periodFrom: string;
+  scheme?: (string | null) | SalaryScheme;
+  adjustmentsBani?: number | null;
+  fixedBani?: number | null;
+  baseTotalBani?: number | null;
+  percentAmountBani?: number | null;
+  totalBani?: number | null;
+  paidBani?: number | null;
+  lines?:
+    | {
+        order?: (string | null) | Order;
+        orderNumber?: string | null;
+        baseBani?: number | null;
+        amountBani?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  schemeSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "salary-schemes".
+ */
+export interface SalaryScheme {
+  id: string;
+  name: string;
+  manager?: (string | null) | User;
+  validFrom?: string | null;
+  validTo?: string | null;
+  fixedBani?: number | null;
+  percentBp: number;
+  base: 'revenue' | 'gross_profit' | 'paid_revenue';
+  dateBasis: 'order_date' | 'payment_date';
+  attribution: 'snapshot' | 'current' | 'creator';
+  customerFilter?: ('all' | 'retail' | 'wholesale') | null;
+  period?: 'month' | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-balances".
+ */
+export interface CustomerBalance {
+  id: string;
+  customer: string | User;
+  debtBani?: number | null;
+  balanceBani: number;
+  netBani?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-balances".
+ */
+export interface StockBalance {
+  id: string;
+  product: string | Product;
+  variant?: (string | null) | Variant;
+  warehouse: string | Warehouse;
+  qty: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -680,24 +890,6 @@ export interface PromoCode {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "suppliers".
- */
-export interface Supplier {
-  id: string;
-  name: string;
-  idno?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  contactPerson?: string | null;
-  bankDetails?: string | null;
-  isCarrier?: boolean | null;
-  isActive?: boolean | null;
-  notes?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "stock-moves".
  */
 export interface StockMove {
@@ -728,19 +920,6 @@ export interface StockMove {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "stock-balances".
- */
-export interface StockBalance {
-  id: string;
-  product: string | Product;
-  variant?: (string | null) | Variant;
-  warehouse: string | Warehouse;
-  qty: number;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "product-costs".
  */
 export interface ProductCost {
@@ -750,49 +929,6 @@ export interface ProductCost {
   valueBani: number;
   avgCostBani?: number | null;
   lastPurchaseUnitCostBani?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "purchases".
- */
-export interface Purchase {
-  id: string;
-  number?: string | null;
-  status: 'draft' | 'posted' | 'reversed';
-  documentDate: string;
-  postedAt?: string | null;
-  postedBy?: (string | null) | User;
-  reversedAt?: string | null;
-  reversedBy?: (string | null) | User;
-  reversalReason?: string | null;
-  comment?: string | null;
-  supplier: string | Supplier;
-  supplierInvoiceNo?: string | null;
-  warehouse: string | Warehouse;
-  allocationBase: 'amount' | 'quantity';
-  lines: {
-    product: string | Product;
-    quantity: number;
-    unitPriceBani: number;
-    amountBani?: number | null;
-    allocatedBani?: number | null;
-    landedBani?: number | null;
-    landedUnitCost?: number | null;
-    id?: string | null;
-  }[];
-  extraCosts?:
-    | {
-        description: string;
-        amountBani: number;
-        payee: string | Supplier;
-        id?: string | null;
-      }[]
-    | null;
-  goodsTotalBani?: number | null;
-  extraTotalBani?: number | null;
-  landedTotalBani?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -868,6 +1004,7 @@ export interface OpeningBalance {
   reversalReason?: string | null;
   comment?: string | null;
   kind: 'stock' | 'cash' | 'supplierDebt' | 'customerDebt' | 'customerAdvance';
+  warehouse?: (string | null) | Warehouse;
   advanceLines?:
     | {
         customer: string | User;
@@ -898,41 +1035,12 @@ export interface OpeningBalance {
     | null;
   stockLines?:
     | {
-        warehouse: string | Warehouse;
         product: string | Product;
         quantity: number;
         unitCostBani: number;
         id?: string | null;
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cash-accounts".
- */
-export interface CashAccount {
-  id: string;
-  name: string;
-  code: string;
-  kind: 'cash' | 'bank';
-  balanceBani?: number | null;
-  allowNegative?: boolean | null;
-  isActive?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "expense-categories".
- */
-export interface ExpenseCategory {
-  id: string;
-  name: string;
-  code: string;
-  isSalary?: boolean | null;
-  isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -949,114 +1057,6 @@ export interface CashMove {
   docId: string;
   docNumber?: string | null;
   reversalOf?: (string | null) | CashMove;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cash-operations".
- */
-export interface CashOperation {
-  id: string;
-  number?: string | null;
-  status: 'draft' | 'posted' | 'reversed';
-  operationDate: string;
-  postedAt?: string | null;
-  postedBy?: (string | null) | User;
-  reversedAt?: string | null;
-  reversedBy?: (string | null) | User;
-  reversalReason?: string | null;
-  comment?: string | null;
-  type: 'expense' | 'transfer' | 'supplier_payment' | 'customer_receipt' | 'customer_refund';
-  account: string | CashAccount;
-  toAccount?: (string | null) | CashAccount;
-  amountBani: number;
-  customer?: (string | null) | User;
-  order?: (string | null) | Order;
-  supplier?: (string | null) | Supplier;
-  purchase?: (string | null) | Purchase;
-  category?: (string | null) | ExpenseCategory;
-  manager?: (string | null) | User;
-  payroll?: (string | null) | Payroll;
-  createdBy?: (string | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payrolls".
- */
-export interface Payroll {
-  id: string;
-  number?: string | null;
-  status: 'draft' | 'posted' | 'reversed';
-  periodTo: string;
-  postedAt?: string | null;
-  postedBy?: (string | null) | User;
-  reversedAt?: string | null;
-  reversedBy?: (string | null) | User;
-  reversalReason?: string | null;
-  comment?: string | null;
-  manager: string | User;
-  periodFrom: string;
-  scheme?: (string | null) | SalaryScheme;
-  adjustmentsBani?: number | null;
-  fixedBani?: number | null;
-  baseTotalBani?: number | null;
-  percentAmountBani?: number | null;
-  totalBani?: number | null;
-  paidBani?: number | null;
-  lines?:
-    | {
-        order?: (string | null) | Order;
-        orderNumber?: string | null;
-        baseBani?: number | null;
-        amountBani?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  schemeSnapshot?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "salary-schemes".
- */
-export interface SalaryScheme {
-  id: string;
-  name: string;
-  manager?: (string | null) | User;
-  validFrom?: string | null;
-  validTo?: string | null;
-  fixedBani?: number | null;
-  percentBp: number;
-  base: 'revenue' | 'gross_profit' | 'paid_revenue';
-  dateBasis: 'order_date' | 'payment_date';
-  attribution: 'snapshot' | 'current' | 'creator';
-  customerFilter?: ('all' | 'retail' | 'wholesale') | null;
-  period?: 'month' | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "customer-balances".
- */
-export interface CustomerBalance {
-  id: string;
-  customer: string | User;
-  debtBani?: number | null;
-  balanceBani: number;
-  netBani?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1140,6 +1140,26 @@ export interface PayloadLockedDocument {
   id: string;
   document?:
     | ({
+        relationTo: 'orders';
+        value: string | Order;
+      } | null)
+    | ({
+        relationTo: 'purchases';
+        value: string | Purchase;
+      } | null)
+    | ({
+        relationTo: 'cash-operations';
+        value: string | CashOperation;
+      } | null)
+    | ({
+        relationTo: 'customer-balances';
+        value: string | CustomerBalance;
+      } | null)
+    | ({
+        relationTo: 'stock-balances';
+        value: string | StockBalance;
+      } | null)
+    | ({
         relationTo: 'users';
         value: string | User;
       } | null)
@@ -1180,16 +1200,8 @@ export interface PayloadLockedDocument {
         value: string | StockMove;
       } | null)
     | ({
-        relationTo: 'stock-balances';
-        value: string | StockBalance;
-      } | null)
-    | ({
         relationTo: 'product-costs';
         value: string | ProductCost;
-      } | null)
-    | ({
-        relationTo: 'purchases';
-        value: string | Purchase;
       } | null)
     | ({
         relationTo: 'stock-transfers';
@@ -1214,14 +1226,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'cash-moves';
         value: string | CashMove;
-      } | null)
-    | ({
-        relationTo: 'cash-operations';
-        value: string | CashOperation;
-      } | null)
-    | ({
-        relationTo: 'customer-balances';
-        value: string | CustomerBalance;
       } | null)
     | ({
         relationTo: 'customer-moves';
@@ -1258,10 +1262,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'carts';
         value: string | Cart;
-      } | null)
-    | ({
-        relationTo: 'orders';
-        value: string | Order;
       } | null)
     | ({
         relationTo: 'transactions';
@@ -1308,6 +1308,152 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
+  telegramMessageId?: T;
+  customer?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        price?: T;
+        id?: T;
+      };
+  total?: T;
+  status?: T;
+  paymentType?: T;
+  SRL?: T;
+  shippingAddress?:
+    | T
+    | {
+        name?: T;
+        phone?: T;
+        email?: T;
+        city?: T;
+        address?: T;
+      };
+  comment?: T;
+  promoCodeApplied?: T;
+  discount?: T;
+  source?: T;
+  warehouse?: T;
+  createdBy?: T;
+  manager?: T;
+  paidBani?: T;
+  paymentState?: T;
+  accounting?:
+    | T
+    | {
+        stockPostedAt?: T;
+        cogsBani?: T;
+        revenueBani?: T;
+        cancelledAt?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "purchases_select".
+ */
+export interface PurchasesSelect<T extends boolean = true> {
+  number?: T;
+  status?: T;
+  documentDate?: T;
+  postedAt?: T;
+  postedBy?: T;
+  reversedAt?: T;
+  reversedBy?: T;
+  reversalReason?: T;
+  comment?: T;
+  supplier?: T;
+  supplierInvoiceNo?: T;
+  warehouse?: T;
+  allocationBase?: T;
+  lines?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        unitPriceBani?: T;
+        amountBani?: T;
+        allocatedBani?: T;
+        landedBani?: T;
+        landedUnitCost?: T;
+        id?: T;
+      };
+  extraCosts?:
+    | T
+    | {
+        description?: T;
+        amountBani?: T;
+        payee?: T;
+        id?: T;
+      };
+  goodsTotalBani?: T;
+  extraTotalBani?: T;
+  landedTotalBani?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cash-operations_select".
+ */
+export interface CashOperationsSelect<T extends boolean = true> {
+  number?: T;
+  status?: T;
+  operationDate?: T;
+  postedAt?: T;
+  postedBy?: T;
+  reversedAt?: T;
+  reversedBy?: T;
+  reversalReason?: T;
+  comment?: T;
+  type?: T;
+  account?: T;
+  toAccount?: T;
+  amountBani?: T;
+  customer?: T;
+  order?: T;
+  supplier?: T;
+  purchase?: T;
+  category?: T;
+  manager?: T;
+  payroll?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-balances_select".
+ */
+export interface CustomerBalancesSelect<T extends boolean = true> {
+  customer?: T;
+  debtBani?: T;
+  balanceBani?: T;
+  netBani?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-balances_select".
+ */
+export interface StockBalancesSelect<T extends boolean = true> {
+  product?: T;
+  variant?: T;
+  warehouse?: T;
+  qty?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1509,18 +1655,6 @@ export interface StockMovesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "stock-balances_select".
- */
-export interface StockBalancesSelect<T extends boolean = true> {
-  product?: T;
-  variant?: T;
-  warehouse?: T;
-  qty?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "product-costs_select".
  */
 export interface ProductCostsSelect<T extends boolean = true> {
@@ -1529,50 +1663,6 @@ export interface ProductCostsSelect<T extends boolean = true> {
   valueBani?: T;
   avgCostBani?: T;
   lastPurchaseUnitCostBani?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "purchases_select".
- */
-export interface PurchasesSelect<T extends boolean = true> {
-  number?: T;
-  status?: T;
-  documentDate?: T;
-  postedAt?: T;
-  postedBy?: T;
-  reversedAt?: T;
-  reversedBy?: T;
-  reversalReason?: T;
-  comment?: T;
-  supplier?: T;
-  supplierInvoiceNo?: T;
-  warehouse?: T;
-  allocationBase?: T;
-  lines?:
-    | T
-    | {
-        product?: T;
-        quantity?: T;
-        unitPriceBani?: T;
-        amountBani?: T;
-        allocatedBani?: T;
-        landedBani?: T;
-        landedUnitCost?: T;
-        id?: T;
-      };
-  extraCosts?:
-    | T
-    | {
-        description?: T;
-        amountBani?: T;
-        payee?: T;
-        id?: T;
-      };
-  goodsTotalBani?: T;
-  extraTotalBani?: T;
-  landedTotalBani?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1649,6 +1739,7 @@ export interface OpeningBalancesSelect<T extends boolean = true> {
   reversalReason?: T;
   comment?: T;
   kind?: T;
+  warehouse?: T;
   advanceLines?:
     | T
     | {
@@ -1680,7 +1771,6 @@ export interface OpeningBalancesSelect<T extends boolean = true> {
   stockLines?:
     | T
     | {
-        warehouse?: T;
         product?: T;
         quantity?: T;
         unitCostBani?: T;
@@ -1727,47 +1817,6 @@ export interface CashMovesSelect<T extends boolean = true> {
   docId?: T;
   docNumber?: T;
   reversalOf?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cash-operations_select".
- */
-export interface CashOperationsSelect<T extends boolean = true> {
-  number?: T;
-  status?: T;
-  operationDate?: T;
-  postedAt?: T;
-  postedBy?: T;
-  reversedAt?: T;
-  reversedBy?: T;
-  reversalReason?: T;
-  comment?: T;
-  type?: T;
-  account?: T;
-  toAccount?: T;
-  amountBani?: T;
-  customer?: T;
-  order?: T;
-  supplier?: T;
-  purchase?: T;
-  category?: T;
-  manager?: T;
-  payroll?: T;
-  createdBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "customer-balances_select".
- */
-export interface CustomerBalancesSelect<T extends boolean = true> {
-  customer?: T;
-  debtBani?: T;
-  balanceBani?: T;
-  netBani?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1964,55 +2013,6 @@ export interface CartsSelect<T extends boolean = true> {
   status?: T;
   subtotal?: T;
   currency?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders_select".
- */
-export interface OrdersSelect<T extends boolean = true> {
-  orderNumber?: T;
-  telegramMessageId?: T;
-  customer?: T;
-  items?:
-    | T
-    | {
-        product?: T;
-        quantity?: T;
-        price?: T;
-        id?: T;
-      };
-  total?: T;
-  status?: T;
-  paymentType?: T;
-  SRL?: T;
-  shippingAddress?:
-    | T
-    | {
-        name?: T;
-        phone?: T;
-        email?: T;
-        city?: T;
-        address?: T;
-      };
-  comment?: T;
-  promoCodeApplied?: T;
-  discount?: T;
-  source?: T;
-  warehouse?: T;
-  createdBy?: T;
-  manager?: T;
-  paidBani?: T;
-  paymentState?: T;
-  accounting?:
-    | T
-    | {
-        stockPostedAt?: T;
-        cogsBani?: T;
-        revenueBani?: T;
-        cancelledAt?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
 }

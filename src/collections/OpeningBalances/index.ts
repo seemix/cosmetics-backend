@@ -28,7 +28,7 @@ import { receive, revert } from '@/services/stock/stockLedger.service'
 import { formatMDL } from '@/utilities/money'
 
 type Relation = string | { id: string }
-type StockLine = { warehouse: Relation; product: Relation; quantity: number; unitCostBani: number }
+type StockLine = { product: Relation; quantity: number; unitCostBani: number }
 type CashLine = { account: Relation; amountBani: number }
 type SupplierLine = { supplier: Relation; amountBani: number }
 type CustomerLine = { order: Relation; amountBani: number }
@@ -48,10 +48,11 @@ const docRef = ({ id, data, originalDoc }: DocumentTransitionArgs) => ({
   number: String(data.number ?? originalDoc.number),
 })
 
-/** Проведення kind=stock як прихід: вартість рядка `quantity × unitCostBani`, рух `opening` (розд. 3.2). */
+/** Проведення kind=stock як прихід на склад шапки: вартість рядка `quantity × unitCostBani`, рух `opening` (розд. 3.2). */
 const postOpening = async (args: DocumentTransitionArgs) => {
   const { req, data, originalDoc, date } = args
   const lines = (data.stockLines ?? originalDoc.stockLines ?? []) as StockLine[]
+  const warehouse = idOf((data.warehouse ?? originalDoc.warehouse) as Relation)
 
   if (lines.length === 0) fail(req, 'custom:error:openingNoLines')
 
@@ -61,7 +62,7 @@ const postOpening = async (args: DocumentTransitionArgs) => {
     moveType: 'opening',
     lines: lines.map((line) => ({
       product: idOf(line.product),
-      warehouse: idOf(line.warehouse),
+      warehouse,
       qty: line.quantity,
       valueBani: line.quantity * line.unitCostBani,
     })),
@@ -323,7 +324,7 @@ const settleCustomerDebts: CollectionAfterChangeHook = async ({ doc, previousDoc
   return doc
 }
 
-/** Один рядок на пару товар × склад, на касу, постачальника і замовлення: дубль подвоїв би залишок чи борг. */
+/** Один рядок на товар (склад один на документ), на касу, постачальника і замовлення: дубль подвоїв би залишок чи борг. */
 const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
   if ((originalDoc?.status ?? 'draft') !== 'draft') return data
 
@@ -338,7 +339,7 @@ const validateOpening: CollectionBeforeChangeHook = ({ data, originalDoc, req })
           ? (source('customerLines') as CustomerLine[]).map((line) => String(idOf(line.order)))
           : kind === 'customerAdvance'
             ? (source('advanceLines') as AdvanceLine[]).map((line) => String(idOf(line.customer)))
-            : (source('stockLines') as StockLine[]).map((line) => `${idOf(line.product)}:${idOf(line.warehouse)}`)
+            : (source('stockLines') as StockLine[]).map((line) => String(idOf(line.product)))
 
   if (new Set(keys).size !== keys.length) {
     fail(
@@ -401,6 +402,15 @@ export const OpeningBalances: CollectionConfig = {
         { label: label('custom:option:openingCustomerDebt'), value: 'customerDebt' },
         { label: label('custom:option:openingCustomerAdvance'), value: 'customerAdvance' },
       ],
+    },
+    {
+      name: 'warehouse',
+      label: label('custom:term:warehouse'),
+      type: 'relationship',
+      relationTo: 'warehouses',
+      required: true,
+      filterOptions: { isActive: { equals: true } },
+      admin: { condition: (data) => data?.kind === 'stock' },
     },
     {
       name: 'advanceLines',
@@ -503,20 +513,7 @@ export const OpeningBalances: CollectionConfig = {
         {
           type: 'row',
           fields: [
-            {
-              name: 'warehouse',
-              label: label('custom:term:warehouse'),
-              type: 'relationship',
-              relationTo: 'warehouses',
-              required: true,
-              filterOptions: { isActive: { equals: true } },
-            },
             { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
-          ],
-        },
-        {
-          type: 'row',
-          fields: [
             { name: 'quantity', label: label('custom:term:quantity'), type: 'number', required: true, min: 1, validate: validateInteger },
             moneyField({ name: 'unitCostBani', label: label('custom:field:unitCost'), required: true, min: 1 }),
           ],

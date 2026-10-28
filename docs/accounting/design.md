@@ -163,7 +163,7 @@ salary-schemes       orders (продаж)    ─┤
 |---|---|---|
 | (шапка) | | |
 | kind | select R | `stock` / `cash` / `supplierDebt` / `customerDebt` |
-| stockLines[]: warehouse R, product R, quantity int > 0, unitCostBani R > 0 | | kind=stock |
+| warehouse R, stockLines[]: product R, quantity int > 0, unitCostBani R > 0 | | kind=stock; один склад на документ, CSV-імпорт створює чернетку на кожен склад |
 | cashLines[]: account R, amountBani R | | kind=cash |
 | supplierLines[]: supplier R, amountBani R (± ; мінус = аванс) | | kind=supplierDebt |
 | customerLines[]: order R, amountBani R > 0 | | kind=customerDebt, лише історичні замовлення |
@@ -640,7 +640,7 @@ total = fixedBani + Σ lines + adjustmentsBani
 | 1 | admin | Довідники: склади (`main`, `shop`), каси (`cash`, `bank`), статті витрат, постачальники; `defaultWebWarehouse` |
 | 2 | власник | Обирає дату відсічення T (кінець робочого дня). Після T до кроку 6 нові замовлення в адмінці не вводяться, сайт можна лишити: замовлення до вмикання не списують залишок і обліковуються як історичні |
 | 3 | власник | Підрахунок залишків на T по кожному складу |
-| 4 | admin | Імпорт CSV у чернетку `opening-balances` kind=stock скриптом `scripts/import-opening-stock.ts` (рядок: `article; warehouseCode; qty; unitCostMDL`). Скрипт лише створює чернетку й звіт помилок (невідомий артикул, дублі, qty ≤ 0, cost ≤ 0) |
+| 4 | admin | Імпорт CSV у чернетки `opening-balances` kind=stock (по одній на склад) скриптом `scripts/import-opening-stock.ts` (рядок: `article; warehouseCode; qty; unitCostMDL`). Скрипт лише створює чернетки й звіт помилок (невідомий артикул, дублі, qty ≤ 0, cost ≤ 0) |
 | 5 | admin | Чернетки kind=cash (залишки кас на T), supplierDebt (борги постачальникам), за потреби customerDebt (неоплачені історичні замовлення) |
 | 6 | admin | Перевірка, проведення всіх OPN, потім `stockControlEnabled = true` (`accountingStartAt = now`). Замовлення сайту, що надійшли між T і вмиканням, admin вводить як writeoff або коригує через inventory |
 

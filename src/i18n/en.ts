@@ -115,7 +115,7 @@ export const en = {
       unitCostPositive: 'Unit cost must be greater than 0',
       transferSameWarehouse: 'Source and destination warehouses must differ',
       openingNoLines: 'An opening balance without lines cannot be posted',
-      openingDuplicate: 'A product can appear only once per warehouse',
+      openingDuplicate: 'A product can appear only once in a stock opening balance',
       openingDuplicateAccount: 'A cash account can appear only once in an opening balance',
       insufficientCash: 'Insufficient funds in {{account}}: requested {{requested}}, available {{available}}',
       cashMovesReverted: 'The cash moves of this document are already reversed',

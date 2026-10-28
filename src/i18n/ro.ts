@@ -113,7 +113,7 @@ export const ro: CustomTranslationsObject = {
       unitCostPositive: 'Costul unitar trebuie să fie mai mare ca 0',
       transferSameWarehouse: 'Depozitul sursă și cel destinație trebuie să fie diferite',
       openingNoLines: 'Un sold inițial fără linii nu poate fi operat',
-      openingDuplicate: 'Un produs poate apărea o singură dată pe depozit',
+      openingDuplicate: 'Un produs poate apărea o singură dată într-un sold inițial de stoc',
       openingDuplicateAccount: 'O casă poate apărea o singură dată într-un sold inițial',
       insufficientCash: 'Fonduri insuficiente în {{account}}: solicitat {{requested}}, disponibil {{available}}',
       cashMovesReverted: 'Mișcările de numerar ale acestui document sunt deja stornate',

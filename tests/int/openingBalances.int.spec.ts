@@ -48,7 +48,7 @@ const newProduct = async () => {
 
 const importCsv = async (csv: string) => {
   const report = await importOpeningStock(payload, csv)
-  if (report.draft) balances.push(report.draft.id)
+  balances.push(...report.drafts.map((draft) => draft.id))
   return report
 }
 
@@ -86,7 +86,7 @@ describe('A12: початкові залишки і CSV-імпорт', () => {
   })
 
   describe('скрипт імпорту', () => {
-    it('CSV із 3 рядків створює лише чернетку, залишки не змінюються', async () => {
+    it('CSV із 3 рядків на 2 склади створює по чернетці на склад, залишки не змінюються', async () => {
       const [a, b, c] = [await newProduct(), await newProduct(), await newProduct()]
       const csv = [
         'article; warehouseCode; qty; unitCostMDL',
@@ -99,21 +99,29 @@ describe('A12: початкові залишки і CSV-імпорт', () => {
       const report = await importCsv(csv)
 
       expect(report.errors).toEqual([])
-      expect(report.draft).toMatchObject({ lines: 3 })
-      expect(formatReport(report)).toMatch(/Draft OPN-\d{6} created with 3 lines/)
-
-      const draft = await payload.findByID({ collection: 'opening-balances', id: report.draft!.id, depth: 0 })
-      expect(draft.status).toBe('draft')
-      expect(draft.kind).toBe('stock')
-      expect(
-        draft.stockLines?.map((line) => [line.product, line.warehouse, line.quantity, line.unitCostBani]),
-      ).toEqual([
-        [a.id, mainId, 4, 11500],
-        [b.id, mainId, 10, 1250],
-        [c.id, shopId, 3, 24990],
+      expect(report.drafts).toMatchObject([
+        { warehouseCode: mainCode, lines: 2 },
+        { warehouseCode: shopCode, lines: 1 },
       ])
+      expect(formatReport(report)).toMatch(/2 draft\(s\) created/)
+      expect(formatReport(report)).toMatch(new RegExp(`OPN-\\d{6}: warehouse ${shopCode}, 1 lines`))
+
+      const [main, shop] = await Promise.all(
+        report.drafts.map((draft) => payload.findByID({ collection: 'opening-balances', id: draft.id, depth: 0 })),
+      )
+      for (const draft of [main, shop]) {
+        expect(draft.status).toBe('draft')
+        expect(draft.kind).toBe('stock')
+        expect(await movesOfDoc(payload, 'opening-balances', draft.id)).toHaveLength(0)
+      }
+      expect(main.warehouse).toBe(mainId)
+      expect(main.stockLines?.map((line) => [line.product, line.quantity, line.unitCostBani])).toEqual([
+        [a.id, 4, 11500],
+        [b.id, 10, 1250],
+      ])
+      expect(shop.warehouse).toBe(shopId)
+      expect(shop.stockLines?.map((line) => [line.product, line.quantity, line.unitCostBani])).toEqual([[c.id, 3, 24990]])
       expect(await qtyAt(payload, a.id, mainId)).toBe(0)
-      expect(await movesOfDoc(payload, 'opening-balances', draft.id)).toHaveLength(0)
     })
 
     it('помилки: невідомий артикул, невідомий склад, qty ≤ 0, cost ≤ 0, дубль; чернетка не створюється', async () => {
@@ -134,7 +142,7 @@ describe('A12: початкові залишки і CSV-імпорт', () => {
 
       const report = await importCsv(csv)
 
-      expect(report.draft).toBeUndefined()
+      expect(report.drafts).toEqual([])
       const byLine = Object.fromEntries(report.errors.map((error) => [error.line, error.message]))
       expect(byLine[2]).toMatch(/Unknown article/)
       expect(byLine[3]).toMatch(/Unknown warehouse/)
@@ -152,7 +160,7 @@ describe('A12: початкові залишки і CSV-імпорт', () => {
 
     it('порожній файл і файл лише із заголовком — помилка', async () => {
       expect((await importCsv('')).errors).toEqual([{ line: 0, message: 'The file has no data rows' }])
-      expect((await importCsv('article;warehouseCode;qty;unitCostMDL\n')).draft).toBeUndefined()
+      expect((await importCsv('article;warehouseCode;qty;unitCostMDL\n')).drafts).toEqual([])
     })
 
     it('parseCsv: заголовок, BOM, порожні рядки, номери рядків файлу', () => {
@@ -166,13 +174,14 @@ describe('A12: початкові залишки і CSV-імпорт', () => {
     const importedDraft = async (lines: Array<{ article: string; code: string; qty: number; cost: string }>) => {
       const report = await importCsv(lines.map((l) => `${l.article};${l.code};${l.qty};${l.cost}`).join('\n'))
       expect(report.errors).toEqual([])
-      return report.draft!
+      expect(report.drafts).toHaveLength(1)
+      return report.drafts[0]!
     }
 
-    it('проведення як прихід: кеш, журнал opening, вартість quantity × unitCostBani', async () => {
+    it('проведення як прихід на склад шапки: кеш, журнал opening, вартість quantity × unitCostBani', async () => {
       const [a, b] = [await newProduct(), await newProduct()]
       const draft = await importedDraft([
-        { article: a.article, code: mainCode, qty: 4, cost: '115,00' },
+        { article: a.article, code: shopCode, qty: 4, cost: '115,00' },
         { article: b.article, code: shopCode, qty: 3, cost: '249,90' },
       ])
 
@@ -181,12 +190,14 @@ describe('A12: початкові залишки і CSV-імпорт', () => {
       expect(posted.status).toBe('posted')
       expect(await costOf(payload, a.id)).toEqual({ qty: 4, valueBani: 46000 })
       expect(await costOf(payload, b.id)).toEqual({ qty: 3, valueBani: 74970 })
-      expect(await qtyAt(payload, a.id, mainId)).toBe(4)
+      expect(await qtyAt(payload, a.id, shopId)).toBe(4)
       expect(await qtyAt(payload, b.id, shopId)).toBe(3)
+      expect(await qtyAt(payload, a.id, mainId)).toBe(0)
 
       const moves = await movesOfDoc(payload, 'opening-balances', draft.id)
       expect(moves).toHaveLength(2)
       expect(moves.every((move) => move.moveType === 'opening' && move.docNumber === posted.number)).toBe(true)
+      expect(moves.every((move) => String(move.warehouse) === shopId)).toBe(true)
     })
 
     it('сторно повертає кеш у вихідний стан; якщо вже продано, відхиляється', async () => {
@@ -212,9 +223,9 @@ describe('A12: початкові залишки і CSV-імпорт', () => {
       expect(moves.reduce((sum, move) => sum + move.valueDeltaBani, 0)).toBe(0)
     })
 
-    it('дубль товар × склад у чернетці відхиляється й при ручному вводі', async () => {
+    it('дубль товару в чернетці відхиляється й при ручному вводі', async () => {
       const a = await newProduct()
-      const line = { product: a.id, warehouse: mainId, quantity: 1, unitCostBani: 100 }
+      const line = { product: a.id, quantity: 1, unitCostBani: 100 }
 
       await expect(
         payload.create({
@@ -223,11 +234,29 @@ describe('A12: початкові залишки і CSV-імпорт', () => {
             status: 'draft',
             kind: 'stock',
             documentDate: '2026-10-24T00:00:00.000Z',
+            warehouse: mainId,
             stockLines: [line, { ...line, quantity: 2 }],
           },
           ...asAdmin,
         }),
-      ).rejects.toThrow(/only once per warehouse/)
+      ).rejects.toThrow(/only once in a stock opening balance/)
+    })
+
+    it('kind=stock без складу в шапці не зберігається', async () => {
+      const a = await newProduct()
+
+      await expect(
+        payload.create({
+          collection: 'opening-balances',
+          data: {
+            status: 'draft',
+            kind: 'stock',
+            documentDate: '2026-10-24T00:00:00.000Z',
+            stockLines: [{ product: a.id, quantity: 1, unitCostBani: 100 }],
+          },
+          ...asAdmin,
+        }),
+      ).rejects.toThrow()
     })
 
     it('проведений документ не змінюється, доступ лише admin', async () => {

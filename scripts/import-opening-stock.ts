@@ -1,13 +1,14 @@
 /**
- * Імпорт початкових залишків товару з CSV у чернетку `opening-balances` (docs/accounting/design.md, розд. 10).
+ * Імпорт початкових залишків товару з CSV у чернетки `opening-balances` (docs/accounting/design.md, розд. 10).
  *
  * Запуск (з кореня проєкту, потрібен `.env` з DATABASE_URI):
  *   npx tsx scripts/import-opening-stock.ts <file.csv> [--date=2026-10-24]
  *
  * Формат рядка: `article; warehouseCode; qty; unitCostMDL` (роздільник `;`, перший рядок
- * із заголовком необов'язковий, десяткова кома або крапка). Скрипт створює лише чернетку:
- * провести її може admin в адмінці. Якщо в файлі є хоч одна помилка, чернетка не створюється,
- * а звіт перелічує всі проблеми одразу, щоб виправити файл за один прохід.
+ * із заголовком необов'язковий, десяткова кома або крапка). Склад указується в шапці документа,
+ * тож скрипт створює окрему чернетку на кожен склад із файлу: провести їх може admin в адмінці.
+ * Якщо в файлі є хоч одна помилка, жодна чернетка не створюється, а звіт перелічує всі проблеми
+ * одразу, щоб виправити файл за один прохід.
  */
 import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
@@ -19,8 +20,8 @@ import { toBani } from '../src/utilities/money'
 export type ImportError = { line: number; message: string }
 
 export type ImportReport = {
-  /** Створена чернетка; відсутня, якщо є помилки. */
-  draft?: { id: number | string; number: string; lines: number }
+  /** Створені чернетки, по одній на склад у порядку першої появи у файлі; порожньо, якщо є помилки. */
+  drafts: Array<{ id: number | string; number: string; warehouseCode: string; lines: number }>
   errors: ImportError[]
 }
 
@@ -46,7 +47,7 @@ export const parseCsv = (text: string): ParsedRow[] => {
   return rows
 }
 
-type ResolvedLine = { warehouse: string; product: string; quantity: number; unitCostBani: number }
+type ResolvedLine = { product: string; quantity: number; unitCostBani: number }
 
 export const importOpeningStock = async (
   payload: Payload,
@@ -54,7 +55,7 @@ export const importOpeningStock = async (
   { documentDate = new Date().toISOString() }: { documentDate?: string } = {},
 ): Promise<ImportReport> => {
   const errors: ImportError[] = []
-  const lines: ResolvedLine[] = []
+  const byWarehouse = new Map<string, { code: string; lines: ResolvedLine[] }>()
   const seen = new Map<string, number>()
   const rows = parseCsv(csv)
 
@@ -138,24 +139,33 @@ export const importOpeningStock = async (
     }
 
     if (valid && product && warehouse) {
-      lines.push({ warehouse, product, quantity: qty, unitCostBani })
+      const group = byWarehouse.get(warehouse) ?? { code: row.warehouseCode, lines: [] }
+      group.lines.push({ product, quantity: qty, unitCostBani })
+      byWarehouse.set(warehouse, group)
     }
   }
 
   if (rows.length === 0) errors.push({ line: 0, message: 'The file has no data rows' })
-  if (errors.length > 0) return { errors }
+  if (errors.length > 0) return { drafts: [], errors }
 
-  const draft = await payload.create({
-    collection: 'opening-balances',
-    data: { status: 'draft', kind: 'stock', documentDate, stockLines: lines },
-  })
+  const drafts: ImportReport['drafts'] = []
+  for (const [warehouse, group] of byWarehouse) {
+    const draft = await payload.create({
+      collection: 'opening-balances',
+      data: { status: 'draft', kind: 'stock', documentDate, warehouse, stockLines: group.lines },
+    })
+    drafts.push({ id: draft.id, number: draft.number ?? '', warehouseCode: group.code, lines: group.lines.length })
+  }
 
-  return { draft: { id: draft.id, number: draft.number ?? '', lines: lines.length }, errors }
+  return { drafts, errors }
 }
 
 export const formatReport = (report: ImportReport): string => {
-  if (report.errors.length === 0 && report.draft) {
-    return `Draft ${report.draft.number} created with ${report.draft.lines} lines. Review and post it in the admin panel.`
+  if (report.errors.length === 0 && report.drafts.length > 0) {
+    return [
+      `${report.drafts.length} draft(s) created. Review and post them in the admin panel:`,
+      ...report.drafts.map((draft) => `  ${draft.number}: warehouse ${draft.warehouseCode}, ${draft.lines} lines`),
+    ].join('\n')
   }
 
   return [

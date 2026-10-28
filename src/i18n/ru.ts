@@ -113,7 +113,7 @@ export const ru: CustomTranslationsObject = {
       unitCostPositive: 'Себестоимость единицы должна быть больше 0',
       transferSameWarehouse: 'Склад-источник и склад-получатель должны различаться',
       openingNoLines: 'Начальный остаток без строк нельзя провести',
-      openingDuplicate: 'Товар может встречаться только один раз на склад',
+      openingDuplicate: 'Товар может встречаться только один раз в начальных остатках товара',
       openingDuplicateAccount: 'Касса может встречаться только один раз в начальных остатках',
       insufficientCash: 'Недостаточно средств в кассе {{account}}: запрошено {{requested}}, доступно {{available}}',
       cashMovesReverted: 'Движения денег этого документа уже сторнированы',

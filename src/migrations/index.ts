@@ -3,6 +3,7 @@ import * as migration_20261025_100000_seed_warehouses from './20261025_100000_se
 import * as migration_20261026_100000_seed_cash_accounts from './20261026_100000_seed_cash_accounts';
 import * as migration_20261027_100000_backfill_customer_moves from './20261027_100000_backfill_customer_moves';
 import * as migration_20261027_110000_customer_balance_debts from './20261027_110000_customer_balance_debts';
+import * as migration_20261028_100000_opening_stock_warehouse from './20261028_100000_opening_stock_warehouse';
 
 export const migrations = [
   {
@@ -29,5 +30,10 @@ export const migrations = [
     up: migration_20261027_110000_customer_balance_debts.up,
     down: migration_20261027_110000_customer_balance_debts.down,
     name: '20261027_110000_customer_balance_debts'
+  },
+  {
+    up: migration_20261028_100000_opening_stock_warehouse.up,
+    down: migration_20261028_100000_opening_stock_warehouse.down,
+    name: '20261028_100000_opening_stock_warehouse'
   },
 ];
