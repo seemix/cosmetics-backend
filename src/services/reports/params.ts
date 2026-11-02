@@ -14,7 +14,7 @@ export const DEFAULT_LIMIT = 50
 export const MAX_LIMIT = 200
 const MAX_QUERY_LENGTH = 100
 
-export type ParamErrorReason = 'required' | 'format' | 'range' | 'order' | 'not_found'
+export type ParamErrorReason = 'required' | 'format' | 'range' | 'order' | 'not_found' | 'same'
 export type ParamError = { field: string; reason: ParamErrorReason }
 
 export class ReportParamsError extends Error {
@@ -47,6 +47,7 @@ type Reference = { collection: string; filter?: Record<string, unknown> }
 
 export const REFERENCES = {
   warehouse: { collection: 'warehouses' },
+  source: { collection: 'warehouses' },
   supplier: { collection: 'suppliers' },
   category: { collection: 'expense-categories' },
   account: { collection: 'cash-accounts' },
@@ -111,10 +112,13 @@ export class ReportParams {
     return { day: value, at: endOfDay(value) }
   }
 
-  /** Необов'язковий id документа відомого типу. */
-  reference(name: keyof typeof REFERENCES): string | undefined {
+  /** Id документа відомого типу; необов'язковий, якщо не `required`. */
+  reference(name: keyof typeof REFERENCES, { required = false }: { required?: boolean } = {}): string | undefined {
     const value = this.raw(name)
-    if (value === undefined) return undefined
+    if (value === undefined) {
+      if (required) this.fail(name, 'required')
+      return undefined
+    }
     if (!OBJECT_ID.test(value)) {
       this.fail(name, 'format')
       return undefined
@@ -177,6 +181,11 @@ export class ReportParams {
     }
 
     return value
+  }
+
+  /** Два параметри не можуть мати однакове значення (напр. склад-джерело й склад-приймач). */
+  distinct(name: string, value: string | undefined, other: string | undefined) {
+    if (value !== undefined && value === other) this.fail(name, 'same')
   }
 
   /** Перевіряє існування id і кидає `ReportParamsError`, якщо є хоч одна помилка. */

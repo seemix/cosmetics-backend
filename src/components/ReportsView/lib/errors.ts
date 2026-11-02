@@ -21,6 +21,7 @@ const FIELDS: Record<string, CustomTranslationsKeys> = {
   to: 'custom:reports:filterTo',
   asOf: 'custom:reports:filterAsOf',
   warehouse: 'custom:term:warehouse',
+  source: 'custom:reports:salesSource',
   supplier: 'custom:term:supplier',
   category: 'custom:reports:filterCategory',
   account: 'custom:term:cashAccount',
@@ -37,6 +38,7 @@ const REASONS: Record<string, CustomTranslationsKeys> = {
   range: 'custom:reports:reasonRange',
   order: 'custom:reports:reasonOrder',
   not_found: 'custom:reports:reasonNotFound',
+  same: 'custom:reports:reasonSame',
 }
 
 /** Ключі підпису поля й причини; `null`, якщо невідомі (тоді показується сирий рядок). */

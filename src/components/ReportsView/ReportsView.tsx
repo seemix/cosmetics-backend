@@ -9,6 +9,7 @@ import type { ExpensesReport } from '@/services/reports/expenses.service'
 import type { ProfitReport } from '@/services/reports/profit.service'
 import type { PurchasesReport } from '@/services/reports/purchases.service'
 import type { SalaryReport } from '@/services/reports/salary.service'
+import type { SalesReport } from '@/services/reports/sales.service'
 import type { StockReport } from '@/services/reports/stock.service'
 
 import { canRetry, errorKey, fieldErrorKeys, type ReportError } from './lib/errors'
@@ -20,19 +21,21 @@ import { ExpensesTab } from './tabs/Expenses'
 import { ProfitTab } from './tabs/Profit'
 import { PurchasesTab } from './tabs/Purchases'
 import { SalaryTab } from './tabs/Salary'
+import { SalesTab } from './tabs/Sales'
 import { StockTab } from './tabs/Stock'
 import './styles.css'
 
 const TAB_LABELS: Record<ReportTab, CustomTranslationsKeys> = {
   profit: 'custom:reports:tabProfit',
   stock: 'custom:reports:tabStock',
+  sales: 'custom:reports:tabSales',
   purchases: 'custom:reports:tabPurchases',
   expenses: 'custom:reports:tabExpenses',
   debts: 'custom:reports:tabDebts',
   salary: 'custom:reports:tabSalary',
 }
 
-type ReportData = ProfitReport | StockReport | PurchasesReport | ExpensesReport | DebtsReport | SalaryReport
+type ReportData = ProfitReport | StockReport | SalesReport | PurchasesReport | ExpensesReport | DebtsReport | SalaryReport
 
 type Result = { url: string; data?: ReportData; error?: ReportError }
 
@@ -96,6 +99,8 @@ const Report = ({ state, data, onPage }: { state: ViewState; data: ReportData; o
       return <ProfitTab data={data as ProfitReport} />
     case 'stock':
       return <StockTab data={data as StockReport} onPage={onPage} />
+    case 'sales':
+      return <SalesTab data={data as SalesReport} state={state} />
     case 'purchases':
       return <PurchasesTab data={data as PurchasesReport} onPage={onPage} />
     case 'expenses':

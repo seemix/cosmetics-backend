@@ -84,6 +84,8 @@ describe('валідація періоду на клієнті', () => {
     const state = { ...defaultState(new Date('2026-05-15T12:00:00Z'), 'UTC'), tab: 'stock' as const, from: '2026-05-10', to: '2026-05-01' }
     expect(validateState(state)).toBeNull()
     expect(validateState({ ...state, tab: 'profit' })).toBe('order')
+    expect(validateState({ ...state, tab: 'sales', to: '2026-05-10', warehouse: '' })).toBe('warehouseRequired')
+    expect(validateState({ ...state, tab: 'sales', to: '2026-05-10', warehouse: 'a'.repeat(24) })).toBeNull()
   })
 })
 
@@ -146,6 +148,7 @@ describe('стан у URL', () => {
     )
     expect(buildReportUrl({ ...state, tab: 'purchases', onlyPositive: 'false' }, '/api')).not.toContain('onlyPositive')
     expect(parse(serializeState({ ...state, tab: 'stock', onlyPositive: 'false' })).onlyPositive).toBe('false')
+    expect(buildReportUrl({ ...state, tab: 'sales', sort: 'qtyAsc' }, '/api')).toBe(`/api/reports/sales?from=2026-01-01&to=2026-02-01&warehouse=${ID}`)
     expect(buildReportUrl({ ...state, tab: 'debts', asOf: '2026-03-01', page: 1 }, '/custom-api')).toBe(
       '/custom-api/reports/debts?asOf=2026-03-01',
     )

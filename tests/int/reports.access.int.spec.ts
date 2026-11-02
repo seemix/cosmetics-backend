@@ -1,12 +1,13 @@
 import { getPayload, type Endpoint, type Payload } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { reportEndpoints } from '@/endpoints/reports'
+import { reportActionEndpoints, reportEndpoints } from '@/endpoints/reports'
 import { debtsReport } from '@/endpoints/reports/debts'
 import { expensesReport } from '@/endpoints/reports/expenses'
 import { profitReport } from '@/endpoints/reports/profit'
 import { purchasesReport } from '@/endpoints/reports/purchases'
 import { salaryReport } from '@/endpoints/reports/salary'
+import { salesReport, salesTransfer } from '@/endpoints/reports/sales'
 import { stockReport } from '@/endpoints/reports/stock'
 import config from '@/payload.config'
 
@@ -15,6 +16,8 @@ import { type Caller, callReport } from './helpers/reports'
 let payload: Payload
 
 const period = { from: '2003-01-01', to: '2003-01-31' }
+// Існуючий склад для валідного запиту продажів; підставляється в beforeAll.
+const salesValid: Record<string, string> = { ...period }
 
 /** Кожен шлях звітів: валідні параметри й набір неправильних з очікуваною помилкою. */
 const cases: Array<{
@@ -80,6 +83,14 @@ const cases: Array<{
       { query: { from: '2003-01-01', to: '2004-12-31' }, code: 'PERIOD_TOO_LONG' },
     ],
   },
+  {
+    endpoint: salesReport,
+    valid: salesValid,
+    invalid: [
+      { query: period, code: 'INVALID_PARAMS', fields: [{ field: 'warehouse', reason: 'required' }] },
+      { query: { ...period, warehouse: 'ffffffffffffffffffffffff' }, code: 'INVALID_PARAMS', fields: [{ field: 'warehouse', reason: 'not_found' }] },
+    ],
+  },
 ]
 
 const expected: Record<Caller, number> = { guest: 401, customer: 403, manager: 403, admin: 200 }
@@ -88,6 +99,8 @@ const codes: Partial<Record<Caller, string>> = { guest: 'UNAUTHORIZED', customer
 describe('R1: доступ до звітів і параметри', () => {
   beforeAll(async () => {
     payload = await getPayload({ config: await config })
+    const warehouse = (await payload.find({ collection: 'warehouses', limit: 1, depth: 0 })).docs[0]
+    salesValid.warehouse = String(warehouse.id)
   })
 
   it('кожен зареєстрований шлях звіту покритий цим тестом і зареєстрований у конфігурації', () => {
@@ -97,6 +110,8 @@ describe('R1: доступ до звітів і параметри', () => {
     for (const path of covered) {
       expect(payload.config.endpoints.some((endpoint) => endpoint.path === path && endpoint.method === 'get')).toBe(true)
     }
+    expect(reportActionEndpoints).toEqual([salesTransfer])
+    expect(payload.config.endpoints.some((endpoint) => endpoint.path === salesTransfer.path && endpoint.method === 'post')).toBe(true)
   })
 
   describe.each(cases)('$endpoint.path', ({ endpoint, valid, invalid }) => {

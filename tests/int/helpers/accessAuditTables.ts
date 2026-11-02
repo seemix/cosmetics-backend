@@ -283,6 +283,20 @@ export const ENDPOINTS: EndpointCase[] = [
   report('debts'),
   report('salary'),
   {
+    ...report('sales'),
+    // Без складу admin отримує 400 (warehouse required); успішний шлях покрито в reports.sales.int.spec.ts.
+    expect: adminOnly(400),
+  },
+  {
+    key: 'POST /reports/sales/transfer',
+    access: 'admin',
+    why: 'R1: чернетка переміщення за звітом продажів, лише admin; роль перевіряється першою (requireAdmin)',
+    // Без параметрів admin отримує 400 і документ не створюється; успішний шлях у reports.sales.int.spec.ts.
+    request: () => ({ method: 'POST', path: '/reports/sales/transfer' }),
+    expect: adminOnly(400),
+    garbage: { method: 'POST', path: `/reports/sales/transfer${REPORT_GARBAGE}&source=%00` },
+  },
+  {
     key: 'POST /users/favorites',
     access: 'auth',
     why: 'обране поточного користувача',

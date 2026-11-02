@@ -2,8 +2,8 @@
 
 import { useEffect, useId, useState } from 'react'
 
-import { PRESETS, presetRange, type PeriodError, type PresetId } from '../lib/periods'
-import { STOCK_SORTS, usesPeriod, type StockSortState, type ViewState } from '../lib/urlState'
+import { PRESETS, presetRange, type PresetId } from '../lib/periods'
+import { STOCK_SORTS, usesPeriod, type StateError, type StockSortState, type ViewState } from '../lib/urlState'
 import { useReports } from './Ui'
 import type { CustomTranslationsKeys } from '@/i18n'
 
@@ -16,11 +16,12 @@ const PRESET_LABELS: Record<PresetId, CustomTranslationsKeys> = {
   yearToDate: 'custom:reports:presetYearToDate',
 }
 
-const PERIOD_ERRORS: Record<PeriodError, CustomTranslationsKeys> = {
+const PERIOD_ERRORS: Record<StateError, CustomTranslationsKeys> = {
   required: 'custom:reports:periodRequired',
   format: 'custom:reports:periodFormat',
   order: 'custom:reports:periodOrder',
   tooLong: 'custom:reports:periodTooLong',
+  warehouseRequired: 'custom:reports:warehouseRequired',
 }
 
 const SORT_LABELS: Record<StockSortState, CustomTranslationsKeys> = {
@@ -67,7 +68,7 @@ const SOURCES = {
 type SelectName = keyof typeof SOURCES
 
 /** Список значень для фільтра з REST колекції (до 200 записів), без власних ендпоінтів. */
-const OptionSelect = ({
+export const OptionSelect = ({
   name,
   label,
   value,
@@ -153,7 +154,7 @@ export const Filters = ({
   onChange,
 }: {
   state: ViewState
-  periodError: PeriodError | null
+  periodError: StateError | null
   onChange: (patch: Partial<ViewState>) => void
 }) => {
   const { t, timeZone } = useReports()
@@ -204,6 +205,9 @@ export const Filters = ({
           </label>
         </>
       )}
+      {tab === 'sales' && (
+        <OptionSelect name="warehouse" label={t('custom:term:warehouse')} value={state.warehouse} onChange={(warehouse) => onChange({ warehouse })} />
+      )}
       {tab === 'purchases' && (
         <OptionSelect name="supplier" label={t('custom:term:supplier')} value={state.supplier} onChange={(supplier) => onChange({ supplier })} />
       )}
@@ -216,7 +220,8 @@ export const Filters = ({
       {tab === 'salary' && (
         <OptionSelect name="manager" label={t('custom:term:manager')} value={state.manager} onChange={(manager) => onChange({ manager })} />
       )}
-      {periodError && (
+      {periodError === 'warehouseRequired' && <p className="reports__muted">{t(PERIOD_ERRORS[periodError])}</p>}
+      {periodError && periodError !== 'warehouseRequired' && (
         <p className="reports__error" role="alert">
           {t(PERIOD_ERRORS[periodError], { days: '400' })}
         </p>

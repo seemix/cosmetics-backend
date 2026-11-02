@@ -38,20 +38,24 @@ const paramsErrorResponse = (req: PayloadRequest, error: ReportParamsError): Res
 
 /**
  * Тонкий ендпоінт звіту: роль, параметри, сервіс, відповідь. `run` читає параметри через
- * `ReportParams`, викликає `params.finish()` до звернення до сервісу і повертає тіло відповіді.
+ * `ReportParams`, викликає `params.finish()` до звернення до сервісу і повертає тіло відповіді
+ * (або готову `Response`, якщо потрібен інший статус). Типово `GET`; дія на основі звіту `POST`.
  */
 export const reportEndpoint = (
   name: string,
   run: (req: PayloadRequest, params: ReportParams) => Promise<unknown>,
+  method: 'get' | 'post' = 'get',
 ): Endpoint => ({
   path: `/reports/${name}`,
-  method: 'get',
+  method,
   handler: async (req: PayloadRequest): Promise<Response> => {
     const denied = requireAdmin(req)
     if (denied) return denied
 
     try {
-      return reportResponse(await run(req, new ReportParams(req)))
+      const result = await run(req, new ReportParams(req))
+
+      return result instanceof Response ? result : reportResponse(result)
     } catch (error) {
       if (error instanceof ReportParamsError) return paramsErrorResponse(req, error)
 

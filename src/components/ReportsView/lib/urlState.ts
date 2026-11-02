@@ -6,7 +6,7 @@ import { isDay, presetRange, validatePeriod, type PeriodError } from './periods'
  * лишаються й показуються повідомленням, запит у такому разі не надсилається.
  */
 
-export const TABS = ['profit', 'stock', 'purchases', 'expenses', 'debts', 'salary'] as const
+export const TABS = ['profit', 'stock', 'sales', 'purchases', 'expenses', 'debts', 'salary'] as const
 export type ReportTab = (typeof TABS)[number]
 
 /** Сортування залишків; порожнє — за назвою (типове, у URL не пишеться). */
@@ -36,7 +36,7 @@ const OBJECT_ID = /^[0-9a-fA-F]{24}$/
 const MAX_QUERY_LENGTH = 100
 const MAX_PAGE = 1_000_000
 
-const PERIOD_TABS: readonly ReportTab[] = ['profit', 'purchases', 'expenses', 'salary']
+const PERIOD_TABS: readonly ReportTab[] = ['profit', 'sales', 'purchases', 'expenses', 'salary']
 
 export const usesPeriod = (tab: ReportTab) => PERIOD_TABS.includes(tab)
 
@@ -44,6 +44,7 @@ export const usesPeriod = (tab: ReportTab) => PERIOD_TABS.includes(tab)
 const TAB_PARAMS: Record<ReportTab, ReadonlyArray<Exclude<keyof ViewState, 'tab'>>> = {
   profit: ['from', 'to'],
   stock: ['warehouse', 'q', 'sort', 'onlyPositive', 'page'],
+  sales: ['from', 'to', 'warehouse'],
   purchases: ['from', 'to', 'supplier', 'page'],
   expenses: ['from', 'to', 'category', 'account', 'page'],
   debts: ['asOf', 'page'],
@@ -133,6 +134,13 @@ export const buildReportUrl = (state: ViewState, apiRoute: string): string => {
   return `${apiRoute}/reports/${state.tab}${query ? `?${query}` : ''}`
 }
 
+/** Помилка стану: період або не обраний обов'язковий склад (продажі по складу). */
+export type StateError = PeriodError | 'warehouseRequired'
+
 /** Клієнтська валідація, що відповідає серверу; `null`, якщо запит можна надсилати. */
-export const validateState = (state: ViewState): PeriodError | null =>
-  usesPeriod(state.tab) ? validatePeriod(state.from, state.to) : null
+export const validateState = (state: ViewState): StateError | null => {
+  const period = usesPeriod(state.tab) ? validatePeriod(state.from, state.to) : null
+  if (period) return period
+
+  return state.tab === 'sales' && !state.warehouse ? 'warehouseRequired' : null
+}

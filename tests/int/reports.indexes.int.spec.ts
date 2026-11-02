@@ -162,7 +162,7 @@ describe('R1: звіти паралельно із записом докумен
 
     const before = await snapshot()
     for (const endpoint of reportEndpoints) {
-      const { status } = await callReport(payload, endpoint, { from: writeDay, to: writeDay })
+      const { status } = await callReport(payload, endpoint, { from: writeDay, to: writeDay, warehouse: s.warehouse })
       expect(status).toBe(200)
     }
     expect(await snapshot()).toEqual(before)
