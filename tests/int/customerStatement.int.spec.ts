@@ -210,15 +210,15 @@ describe('Виписка по клієнту (розд. 6.5)', () => {
       expect(html).toContain('-50.00')
       expect(html).toContain('Closing balance')
 
-      // Рядок нарахування замовлення, одразу за ним позиція й стан оплати, потім наступний рух.
+      // Рядок нарахування замовлення, одразу за ним позиція, потім наступний рух.
+      // Рядка стану оплати під замовленням немає з 057ec26 (спрощена виписка).
       const orderRow = html.indexOf(`Order ${order.orderNumber}<`)
       const item = html.indexOf('1 × 100.00 = 100.00')
-      const summary = html.indexOf('paid 80.00, left to pay 20.00')
       const nextPayment = html.indexOf(`Payment received, order ${order.orderNumber}`)
       expect(orderRow).toBeGreaterThan(0)
       expect(item).toBeGreaterThan(orderRow)
-      expect(summary).toBeGreaterThan(item)
-      expect(nextPayment).toBeGreaterThan(summary)
+      expect(nextPayment).toBeGreaterThan(item)
+      expect(html).not.toContain('left to pay')
     })
 
     it('не-admin 403, гість 401; неправильний період 400; невідомий баланс 404', async () => {
