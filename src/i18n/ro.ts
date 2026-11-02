@@ -86,7 +86,7 @@ export const ro: CustomTranslationsObject = {
       orderWarehouseRequired: 'Evidența stocului este activă, dar comanda nu are depozit: setați depozitul implicit în setările contabile',
       postedOrderLocked: 'Comanda operată nu poate fi editată: pozițiile, suma, reducerea și clientul sunt fixate',
       cancelledOrderFinal: 'Statusul unei comenzi anulate nu poate fi schimbat',
-      managerOrderTransition: 'Managerul poate doar trece comanda din starea „În așteptare” în „Expediată”',
+      managerOrderTransition: 'Managerul poate edita doar o comandă neexpediată și neplătită și poate trece starea doar din „În așteptare” în „Expediată”',
       managerCannotPublish: 'Managerul poate salva doar ciorne ale produsului; le publică administratorul',
       paidOrderCancel: 'Comanda are plăți: mai întâi rambursați clientul',
       postedOrderNotDeletable: 'Comanda cu stoc descărcat nu poate fi ștearsă, doar anulată',

@@ -88,7 +88,7 @@ export const en = {
       orderWarehouseRequired: 'Stock control is on, but the order has no warehouse: set the default warehouse in the accounting settings',
       postedOrderLocked: 'A posted order cannot be edited: items, total, discount and customer are frozen',
       cancelledOrderFinal: 'A cancelled order cannot change its status',
-      managerOrderTransition: 'A manager can only change the order status from Pending to Shipped',
+      managerOrderTransition: 'A manager can edit only an unshipped unpaid order and change the status only from Pending to Shipped',
       managerCannotPublish: 'A manager can only save product drafts; an administrator publishes them',
       paidOrderCancel: 'The order has payments: refund the customer before cancelling',
       postedOrderNotDeletable: 'An order with deducted stock cannot be deleted, cancel it instead',

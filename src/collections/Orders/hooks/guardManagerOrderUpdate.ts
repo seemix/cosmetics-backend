@@ -2,6 +2,7 @@ import { APIError, type CollectionBeforeChangeHook } from 'payload'
 
 import { isManager } from '@/access/isAdmin'
 import { customT } from '@/i18n'
+import { isOrderEditable } from '@/services/orders/orderState'
 
 /** Службові поля, які адмінка надсилає разом із документом і які не є зміною замовлення. */
 const IGNORED_KEYS = new Set(['id', 'createdAt', 'updatedAt'])
@@ -34,9 +35,11 @@ const normalize = (value: unknown): unknown => {
 const same = (next: unknown, prev: unknown) => JSON.stringify(normalize(next)) === JSON.stringify(normalize(prev))
 
 /**
- * Менеджер змінює замовлення лише переходом `pending → shipped` (розд. 11, В9).
- * Права на update у нього є, тому обмеження тут: будь-яка інша зміна поля чи статусу відхиляється.
- * Поля без права на запис Payload уже прибрав з `data` (field access). Має йти першим у `beforeChange`.
+ * Менеджер змінює статус замовлення лише переходом `pending → shipped` (розд. 11, В9).
+ * Поля він може змінити лише в замовленні, що чекає відвантаження й не оплачене (В21):
+ * ціни, суму й виручку тоді перераховують хуки, а поля без права на запис (ціна позиції, склад,
+ * облікові) Payload уже прибрав з `data` (field access). В іншому замовленні будь-яка зміна поля
+ * відхиляється. Має йти першим у `beforeChange`.
  */
 export const guardManagerOrderUpdate: CollectionBeforeChangeHook = ({ data, originalDoc, operation, req }) => {
   if (operation !== 'update' || !data || !originalDoc || !isManager(req.user)) return data
@@ -45,9 +48,11 @@ export const guardManagerOrderUpdate: CollectionBeforeChangeHook = ({ data, orig
     throw new APIError(customT(req.t)('custom:error:managerOrderTransition'), 403, undefined, true)
   }
 
-  for (const key of Object.keys(data)) {
-    if (IGNORED_KEYS.has(key) || key === 'status') continue
-    if (!same(data[key], originalDoc[key])) reject()
+  if (!isOrderEditable(originalDoc)) {
+    for (const key of Object.keys(data)) {
+      if (IGNORED_KEYS.has(key) || key === 'status') continue
+      if (!same(data[key], originalDoc[key])) reject()
+    }
   }
 
   const status = data.status ?? originalDoc.status

@@ -16,7 +16,11 @@ export const populatePricesAndTotal: CollectionBeforeChangeHook = async ({ data,
       !sameItems(data.items, originalDoc.items) ||
       cents(data.discount) !== cents(originalDoc.discount) ||
       relationID(data.customer) !== relationID(originalDoc.customer)
-    if (!changed) return data
+    // Суму окремо від позицій не змінити: вона лише похідна.
+    if (!changed) {
+      data.total = originalDoc.total
+      return data
+    }
   } else if (operation !== 'create') {
     return data
   }

@@ -449,10 +449,10 @@ describe('M1: матриця прав (розд. 11)', () => {
       ['pending → paid', 'pending', { status: 'paid' }],
       ['shipped → pending', 'shipped', { status: 'pending' }],
       ['shipped → cancelled', 'shipped', { status: 'cancelled' }],
-      ['зміна total', 'pending', { total: 1 }],
-      ['зміна items', 'pending', { items: [{ product: publishedProduct, quantity: 5, price: 100 }] }],
-      ['зміна customer', 'pending', { customer: 'CUSTOMER' }],
-      ['зміна коментаря разом зі статусом', 'pending', { status: 'shipped', comment: 'інше' }],
+      ['зміна total відвантаженого', 'shipped', { total: 1 }],
+      ['зміна items відвантаженого', 'shipped', { items: [{ product: publishedProduct, quantity: 5, price: 100 }] }],
+      ['зміна customer відвантаженого', 'shipped', { customer: 'CUSTOMER' }],
+      ['зміна коментаря відвантаженого', 'shipped', { comment: 'інше' }],
     ])('manager: %s відхиляється', async (_name, status, changes) => {
       const order = await adminOrder(String(users.customer.id), status)
       const patch = { ...changes } as Record<string, unknown>
@@ -462,6 +462,35 @@ describe('M1: матриця прав (розд. 11)', () => {
       const after = await payload.findByID({ collection: 'orders', id: order.id, depth: 0 })
       expect(after.status).toBe(status)
       expect(after.total).toBe(order.total)
+    })
+
+    it('manager редагує невідвантажене замовлення (В21): позиції, клієнт, коментар; ціна з каталогу, сума не задається напряму', async () => {
+      const order = await adminOrder(String(users.customer.id))
+
+      const ignoredTotal = await managerUpdate(order.id, { total: 1 })
+      expect(ignoredTotal.total).toBe(order.total)
+
+      const updated = await managerUpdate(order.id, {
+        items: [{ product: publishedProduct, quantity: 3, price: 1 }],
+        customer: String(otherCustomer.id),
+        comment: 'змінив менеджер',
+        status: 'shipped',
+      })
+      expect(updated.items?.[0]?.price).toBe(100)
+      expect(updated.items?.[0]?.quantity).toBe(3)
+      expect(updated.total).toBe(300)
+      expect(idOf(updated.customer)).toBe(String(otherCustomer.id))
+      expect(updated.comment).toBe('змінив менеджер')
+      expect(updated.status).toBe('shipped')
+
+      const stored = await payload.findByID({ collection: 'orders', id: order.id, depth: 0 })
+      expect(stored.accounting?.revenueBani).toBe(30000)
+      expect(stored.accounting?.stockPostedAt).toBeTruthy()
+
+      // Оплачене гостьове замовлення manager не змінює, навіть невідвантажене.
+      const paid = await adminOrder()
+      await payload.update({ collection: 'orders', id: paid.id, data: { paidBani: 100 }, depth: 0 })
+      await expect(managerUpdate(paid.id, { comment: 'інше' })).rejects.toMatchObject({ status: 403 })
     })
 
     it('manager створює замовлення в «Магазині» без адреси й відвантажує: списання, accounting бачить лише admin', async () => {
