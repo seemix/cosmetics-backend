@@ -26,6 +26,7 @@ const FIELDS: Record<string, CustomTranslationsKeys> = {
   account: 'custom:term:cashAccount',
   manager: 'custom:term:manager',
   q: 'custom:reports:filterSearch',
+  sort: 'custom:reports:filterSort',
   page: 'custom:reports:page',
 }
 

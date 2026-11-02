@@ -129,6 +129,22 @@ describe('R1: звіт залишків', () => {
     expect(onMain.totals.totalValueBani + body.totals.totalValueBani).toBe(100 + 1000 + 5003 + 777)
   })
 
+  it('sort=qtyAsc/qtyDesc: за кількістю рядка, рівні за назвою; totals і пагінація ті самі', async () => {
+    // Кількості: A 3, B 3, D 5, E 7.
+    expect(titles((await stock({ sort: 'qtyAsc' })).items)).toEqual(['A', 'B', 'D', 'E (50%) [x]*.+?'])
+    expect(titles((await stock({ sort: 'qtyDesc' })).items)).toEqual(['E (50%) [x]*.+?', 'D', 'A', 'B'])
+
+    const first = await stock({ sort: 'qtyDesc', limit: 3 })
+    const second = await stock({ sort: 'qtyDesc', limit: 3, page: 2 })
+    expect(titles([...first.items, ...second.items])).toEqual(['E (50%) [x]*.+?', 'D', 'A', 'B'])
+    expect(first.totals).toEqual((await stock()).totals)
+
+    // Зі складом — кількість саме на цьому складі: main A 1, B 3, E 7.
+    expect(titles((await stock({ warehouse: main, sort: 'qtyAsc' })).items)).toEqual(['A', 'B', 'E (50%) [x]*.+?'])
+    // Без залишку (C, 0) першим при зростанні.
+    expect(titles((await stock({ onlyPositive: false, sort: 'qtyAsc' })).items)).toEqual(['C', 'A', 'B', 'D', 'E (50%) [x]*.+?'])
+  })
+
   it('onlyPositive=false показує товар без залишку з нулями', async () => {
     const body = await stock({ onlyPositive: false })
     const c = (body.items as Row[]).find((row) => row.product.id === ids.c)
@@ -146,16 +162,17 @@ describe('R1: звіт залишків', () => {
     expect(titles((await stock({ q: article.toLowerCase() })).items)).toEqual(['B'])
   })
 
-  it('неіснуючий склад: 400 not_found; занадто довгий q: 400 range', async () => {
+  it('неіснуючий склад: 400 not_found; занадто довгий q: 400 range; невідомий sort: 400 format', async () => {
     const missing = await callReport(payload, stockReport, { warehouse: 'aaaaaaaaaaaaaaaaaaaaaaaa' })
     expect(missing.status).toBe(400)
     expect(missing.body.fields).toEqual([{ field: 'warehouse', reason: 'not_found' }])
 
-    const long = await callReport(payload, stockReport, { q: 'x'.repeat(101), onlyPositive: 'maybe' })
+    const long = await callReport(payload, stockReport, { q: 'x'.repeat(101), onlyPositive: 'maybe', sort: 'price' })
     expect(long.status).toBe(400)
     expect(long.body.fields).toEqual([
       { field: 'q', reason: 'range' },
       { field: 'onlyPositive', reason: 'format' },
+      { field: 'sort', reason: 'format' },
     ])
   })
 })

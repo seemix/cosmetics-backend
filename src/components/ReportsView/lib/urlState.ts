@@ -9,6 +9,10 @@ import { isDay, presetRange, validatePeriod, type PeriodError } from './periods'
 export const TABS = ['profit', 'stock', 'purchases', 'expenses', 'debts', 'salary'] as const
 export type ReportTab = (typeof TABS)[number]
 
+/** Сортування залишків; порожнє — за назвою (типове, у URL не пишеться). */
+export const STOCK_SORTS = ['qtyAsc', 'qtyDesc'] as const
+export type StockSortState = '' | (typeof STOCK_SORTS)[number]
+
 export type ViewState = {
   tab: ReportTab
   from: string
@@ -20,6 +24,7 @@ export type ViewState = {
   category: string
   account: string
   manager: string
+  sort: StockSortState
   page: number
 }
 
@@ -34,7 +39,7 @@ export const usesPeriod = (tab: ReportTab) => PERIOD_TABS.includes(tab)
 /** Які параметри (крім вкладки) стосуються вкладки: ті самі йдуть і в URL сторінки, і в запит до R1. */
 const TAB_PARAMS: Record<ReportTab, ReadonlyArray<Exclude<keyof ViewState, 'tab'>>> = {
   profit: ['from', 'to'],
-  stock: ['warehouse', 'q', 'page'],
+  stock: ['warehouse', 'q', 'sort', 'page'],
   purchases: ['from', 'to', 'supplier', 'page'],
   expenses: ['from', 'to', 'category', 'account', 'page'],
   debts: ['asOf', 'page'],
@@ -51,6 +56,7 @@ export const defaultState = (now: Date, timeZone: string): ViewState => ({
   category: '',
   account: '',
   manager: '',
+  sort: '',
   page: 1,
 })
 
@@ -79,6 +85,9 @@ export const parseState = (source: ParamSource, now: Date, timeZone: string): Vi
   const q = read('q')
   if (q.length > 0 && q.length <= MAX_QUERY_LENGTH) state.q = q
 
+  const sort = read('sort')
+  if ((STOCK_SORTS as readonly string[]).includes(sort)) state.sort = sort as StockSortState
+
   const page = read('page')
   if (/^\d{1,7}$/.test(page) && Number(page) >= 1 && Number(page) <= MAX_PAGE) state.page = Number(page)
 
@@ -102,7 +111,7 @@ const paramsFor = (state: ViewState): URLSearchParams => {
 export const serializeState = (state: ViewState): string => {
   const params = new URLSearchParams({ tab: state.tab })
 
-  for (const name of ['from', 'to', 'asOf', 'warehouse', 'q', 'supplier', 'category', 'account', 'manager'] as const) {
+  for (const name of ['from', 'to', 'asOf', 'warehouse', 'q', 'supplier', 'category', 'account', 'manager', 'sort'] as const) {
     if (state[name]) params.set(name, state[name])
   }
   if (state.page > 1) params.set('page', String(state.page))

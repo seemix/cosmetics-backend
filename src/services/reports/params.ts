@@ -158,6 +158,16 @@ export class ReportParams {
     return fallback
   }
 
+  /** Необов'язкове значення з переліку; інше значення — помилка формату. */
+  oneOf<T extends string>(name: string, values: readonly T[], fallback: T): T {
+    const value = this.raw(name)
+    if (value === undefined) return fallback
+    if ((values as readonly string[]).includes(value)) return value as T
+
+    this.fail(name, 'format')
+    return fallback
+  }
+
   /** Рядок пошуку; у запит іде лише екранованим (див. `escapeRegExp`). */
   text(name: string): string | undefined {
     const value = this.raw(name)

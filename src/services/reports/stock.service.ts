@@ -19,11 +19,15 @@ import { escapeRegExp } from './params'
  * Залишки й вартість по товарах (розд. 12) з кешу: `product-costs` (вартість на товар) і
  * `stock-balances` (кількість товар × склад). Вартість складу = частка `product-costs.valueBani`
  * за кількістю методом найбільших залишків, тож Σ складів = вартість товару точно.
- * Один прохід курсором у детермінованому порядку (назва, id товару): totals за всіма сторінками,
- * у пам'яті лише поточна сторінка.
+ * Один прохід курсором у детермінованому порядку (назва, id товару; або спершу кількість, щоб
+ * бачити, що дозамовити): totals за всіма сторінками, у пам'яті лише поточна сторінка.
  */
 
-export type StockFilters = { warehouse?: string; q?: string; onlyPositive: boolean }
+/** `title` — за назвою; `qtyAsc`/`qtyDesc` — за кількістю рядка (на складі фільтра або загальною), далі за назвою. */
+export const STOCK_SORTS = ['title', 'qtyAsc', 'qtyDesc'] as const
+export type StockSort = (typeof STOCK_SORTS)[number]
+
+export type StockFilters = { warehouse?: string; q?: string; onlyPositive: boolean; sort?: StockSort }
 
 export type StockRow = {
   product: { id: string; title: string | null; article: string | null }
@@ -70,7 +74,7 @@ const average = (valueBani: number, qty: number) => (qty > 0 ? Math.round(valueB
 
 export const getStockReport = async (
   req: PayloadRequest,
-  { warehouse, q, onlyPositive }: StockFilters,
+  { warehouse, q, onlyPositive, sort = 'title' }: StockFilters,
   paging: Paging,
 ): Promise<StockReport> => {
   const session = await readSession(req)
@@ -101,7 +105,32 @@ export const getStockReport = async (
       },
     },
     ...(warehouseId && onlyPositive ? [{ $match: { balances: { $elemMatch: { warehouse: warehouseId, qty: { $gt: 0 } } } } }] : []),
-    { $sort: { 'productDoc.title': 1, product: 1 } },
+    // Кількість рядка так само, як `totalQty` нижче: Σ балансів складу фільтра або всіх складів.
+    ...(sort === 'title'
+      ? []
+      : [
+          {
+            $addFields: {
+              sortQty: {
+                $sum: {
+                  $map: {
+                    input: warehouseId
+                      ? { $filter: { input: '$balances', cond: { $eq: ['$$this.warehouse', warehouseId] } } }
+                      : '$balances',
+                    in: '$$this.qty',
+                  },
+                },
+              },
+            },
+          },
+        ]),
+    {
+      $sort: {
+        ...(sort === 'title' ? {} : { sortQty: sort === 'qtyAsc' ? 1 : -1 }),
+        'productDoc.title': 1,
+        product: 1,
+      },
+    },
     { $project: { product: 1, valueBani: 1, productDoc: 1, balances: 1 } },
   ]
 

@@ -103,12 +103,13 @@ describe('стан у URL', () => {
       category: '',
       account: '',
       manager: '',
+      sort: '',
       page: 1,
     })
   })
 
   it('невалідні значення замінюються типовими', () => {
-    const state = parse(`tab=nope&from=2026-02-30&to=abc&asOf=x&warehouse=123&supplier=${ID};drop&page=0&q=${'a'.repeat(101)}`)
+    const state = parse(`tab=nope&from=2026-02-30&to=abc&asOf=x&warehouse=123&supplier=${ID};drop&sort=title&page=0&q=${'a'.repeat(101)}`)
 
     expect(state).toEqual(parse(''))
     expect(parse('page=-3').page).toBe(1)
@@ -136,6 +137,9 @@ describe('стан у URL', () => {
     expect(buildReportUrl({ ...state, tab: 'stock', q: 'крем' }, '/api')).toBe(
       `/api/reports/stock?warehouse=${ID}&q=%D0%BA%D1%80%D0%B5%D0%BC&page=2`,
     )
+    expect(buildReportUrl({ ...state, tab: 'stock', q: '', sort: 'qtyAsc', page: 1 }, '/api')).toBe(`/api/reports/stock?warehouse=${ID}&sort=qtyAsc`)
+    expect(buildReportUrl({ ...state, tab: 'purchases', sort: 'qtyAsc' }, '/api')).not.toContain('sort')
+    expect(parse(serializeState({ ...state, tab: 'stock', sort: 'qtyDesc' })).sort).toBe('qtyDesc')
     expect(buildReportUrl({ ...state, tab: 'debts', asOf: '2026-03-01', page: 1 }, '/custom-api')).toBe(
       '/custom-api/reports/debts?asOf=2026-03-01',
     )

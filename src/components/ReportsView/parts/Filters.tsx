@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from 'react'
 
 import { PRESETS, presetRange, type PeriodError, type PresetId } from '../lib/periods'
-import { usesPeriod, type ViewState } from '../lib/urlState'
+import { STOCK_SORTS, usesPeriod, type StockSortState, type ViewState } from '../lib/urlState'
 import { useReports } from './Ui'
 import type { CustomTranslationsKeys } from '@/i18n'
 
@@ -21,6 +21,31 @@ const PERIOD_ERRORS: Record<PeriodError, CustomTranslationsKeys> = {
   format: 'custom:reports:periodFormat',
   order: 'custom:reports:periodOrder',
   tooLong: 'custom:reports:periodTooLong',
+}
+
+const SORT_LABELS: Record<StockSortState, CustomTranslationsKeys> = {
+  '': 'custom:reports:sortTitle',
+  qtyAsc: 'custom:reports:sortQtyAsc',
+  qtyDesc: 'custom:reports:sortQtyDesc',
+}
+
+/** Порядок рядків залишків: за назвою або за кількістю (мало → багато, щоб бачити, що дозамовити). */
+const SortSelect = ({ value, onChange }: { value: StockSortState; onChange: (value: StockSortState) => void }) => {
+  const { t } = useReports()
+  const id = useId()
+
+  return (
+    <div className="reports__field">
+      <label htmlFor={id}>{t('custom:reports:filterSort')}</label>
+      <select id={id} value={value} onChange={(event) => onChange(event.target.value as StockSortState)}>
+        {(['', ...STOCK_SORTS] as const).map((option) => (
+          <option key={option} value={option}>
+            {t(SORT_LABELS[option])}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
 }
 
 type Source = { slug: string; query: string; label: (doc: Record<string, unknown>) => string }
@@ -168,6 +193,7 @@ export const Filters = ({
         <>
           <OptionSelect name="warehouse" label={t('custom:term:warehouse')} value={state.warehouse} onChange={(warehouse) => onChange({ warehouse })} />
           <SearchInput label={t('custom:reports:filterSearch')} value={state.q} onChange={(q) => onChange({ q })} />
+          <SortSelect value={state.sort} onChange={(sort) => onChange({ sort })} />
         </>
       )}
       {tab === 'purchases' && (
