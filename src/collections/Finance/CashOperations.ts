@@ -324,10 +324,11 @@ export const CashOperations: CollectionConfig = {
         { label: label('custom:option:opCustomerReceipt'), value: 'customer_receipt' },
         { label: label('custom:option:opCustomerRefund'), value: 'customer_refund' },
       ],
+      // Лише значення: результат іде в стан форми на клієнт, а `label` тут функція з `label()`, яку RSC не серіалізує.
       filterOptions: ({ options, req }) =>
-        isManager(req.user)
-          ? options.filter((option) => MANAGER_TYPES.has((typeof option === 'string' ? option : option.value) as CashOperationType))
-          : options,
+        options
+          .map((option) => (typeof option === 'string' ? option : option.value))
+          .filter((value) => !isManager(req.user) || MANAGER_TYPES.has(value as CashOperationType)),
     },
     {
       type: 'row',

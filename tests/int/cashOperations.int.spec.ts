@@ -573,4 +573,22 @@ describe('C2: касові операції', () => {
       expect(docs.map((doc) => doc.id)).toEqual([rent])
     })
   })
+
+  describe('форма в адмінці', () => {
+    // filterOptions поля type іде в стан форми на клієнт (RSC): функція в результаті валить сторінку операції.
+    it('варіанти типу серіалізуються без функцій: admin усі, manager лише свої типи', async () => {
+      const field = payload.collections['cash-operations'].config.fields.find(
+        (candidate) => 'name' in candidate && candidate.name === 'type',
+      ) as { options: unknown[]; filterOptions: (args: unknown) => unknown[] }
+      const optionsFor = async (user: unknown) =>
+        field.filterOptions({ options: field.options, req: await createLocalReq({ user: user as never }, payload), data: {}, siblingData: {} })
+
+      const forAdmin = await optionsFor(admin)
+      const forManager = await optionsFor(manager)
+
+      expect(forAdmin.every((option) => typeof option === 'string')).toBe(true)
+      expect(forAdmin).toEqual(['expense', 'transfer', 'supplier_payment', 'customer_receipt', 'customer_refund'])
+      expect(forManager).toEqual(['expense', 'customer_receipt'])
+    })
+  })
 })
