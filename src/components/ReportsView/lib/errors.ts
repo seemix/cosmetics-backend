@@ -27,6 +27,7 @@ const FIELDS: Record<string, CustomTranslationsKeys> = {
   manager: 'custom:term:manager',
   q: 'custom:reports:filterSearch',
   sort: 'custom:reports:filterSort',
+  onlyPositive: 'custom:reports:filterShowEmpty',
   page: 'custom:reports:page',
 }
 

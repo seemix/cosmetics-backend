@@ -615,6 +615,7 @@ export const ru: CustomTranslationsObject = {
       filterCategory: 'Статья расходов',
       filterSearch: 'Поиск по названию или артикулу',
       filterSort: 'Сортировка',
+      filterShowEmpty: 'Показывать отсутствующие',
       sortTitle: 'По названию',
       sortQtyAsc: 'Количество: по возрастанию',
       sortQtyDesc: 'Количество: по убыванию',

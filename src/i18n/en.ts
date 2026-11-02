@@ -617,6 +617,7 @@ export const en = {
       filterCategory: 'Expense category',
       filterSearch: 'Search by title or article',
       filterSort: 'Sort',
+      filterShowEmpty: 'Show out of stock',
       sortTitle: 'By title',
       sortQtyAsc: 'Quantity: low to high',
       sortQtyDesc: 'Quantity: high to low',

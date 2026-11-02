@@ -194,6 +194,14 @@ export const Filters = ({
           <OptionSelect name="warehouse" label={t('custom:term:warehouse')} value={state.warehouse} onChange={(warehouse) => onChange({ warehouse })} />
           <SearchInput label={t('custom:reports:filterSearch')} value={state.q} onChange={(q) => onChange({ q })} />
           <SortSelect value={state.sort} onChange={(sort) => onChange({ sort })} />
+          <label className="reports__check">
+            <input
+              type="checkbox"
+              checked={state.onlyPositive === 'false'}
+              onChange={(event) => onChange({ onlyPositive: event.target.checked ? 'false' : '' })}
+            />
+            {t('custom:reports:filterShowEmpty')}
+          </label>
         </>
       )}
       {tab === 'purchases' && (

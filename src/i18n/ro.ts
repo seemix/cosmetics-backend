@@ -615,6 +615,7 @@ export const ro: CustomTranslationsObject = {
       filterCategory: 'Categorie de cheltuieli',
       filterSearch: 'Căutare după denumire sau articol',
       filterSort: 'Sortare',
+      filterShowEmpty: 'Afișează produsele lipsă',
       sortTitle: 'După denumire',
       sortQtyAsc: 'Cantitate: crescător',
       sortQtyDesc: 'Cantitate: descrescător',

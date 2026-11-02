@@ -13,6 +13,9 @@ export type ReportTab = (typeof TABS)[number]
 export const STOCK_SORTS = ['qtyAsc', 'qtyDesc'] as const
 export type StockSortState = '' | (typeof STOCK_SORTS)[number]
 
+/** Залишки: `'false'` показує й товари без залишку; порожнє — лише наявні (типове, у URL не пишеться). */
+export type OnlyPositiveState = '' | 'false'
+
 export type ViewState = {
   tab: ReportTab
   from: string
@@ -25,6 +28,7 @@ export type ViewState = {
   account: string
   manager: string
   sort: StockSortState
+  onlyPositive: OnlyPositiveState
   page: number
 }
 
@@ -39,7 +43,7 @@ export const usesPeriod = (tab: ReportTab) => PERIOD_TABS.includes(tab)
 /** Які параметри (крім вкладки) стосуються вкладки: ті самі йдуть і в URL сторінки, і в запит до R1. */
 const TAB_PARAMS: Record<ReportTab, ReadonlyArray<Exclude<keyof ViewState, 'tab'>>> = {
   profit: ['from', 'to'],
-  stock: ['warehouse', 'q', 'sort', 'page'],
+  stock: ['warehouse', 'q', 'sort', 'onlyPositive', 'page'],
   purchases: ['from', 'to', 'supplier', 'page'],
   expenses: ['from', 'to', 'category', 'account', 'page'],
   debts: ['asOf', 'page'],
@@ -57,6 +61,7 @@ export const defaultState = (now: Date, timeZone: string): ViewState => ({
   account: '',
   manager: '',
   sort: '',
+  onlyPositive: '',
   page: 1,
 })
 
@@ -88,6 +93,8 @@ export const parseState = (source: ParamSource, now: Date, timeZone: string): Vi
   const sort = read('sort')
   if ((STOCK_SORTS as readonly string[]).includes(sort)) state.sort = sort as StockSortState
 
+  if (read('onlyPositive') === 'false') state.onlyPositive = 'false'
+
   const page = read('page')
   if (/^\d{1,7}$/.test(page) && Number(page) >= 1 && Number(page) <= MAX_PAGE) state.page = Number(page)
 
@@ -111,7 +118,7 @@ const paramsFor = (state: ViewState): URLSearchParams => {
 export const serializeState = (state: ViewState): string => {
   const params = new URLSearchParams({ tab: state.tab })
 
-  for (const name of ['from', 'to', 'asOf', 'warehouse', 'q', 'supplier', 'category', 'account', 'manager', 'sort'] as const) {
+  for (const name of ['from', 'to', 'asOf', 'warehouse', 'q', 'supplier', 'category', 'account', 'manager', 'sort', 'onlyPositive'] as const) {
     if (state[name]) params.set(name, state[name])
   }
   if (state.page > 1) params.set('page', String(state.page))

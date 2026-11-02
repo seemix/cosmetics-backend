@@ -77,6 +77,13 @@
   gap: calc(var(--base) / 8);
 }
 
+.reports__check {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--base) / 4);
+  cursor: pointer;
+}
+
 .reports__field input,
 .reports__field select {
   font: inherit;
