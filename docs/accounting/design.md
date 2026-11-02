@@ -257,7 +257,8 @@ salary-schemes       orders (продаж)    ─┤
 | manager | rel users RO | знімок; admin, manager |
 | createdBy | rel users RO | admin, manager |
 | accounting (group, RO) | | **тільки admin** |
-| ├ stockPostedAt | date | є ⇒ замовлення проведене й списало залишок |
+| ├ stockTracked | checkbox | створене з увімкненим обліком: проводиться при відвантаженні (В20) |
+| ├ stockPostedAt | date | є ⇒ замовлення проведене (відвантажене) й списало залишок |
 | ├ cogsBani | number | собівартість на момент списання |
 | ├ revenueBani | number | `round(total × 100)` на момент створення |
 | └ cancelledAt | date | |
@@ -600,6 +601,8 @@ total = fixedBani + Σ lines + adjustmentsBani
 Повернення з `cancelled` в інший статус заборонене (`beforeChange`).
 
 ### 9.2 Хуки й межі транзакції
+
+> **В20 (2026-11-02):** проведення перенесено зі створення на перехід у `shipped`. `populatePricesAndTotal` і `assignAccountingFields` перераховують суму, виручку й знімок менеджера в непроведеному неоплаченому замовленні; `guardPostedOrder` заморожує лише проведені, оплачені, скасовані й історичні; `deductOrderStock` і `writeOrderStockMoves` працюють і на update; `forbidDeletePosted` блокує ще й замовлення з касовими операціями. Подробиці: `docs/decisions.md`, В20.
 
 | Хук | Порядок | Операція | Дія |
 |---|---|---|---|

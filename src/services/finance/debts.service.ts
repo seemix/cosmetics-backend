@@ -214,7 +214,7 @@ export const getCustomerDebts = async (
       { $group: { _id: '$customerLines.order', capBani: { $sum: '$customerLines.amountBani' } } },
       { $lookup: { from: model(req, 'orders').collection.collectionName, localField: '_id', foreignField: '_id', as: 'order' } },
       { $unwind: '$order' },
-      { $match: { 'order.status': { $ne: 'cancelled' }, 'order.accounting.stockPostedAt': null } },
+      { $match: { 'order.status': { $ne: 'cancelled' }, 'order.accounting.stockPostedAt': null, 'order.accounting.stockTracked': { $ne: true } } },
       ...customerMatch('order.customer'),
       {
         $addFields: {

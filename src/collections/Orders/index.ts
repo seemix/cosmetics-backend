@@ -302,6 +302,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       access: { read: adminOnlyFieldAccess, create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
       admin: { readOnly: true },
       fields: [
+        { name: 'stockTracked', label: label('custom:field:stockTracked'), type: 'checkbox' },
         { name: 'stockPostedAt', label: label('custom:field:stockPostedAt'), type: 'date', index: true },
         moneyField({ name: 'cogsBani', label: label('custom:field:cogsBani') }),
         moneyField({ name: 'revenueBani', label: label('custom:field:revenueBani') }),

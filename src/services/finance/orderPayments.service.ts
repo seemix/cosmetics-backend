@@ -1,6 +1,7 @@
 import { APIError, type PayloadRequest } from 'payload'
 
 import { customT, type CustomTranslationsKeys } from '@/i18n'
+import { isOrderHistorical } from '@/services/orders/orderState'
 import { requireSession } from '@/services/stock/session'
 import { formatMDL } from '@/utilities/money'
 
@@ -17,7 +18,7 @@ export type PaymentOrder = {
   total?: number | null
   paidBani?: number | null
   orderNumber?: string | null
-  accounting?: { revenueBani?: number | null; stockPostedAt?: Date | string | null } | null
+  accounting?: { revenueBani?: number | null; stockTracked?: boolean | null; stockPostedAt?: Date | string | null } | null
 }
 
 const orders = (req: PayloadRequest) => req.payload.db.collections['orders'].collection
@@ -47,12 +48,12 @@ export const REVENUE_EXPR = {
 export const PAID_EXPR = { $ifNull: ['$paidBani', 0] }
 
 /**
- * Сума, яку замовлення може сплатити (ліміт `paidBani`). Замовлення зі списаним складом: його
- * виручка. Історичне (без `stockPostedAt`): сума його активного (проведеного) `customerDebt`,
- * тобто 0, якщо такого немає, і тоді надходження не приймається (розд. 6.3, 10).
+ * Сума, яку замовлення може сплатити (ліміт `paidBani`). Проведене або те, що чекає проведення
+ * (передоплата до відвантаження, В20): його виручка. Історичне: сума його активного (проведеного)
+ * `customerDebt`, тобто 0, якщо такого немає, і тоді надходження не приймається (розд. 6.3, 10).
  */
 export const getOrderPayableCapBani = async (order: PaymentOrder, req: PayloadRequest): Promise<number> => {
-  if (order.accounting?.stockPostedAt) return getOrderRevenueBani(order)
+  if (!isOrderHistorical(order)) return getOrderRevenueBani(order)
 
   const session = await requireSession(req)
   const [row] = await req.payload.db.collections['opening-balances']
@@ -73,7 +74,7 @@ export const getOrderPayableCapBani = async (order: PaymentOrder, req: PayloadRe
  */
 export const canAcceptPayment = (order: PaymentOrder, capBani: number): CustomTranslationsKeys | null => {
   if (order.status === 'cancelled') return 'custom:error:paymentOrderCancelled'
-  if (!order.accounting?.stockPostedAt && capBani <= 0) return 'custom:error:paymentOrderNotPosted'
+  if (isOrderHistorical(order) && capBani <= 0) return 'custom:error:paymentOrderNotPosted'
   return null
 }
 
@@ -144,7 +145,7 @@ export const changeOrderPaid = async (req: PayloadRequest, { order, deltaBani }:
 
   if (deltaBani > 0) {
     if (current.status === 'cancelled') fail(req, 'custom:error:paymentOrderCancelled', 409, { order: number })
-    if (!current.accounting?.stockPostedAt && cap <= 0) fail(req, 'custom:error:paymentOrderNotPosted', 409, { order: number })
+    if (isOrderHistorical(current) && cap <= 0) fail(req, 'custom:error:paymentOrderNotPosted', 409, { order: number })
     fail(req, 'custom:error:paymentOverpaid', 409, {
       order: number,
       requested: formatMDL(deltaBani),

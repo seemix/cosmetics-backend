@@ -1,5 +1,6 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
+import { isOrderEditable } from '@/services/orders/orderState'
 import { resolveOrderManager } from '@/services/orders/resolveOrderManager'
 
 /** Ключ `req.context`, яким публічний `createOrder` позначає замовлення сайту. */
@@ -14,7 +15,8 @@ const relationID = (value: unknown): string | number | undefined => {
 /**
  * Облікові поля замовлення (дизайн, розд. 2.5, 4.3).
  * Create: `source` за контекстом, склад (для сайту завжди з налаштувань, значення з тіла ігнорується),
- * автор, знімок `manager` і `accounting.revenueBani`. Update: `source`, `warehouse`, `createdBy`, `manager` не змінюються.
+ * автор, знімок `manager` і `accounting.revenueBani`. Update: `source`, `warehouse`, `createdBy` не змінюються;
+ * `manager` і `revenueBani` перераховуються лише в замовленні, що чекає проведення (В20).
  * Має йти після `populatePricesAndTotal`, бо виручка береться з готового `total`.
  */
 export const assignAccountingFields: CollectionBeforeChangeHook = async ({
@@ -31,6 +33,25 @@ export const assignAccountingFields: CollectionBeforeChangeHook = async ({
       data.warehouse = relationID(originalDoc.warehouse)
       data.createdBy = relationID(originalDoc.createdBy)
       data.manager = relationID(originalDoc.manager)
+
+      // Непроведене замовлення можна змінити (В20): виручка йде за новою сумою, знімок менеджера за новим клієнтом.
+      if (isOrderEditable(originalDoc)) {
+        const total = data.total ?? originalDoc.total
+        data.accounting = {
+          ...originalDoc.accounting,
+          ...data.accounting,
+          revenueBani: Math.round((Number(total) || 0) * 100),
+        }
+
+        if ('customer' in data && String(relationID(data.customer) ?? '') !== String(relationID(originalDoc.customer) ?? '')) {
+          const settings = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
+          const creatorId = relationID(originalDoc.createdBy)
+          const creator = creatorId
+            ? await req.payload.findByID({ collection: 'users', id: creatorId, depth: 0, overrideAccess: true, disableErrors: true, req })
+            : null
+          data.manager = (await resolveOrderManager({ customerId: data.customer, creator, settings, req })) ?? null
+        }
+      }
     }
     return data
   }

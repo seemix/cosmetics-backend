@@ -244,6 +244,7 @@ export interface Order {
   paidBani?: number | null;
   paymentState?: ('unpaid' | 'partial' | 'paid') | null;
   accounting?: {
+    stockTracked?: boolean | null;
     stockPostedAt?: string | null;
     cogsBani?: number | null;
     revenueBani?: number | null;
@@ -1350,6 +1351,7 @@ export interface OrdersSelect<T extends boolean = true> {
   accounting?:
     | T
     | {
+        stockTracked?: T;
         stockPostedAt?: T;
         cogsBani?: T;
         revenueBani?: T;

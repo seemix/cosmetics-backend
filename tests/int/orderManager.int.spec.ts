@@ -236,10 +236,8 @@ describe('M3: знімок менеджера в замовленні (розд.
       })
       expect(await storedManager(order.id)).toBe(String(managerOne.id))
 
-      // Код з overrideAccess: зміну відхиляє guardPostedOrder.
-      await expect(
-        payload.update({ collection: 'orders', id: order.id, data: { manager: managerTwo.id } as never, depth: 0 }),
-      ).rejects.toThrow()
+      // Код з overrideAccess, непроведене замовлення: знімок лишає assignAccountingFields (В20).
+      await payload.update({ collection: 'orders', id: order.id, data: { manager: managerTwo.id } as never, depth: 0 })
       expect(await storedManager(order.id)).toBe(String(managerOne.id))
 
       // Адмінка надсилає документ цілком із тим самим manager: це не зміна.
@@ -252,6 +250,12 @@ describe('M3: знімок менеджера в замовленні (розд.
         depth: 0,
       })
       expect(updated.status).toBe('shipped')
+      expect(await storedManager(order.id)).toBe(String(managerOne.id))
+
+      // Проведене замовлення: зміну відхиляє guardPostedOrder.
+      await expect(
+        payload.update({ collection: 'orders', id: order.id, data: { manager: managerTwo.id } as never, depth: 0 }),
+      ).rejects.toThrow()
       expect(await storedManager(order.id)).toBe(String(managerOne.id))
     })
 
@@ -278,9 +282,19 @@ describe('M3: знімок менеджера в замовленні (розд.
   })
 
   describe('списання залишку', () => {
-    it('замовлення менеджера списує залишок, поле manager не заважає', async () => {
+    it('менеджер відвантажує своє замовлення: списання залишку, поле manager не заважає', async () => {
       const before = await qtyAt(payload, productId, warehouseId)
       const order = await createInAdmin(managerTwo, (await customerOf(managerOne.id)).id)
+      expect(await qtyAt(payload, productId, warehouseId)).toBe(before)
+
+      await payload.update({
+        collection: 'orders',
+        id: order.id,
+        user: managerTwo,
+        overrideAccess: false,
+        data: { status: 'shipped' } as never,
+        depth: 0,
+      })
 
       const stored = await payload.findByID({ collection: 'orders', id: order.id, depth: 0, overrideAccess: true })
       expect(stored.accounting?.stockPostedAt).toBeTruthy()

@@ -1,8 +1,23 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
-export const populatePricesAndTotal: CollectionBeforeChangeHook = async ({ data, operation, req }) => {
-  // Ціни й сума фіксуються при створенні; на update їх стереже guardPostedOrder (F6).
-  if (operation !== 'create') {
+import { cents, isOrderEditable, relationID, sameItems } from '@/services/orders/orderState'
+
+export const populatePricesAndTotal: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+  // Ціни й сума ставляться при створенні й перераховуються, лише коли в непроведеному
+  // неоплаченому замовленні змінились позиції, знижка чи клієнт (В20); інакше їх стереже guardPostedOrder (F6).
+  if (operation === 'update') {
+    if (!data || !originalDoc || !isOrderEditable(originalDoc)) return data
+
+    if (data.items === undefined) data.items = originalDoc.items
+    if (!('customer' in data)) data.customer = originalDoc.customer
+    if (!('discount' in data)) data.discount = originalDoc.discount
+
+    const changed =
+      !sameItems(data.items, originalDoc.items) ||
+      cents(data.discount) !== cents(originalDoc.discount) ||
+      relationID(data.customer) !== relationID(originalDoc.customer)
+    if (!changed) return data
+  } else if (operation !== 'create') {
     return data
   }
 

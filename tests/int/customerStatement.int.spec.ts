@@ -119,7 +119,7 @@ describe('Виписка по клієнту (розд. 6.5)', () => {
     order = await payload.create({
       collection: 'orders',
       user: admin,
-      data: { items: [{ product, quantity: 1, price: 0 }], total: 0, customer } as never,
+      data: { items: [{ product, quantity: 1, price: 0 }], total: 0, status: 'shipped', customer } as never,
       depth: 0,
     })
     orders.push(String(order.id))

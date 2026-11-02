@@ -24,6 +24,7 @@ import {
 } from '@/services/finance/customerBalance.service'
 import { getOrderRevenueBani, type PaymentOrder } from '@/services/finance/orderPayments.service'
 import { requireSession } from '@/services/stock/session'
+import { isOrderHistorical } from '@/services/orders/orderState'
 import { receive, revert } from '@/services/stock/stockLedger.service'
 import { formatMDL } from '@/utilities/money'
 
@@ -177,7 +178,7 @@ const loadOrders = async (req: PayloadRequest, ids: string[]) => {
 
 /**
  * Проведення kind=customerDebt: журналів руху немає, `getOrderPayableCapBani` бере суму з проведених
- * рядків. Приймаються лише історичні замовлення (без `stockPostedAt`), не скасовані, а сума не
+ * рядків. Приймаються лише історичні замовлення (створені до вмикання обліку складу), не скасовані, а сума не
  * перевищує виручку; одне замовлення має лише один активний рядок у всіх проведених документах.
  */
 const postCustomerDebt = async (args: DocumentTransitionArgs) => {
@@ -198,7 +199,7 @@ const postCustomerDebt = async (args: DocumentTransitionArgs) => {
     if (!order) reject('custom:error:customerDebtOrderNotFound', orderId)
 
     const number = order?.orderNumber ?? orderId
-    if (order?.accounting?.stockPostedAt) reject('custom:error:customerDebtOrderNotHistorical', number)
+    if (!isOrderHistorical(order)) reject('custom:error:customerDebtOrderNotHistorical', number)
     if (order?.status === 'cancelled') reject('custom:error:customerDebtOrderCancelled', number)
 
     const revenue = getOrderRevenueBani(order as PaymentOrder)

@@ -40,12 +40,12 @@ const newProduct = async () => {
   return id
 }
 
-/** Замовлення з адмінки на тестовому складі: проводиться, якщо облік увімкнено. */
+/** Відвантажене замовлення з адмінки на тестовому складі: проводиться, якщо облік увімкнено (В20). */
 const adminOrder = async (product: string, quantity: number): Promise<Order> => {
   const order = await payload.create({
     collection: 'orders',
     user: admin,
-    data: { items: [{ product, quantity, price: 0 }], total: 0 } as never,
+    data: { items: [{ product, quantity, price: 0 }], total: 0, status: 'shipped' } as never,
     depth: 0,
   })
   orders.push(String(order.id))
@@ -165,6 +165,32 @@ describe('S2.5: скасування замовлення', () => {
     }
   })
 
+  it('невідвантажене замовлення скасовується без руху залишку; оплачене гостьове ні (В20)', async () => {
+    const product = await newProduct()
+    await stockUp(payload, product, warehouse, 2, 2000)
+    const pending = () =>
+      payload.create({
+        collection: 'orders',
+        user: admin,
+        data: { items: [{ product, quantity: 1, price: 0 }], total: 0 } as never,
+        depth: 0,
+      })
+
+    const free = await pending()
+    orders.push(String(free.id))
+    const cancelled = await setStatus(free, 'cancelled')
+    expect(cancelled.status).toBe('cancelled')
+    expect(await movesOfDoc(payload, 'orders', free.id)).toHaveLength(0)
+
+    const paid = await pending()
+    orders.push(String(paid.id))
+    await payload.update({ collection: 'orders', id: paid.id, user: admin, data: { paidBani: 100 }, depth: 0 })
+    const error = await rejection(setStatus(paid, 'cancelled'))
+    expect(error).toBeInstanceOf(APIError)
+    expect((error as APIError).status).toBe(409)
+    expect(await qtyAt(payload, product, warehouse)).toBe(2)
+  })
+
   it('оплачене замовлення не скасовується: статус і залишок незмінні', async () => {
     const product = await newProduct()
     await stockUp(payload, product, warehouse, 2, 2000)
@@ -177,7 +203,7 @@ describe('S2.5: скасування замовлення', () => {
     expect((error as APIError).status).toBe(409)
     expect((error as Error).message).not.toMatch(/custom:/)
 
-    expect((await payload.findByID({ collection: 'orders', id: order.id, depth: 0 })).status).toBe('pending')
+    expect((await payload.findByID({ collection: 'orders', id: order.id, depth: 0 })).status).toBe('shipped')
     expect(await qtyAt(payload, product, warehouse)).toBe(1)
     expect(await movesOfDoc(payload, 'orders', order.id)).toHaveLength(1)
   })
@@ -193,7 +219,7 @@ describe('S2.5: скасування замовлення', () => {
       const error = await rejection(setStatus(order, 'cancelled'))
       expect(error).toBeInstanceOf(APIError)
       expect((error as APIError).status).toBe(409)
-      expect((await payload.findByID({ collection: 'orders', id: order.id, depth: 0 })).status).toBe('pending')
+      expect((await payload.findByID({ collection: 'orders', id: order.id, depth: 0 })).status).toBe('shipped')
       expect(await qtyAt(payload, product, warehouse)).toBe(1)
     } finally {
       await settings({ lockedUntil: null })

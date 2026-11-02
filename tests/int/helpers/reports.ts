@@ -275,7 +275,7 @@ export class ReportScenario {
     const order = await this.payload.create({
       collection: 'orders',
       user: this.admin,
-      data: { items: items.map((item) => ({ ...item, price: 0 })), total: 0, ...(customer ? { customer } : {}) } as never,
+      data: { items: items.map((item) => ({ ...item, price: 0 })), total: 0, status: 'shipped', ...(customer ? { customer } : {}) } as never,
       depth: 0,
     })
     this.track('orders', order.id)

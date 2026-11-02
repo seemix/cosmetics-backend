@@ -1,8 +1,9 @@
 import { APIError, type CollectionBeforeChangeHook, type PayloadRequest } from 'payload'
 
 import { customT } from '@/i18n'
+import { isOrderAwaitingPosting } from '@/services/orders/orderState'
 import { InsufficientStockError, type StockShortage } from '@/services/stock/errors'
-import { issueWithoutMoves, type PendingStockMove } from '@/services/stock/stockLedger.service'
+import { assertAvailable, issueWithoutMoves, type PendingStockMove } from '@/services/stock/stockLedger.service'
 
 /** Ключ `req.context`, у якому `deductOrderStock` передає рухи `writeOrderStockMoves`. */
 export const ORDER_STOCK_MOVES_CONTEXT_KEY = 'orderStockMoves'
@@ -48,29 +49,54 @@ const shortageMessage = async (req: PayloadRequest, items: StockShortage[]): Pro
 }
 
 /**
- * Списання залишку при створенні замовлення (дизайн, розд. 4.2, 9.2), у транзакції створення.
+ * Проведення замовлення при переході в `shipped` (В20; дизайн, розд. 4.2, 9.2), у транзакції запиту:
+ * при створенні одразу зі статусом `shipped` або при зміні статусу на `shipped`.
+ * Create ставить `accounting.stockTracked` = чи ввімкнено облік складу: лише таке замовлення далі проводиться.
  * Облік вимкнено ⇒ нічого не списує, `accounting.stockPostedAt` порожнє.
  * Інакше умовно списує зі складу замовлення через сервіс руху запасів, ставить `stockPostedAt`
- * і `cogsBani`, а рухи з собівартістю по позиціях кладе в `req.context`: id замовлення ще немає,
- * журнал пише `writeOrderStockMoves`. Нестача кидає `InsufficientStockError` і відкочує замовлення.
- * Має йти після `assignAccountingFields`, бо склад визначає він.
+ * і `cogsBani`, а рухи з собівартістю по позиціях кладе в `req.context` (на create id замовлення ще немає),
+ * журнал пише `writeOrderStockMoves`. Нестача кидає `InsufficientStockError` і відкочує запит.
+ * Замовлення сайту, створене не відвантаженим, лише перевіряє наявність без списання й резерву:
+ * сайт, як і раніше, отримує 409 при нестачі.
+ * Має йти після `populatePricesAndTotal` і `assignAccountingFields`: позиції й склад беруться готові.
  */
-export const deductOrderStock: CollectionBeforeChangeHook = async ({ data, operation, req }) => {
-  if (operation !== 'create' || !data) return data
+export const deductOrderStock: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+  if (!data || (operation !== 'create' && operation !== 'update')) return data
 
-  // Проведення ставить лише цей хук; значення з тіла запиту ігноруються.
+  // Проведення й ознаку обліку ставить лише цей хук; значення з тіла запиту ігноруються.
   delete req.context[ORDER_STOCK_MOVES_CONTEXT_KEY]
-  data.accounting = { ...data.accounting, stockPostedAt: null, cogsBani: null }
-
   const settings = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
-  if (!settings.stockControlEnabled) return data
 
-  const warehouse = relationID(data.warehouse)
+  if (operation === 'create') {
+    data.accounting = {
+      ...data.accounting,
+      stockTracked: Boolean(settings.stockControlEnabled),
+      stockPostedAt: null,
+      cogsBani: null,
+    }
+  } else {
+    const previous = originalDoc?.accounting ?? {}
+    data.accounting = {
+      ...previous,
+      ...data.accounting,
+      stockTracked: previous.stockTracked ?? null,
+      stockPostedAt: previous.stockPostedAt ?? null,
+      cogsBani: previous.cogsBani ?? null,
+    }
+  }
+
+  const status = data.status ?? originalDoc?.status
+  const shipping = status === 'shipped' && (operation === 'create' || originalDoc?.status !== 'shipped')
+  const webCheck = operation === 'create' && !shipping && data.source === 'web'
+  if ((!shipping && !webCheck) || !isOrderAwaitingPosting(data) || !settings.stockControlEnabled) return data
+
+  const warehouse = relationID(data.warehouse ?? originalDoc?.warehouse)
   if (!warehouse) {
     throw new APIError(customT(req.t)('custom:error:orderWarehouseRequired'), 400, undefined, true)
   }
 
-  const items: ItemLike[] = Array.isArray(data.items) ? data.items : []
+  const source = data.items ?? originalDoc?.items
+  const items: ItemLike[] = Array.isArray(source) ? source : []
   const lines = items.map((item) => ({
     product: relationID(item.product) ?? '',
     warehouse,
@@ -78,13 +104,15 @@ export const deductOrderStock: CollectionBeforeChangeHook = async ({ data, opera
   }))
   const date = new Date()
 
-  let moves: PendingStockMove[]
+  let moves: PendingStockMove[] = []
   try {
-    moves = await issueWithoutMoves(req, { date, moveType: 'sale', lines })
+    if (webCheck) await assertAvailable(req, lines)
+    else moves = await issueWithoutMoves(req, { date, moveType: 'sale', lines })
   } catch (error) {
     if (error instanceof InsufficientStockError) error.message = await shortageMessage(req, error.items)
     throw error
   }
+  if (webCheck) return data
 
   data.accounting.stockPostedAt = date.toISOString()
   data.accounting.cogsBani = -moves.reduce((sum, move) => sum + move.valueDeltaBani, 0) || 0

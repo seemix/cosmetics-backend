@@ -1,6 +1,7 @@
 import { APIError, type CollectionAfterChangeHook, type CollectionBeforeChangeHook } from 'payload'
 
 import { customT } from '@/i18n'
+import { isOrderHistorical } from '@/services/orders/orderState'
 import { revert } from '@/services/stock/stockLedger.service'
 
 const isCancelTransition = (status: unknown, previousStatus: unknown) =>
@@ -8,21 +9,23 @@ const isCancelTransition = (status: unknown, previousStatus: unknown) =>
 
 /**
  * Перевірки скасування до збереження (дизайн, розд. 9.1), щоб відхилене скасування не змінило замовлення.
- * Непроведене замовлення (історичне або облік вимкнено) лише змінює статус.
- * Проведене: оплата гостьового замовлення блокує (спершу повернення клієнту), оплата замовлення
- * клієнта повертається на його аванс (`settleCustomerBalance`); закритий період блокує; інакше `cancelledAt = now`.
+ * Історичне замовлення лише змінює статус.
+ * Проведене або те, що чекає проведення: оплата гостьового замовлення блокує (спершу повернення клієнту),
+ * оплата замовлення клієнта повертається на його аванс (`settleCustomerBalance`).
+ * Непроведене далі лише змінює статус. Проведене: закритий період блокує; інакше `cancelledAt = now`.
  * Хто скасовує: `orders.update` дозволено лише admin (В5); скасувати можна й `shipped`.
  */
 export const prepareOrderCancel: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
   if (operation !== 'update' || !data || !originalDoc) return data
   if (!isCancelTransition(data.status, originalDoc.status)) return data
-
-  const stockPostedAt = originalDoc.accounting?.stockPostedAt
-  if (!stockPostedAt) return data
+  if (isOrderHistorical(originalDoc)) return data
 
   if ((Number(originalDoc.paidBani) || 0) > 0 && !originalDoc.customer) {
     throw new APIError(customT(req.t)('custom:error:paidOrderCancel'), 409, undefined, true)
   }
+
+  const stockPostedAt = originalDoc.accounting?.stockPostedAt
+  if (!stockPostedAt) return data
 
   const { lockedUntil } = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
   if (lockedUntil && new Date(stockPostedAt).getTime() <= new Date(lockedUntil).getTime()) {

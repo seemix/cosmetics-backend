@@ -82,10 +82,11 @@ const newCustomer = async () => {
 }
 
 /**
- * Замовлення з адмінки на 1 шт. за 100,00: проводиться, якщо облік увімкнено. Кожне має свого
- * клієнта, бо гроші клієнта гасять усі його борги (розд. 6.4); гостьове без клієнта.
+ * Замовлення з адмінки на 1 шт. за 100,00: відвантажене й проведене, якщо облік увімкнено; `pending`
+ * чекає відвантаження (В20). Кожне має свого клієнта, бо гроші клієнта гасять усі його борги (розд. 6.4);
+ * гостьове без клієнта.
  */
-const newOrder = async (options: { guest?: boolean } = {}): Promise<Order> => {
+const newOrder = async (options: { guest?: boolean; pending?: boolean } = {}): Promise<Order> => {
   const product = String((await data.product({ brand, retailPrice: 100 })).id)
   products.push(product)
   await stockUp(payload, product, warehouse, 5, 5000)
@@ -96,6 +97,7 @@ const newOrder = async (options: { guest?: boolean } = {}): Promise<Order> => {
     data: {
       items: [{ product, quantity: 1, price: 0 }],
       total: 0,
+      status: options.pending ? 'pending' : 'shipped',
       ...(options.guest ? {} : { customer: await newCustomer() }),
     } as never,
     depth: 0,
@@ -205,19 +207,19 @@ describe('C3: надходження й повернення від покупц
       const account = await newAccount('receipt')
       const order = await newOrder()
       expect(getOrderRevenueBani(order)).toBe(10000)
-      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'pending' })
+      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'shipped' })
 
       const first = await pay('customer_receipt', order, account, 4000)
 
       expect(idOf(first.customer)).toBe(idOf(order.customer))
       expect(await balanceOf(account)).toBe(4000)
       expect((await movesOf(first.id)).map((move) => [String(move.account), move.deltaBani])).toEqual([[account, 4000]])
-      expect(await paymentOf(order)).toEqual({ paidBani: 4000, paymentState: 'partial', status: 'pending' })
+      expect(await paymentOf(order)).toEqual({ paidBani: 4000, paymentState: 'partial', status: 'shipped' })
 
       await pay('customer_receipt', order, account, 6000)
 
       expect(await balanceOf(account)).toBe(10000)
-      expect(await paymentOf(order)).toEqual({ paidBani: 10000, paymentState: 'paid', status: 'pending' })
+      expect(await paymentOf(order)).toEqual({ paidBani: 10000, paymentState: 'paid', status: 'shipped' })
     })
 
     it('переплата клієнта йде в аванс', async () => {
@@ -276,7 +278,7 @@ describe('C3: надходження й повернення від покупц
       expect(await paymentOf(order)).toMatchObject({ paidBani: 0, paymentState: 'unpaid' })
     })
 
-    it('замовлення без stockPostedAt не приймає оплату', async () => {
+    it('історичне замовлення (створене з вимкненим обліком) не приймає оплату', async () => {
       const account = await newAccount('not-posted')
       await settings({ stockControlEnabled: false })
       const order = await newOrder().finally(() => settings({ stockControlEnabled: true }))
@@ -344,10 +346,10 @@ describe('C3: надходження й повернення від покупц
       const refund = await pay('customer_refund', order, account, 3000)
       expect((await movesOf(refund.id)).map((move) => move.deltaBani)).toEqual([-3000])
       expect(await balanceOf(account)).toBe(7000)
-      expect(await paymentOf(order)).toEqual({ paidBani: 7000, paymentState: 'partial', status: 'pending' })
+      expect(await paymentOf(order)).toEqual({ paidBani: 7000, paymentState: 'partial', status: 'shipped' })
 
       await pay('customer_refund', order, account, 7000)
-      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'pending' })
+      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'shipped' })
       expect(await balanceOf(account)).toBe(0)
     })
 
@@ -390,7 +392,7 @@ describe('C3: надходження й повернення від покупц
 
       await reverse(receipt.id)
 
-      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'pending' })
+      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'shipped' })
       expect(await balanceOf(account)).toBe(0)
       const [original, mirror] = await movesOf(receipt.id)
       expect(mirror).toMatchObject({ deltaBani: -10000, reversalOf: original.id })
@@ -481,7 +483,7 @@ describe('C3: надходження й повернення від покупц
       await pay('customer_receipt', order, account, 10000)
 
       await expect(setStatus(order, 'cancelled')).rejects.toThrow(/refund the customer/)
-      expect((await orderOf(order)).status).toBe('pending')
+      expect((await orderOf(order)).status).toBe('shipped')
 
       await pay('customer_refund', order, account, 10000)
       const cancelled = await setStatus(order, 'cancelled')
@@ -534,6 +536,43 @@ describe('C3: надходження й повернення від покупц
         const doc = await orderOf(order)
         expect(new Date(doc.updatedAt).getTime()).toBeGreaterThan(new Date(order.updatedAt).getTime())
       })
+    })
+  })
+
+  describe('В20: передоплата до відвантаження', () => {
+    it('гостьове pending: оплата до суми замовлення; оплачене не змінюється й не видаляється; відвантаження зберігає оплату', async () => {
+      const account = await newAccount('prepay-guest')
+      const order = await newOrder({ guest: true, pending: true })
+      expect(order.accounting?.stockPostedAt ?? null).toBeNull()
+
+      await pay('customer_receipt', order, account, 4000)
+      expect(await paymentOf(order)).toEqual({ paidBani: 4000, paymentState: 'partial', status: 'pending' })
+
+      const over = await draft('customer_receipt', order, account, 7000)
+      await expect(post(over.id)).rejects.toThrow(/Overpayment/)
+
+      const product = idOf(order.items?.[0]?.product)
+      await expect(
+        payload.update({ collection: 'orders', id: order.id, user: admin, data: { items: [{ product, quantity: 2, price: 0 }] } as never }),
+      ).rejects.toThrow(/paid or historical/)
+      await expect(payload.delete({ collection: 'orders', id: order.id, user: admin })).rejects.toThrow(/has payments/)
+
+      const shipped = await setStatus(order, 'shipped')
+      expect(shipped.accounting?.stockPostedAt).toBeTruthy()
+      expect(await paymentOf(order)).toEqual({ paidBani: 4000, paymentState: 'partial', status: 'shipped' })
+    })
+
+    it('клієнт pending: надходження по замовленню йде на аванс, відвантаження гасить замовлення авансом', async () => {
+      const account = await newAccount('prepay-customer')
+      const order = await newOrder({ pending: true })
+
+      await pay('customer_receipt', order, account, 10000)
+      expect(await paymentOf(order)).toEqual({ paidBani: 0, paymentState: 'unpaid', status: 'pending' })
+      expect(await advanceOf(order)).toBe(10000)
+
+      await setStatus(order, 'shipped')
+      expect(await paymentOf(order)).toEqual({ paidBani: 10000, paymentState: 'paid', status: 'shipped' })
+      expect(await advanceOf(order)).toBe(0)
     })
   })
 })

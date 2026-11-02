@@ -260,6 +260,32 @@ export const issue = async (
 ): Promise<StockMove[]> => writeMoves(req, doc, await issueWithoutMoves(req, args))
 
 /**
+ * Перевірка наявності без списання й резерву: залишку вистачає на всі рядки (однакові товар і склад
+ * сумуються), інакше `InsufficientStockError` з повним списком нестач. Читання в сесії транзакції `req`.
+ */
+export const assertAvailable = async (req: PayloadRequest, lines: Array<{ product: string; warehouse: string; qty: number }>) => {
+  const ctx = await openContext(req)
+  const totals = new Map<string, { product: string; warehouse: string; qty: number }>()
+
+  for (const line of byProductAndWarehouse(lines)) {
+    assertPositiveInteger(line.qty)
+    const key = `${line.product}:${line.warehouse}`
+    const total = totals.get(key) ?? { product: line.product, warehouse: line.warehouse, qty: 0 }
+    total.qty += line.qty
+    totals.set(key, total)
+  }
+
+  const shortages: StockShortage[] = []
+  for (const { product, warehouse, qty } of totals.values()) {
+    const current = await balances(req).findOne<BalanceDoc>(balanceKey(ctx, product, warehouse), { session: ctx.session })
+    const available = current?.qty ?? 0
+    if (available < qty) shortages.push({ product, warehouse, requested: qty, available })
+  }
+
+  if (shortages.length > 0) throw new InsufficientStockError(shortages)
+}
+
+/**
  * Те саме, що `issue`, але без запису журналу: повертає обчислені рухи. Для документа, id якого
  * ще немає (замовлення в `beforeChange`); рухи записує `writeMoves` у тій самій транзакції.
  */

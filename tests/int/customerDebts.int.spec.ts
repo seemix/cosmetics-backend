@@ -65,7 +65,7 @@ const newOrder = async ({
     .create({
       collection: 'orders',
       user: admin,
-      data: { items: [{ product, quantity: 1, price: 0 }], total: 0, ...(buyer ? { customer: buyer } : {}) } as never,
+      data: { items: [{ product, quantity: 1, price: 0 }], total: 0, status: 'shipped', ...(buyer ? { customer: buyer } : {}) } as never,
       depth: 0,
     })
     .finally(() => settings({ stockControlEnabled: true }))

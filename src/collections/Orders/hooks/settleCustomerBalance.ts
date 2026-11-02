@@ -8,7 +8,8 @@ const idOf = (value: unknown) =>
 
 /**
  * Баланс клієнта й замовлення (дизайн, розд. 6.4), у транзакції `req`:
- * - нове проведене замовлення клієнта одразу гаситься його авансом;
+ * - щойно проведене замовлення клієнта (створене відвантаженим або відвантажене, В20) одразу
+ *   гаситься його авансом, зокрема передоплатою за це замовлення;
  * - скасоване замовлення клієнта повертає свою оплату на аванс, і той гасить інші борги.
  * Гостьові замовлення балансу не мають. Має йти після `cancelOrderStock`, до сповіщень.
  */
@@ -17,8 +18,9 @@ export const settleCustomerBalance: CollectionAfterChangeHook = async ({ doc, pr
   if (!customer) return doc
 
   const ref = { collection: 'orders', id: String(doc.id), number: doc.orderNumber ?? undefined }
+  const justPosted = Boolean(doc.accounting?.stockPostedAt) && (operation === 'create' || !previousDoc?.accounting?.stockPostedAt)
 
-  if (operation === 'create' && doc.accounting?.stockPostedAt) {
+  if (justPosted) {
     await settleCustomer(req, { customer, first: String(doc.id), doc: ref, date: new Date(doc.accounting.stockPostedAt) })
   } else if (operation === 'update' && doc.status === 'cancelled' && previousDoc?.status !== 'cancelled') {
     const cancelledAt = doc.accounting?.cancelledAt

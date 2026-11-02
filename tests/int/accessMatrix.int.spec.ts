@@ -380,7 +380,7 @@ describe('M1: матриця прав (розд. 11)', () => {
 
     it('read: admin і manager усі, customer свої, гість нічого; accounting лише admin', async () => {
       const own = await adminOrder(String(users.customer.id))
-      const foreign = await adminOrder(String(otherCustomer.id))
+      const foreign = await adminOrder(String(otherCustomer.id), 'shipped')
 
       for (const role of ['admin', 'manager'] as const) {
         const doc = await payload.findByID({ collection: 'orders', id: foreign.id, user: users[role], overrideAccess: false, depth: 0 })
@@ -416,7 +416,10 @@ describe('M1: матриця прав (розд. 11)', () => {
     })
 
     it('delete: лише admin і лише непроведене', async () => {
-      const posted = await adminOrder()
+      const pending = await adminOrder()
+      await payload.delete({ collection: 'orders', id: pending.id, user: users.admin, overrideAccess: false })
+
+      const posted = await adminOrder(undefined, 'shipped')
       await expectMatrix(async (role) => {
         if (role === 'admin') return
         await payload.delete({ collection: 'orders', id: posted.id, user: userOf(role), overrideAccess: false })
@@ -461,7 +464,7 @@ describe('M1: матриця прав (розд. 11)', () => {
       expect(after.total).toBe(order.total)
     })
 
-    it('manager створює замовлення в «Магазині» без адреси: списання, accounting бачить лише admin', async () => {
+    it('manager створює замовлення в «Магазині» без адреси й відвантажує: списання, accounting бачить лише admin', async () => {
       const before = await qtyAt(payload, publishedProduct, shop)
       const order = await payload.create({
         collection: 'orders',
@@ -471,7 +474,9 @@ describe('M1: матриця прав (розд. 11)', () => {
         depth: 0,
       })
       orders.push(String(order.id))
+      expect(await qtyAt(payload, publishedProduct, shop)).toBe(before)
 
+      await managerUpdate(order.id, { status: 'shipped' })
       expect(await qtyAt(payload, publishedProduct, shop)).toBe(before - 2)
       expect(order).not.toHaveProperty('accounting')
       expect(order.source).toBe('admin')
