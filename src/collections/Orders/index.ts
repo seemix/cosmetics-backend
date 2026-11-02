@@ -27,10 +27,13 @@ import { moneyField } from '@/fields/money'
 import { collectionLabels, description, label, localized } from '@/i18n'
 
 /**
- * Склад, джерело й автор задаються при створенні й далі не змінюються (REST; хук тримає те саме для Local API).
+ * Джерело й автор задаються при створенні й далі не змінюються (REST; хук тримає те саме для Local API).
  * Менеджер бачить їх і обирає склад, створюючи замовлення в адмінці (розд. 2.5, 9.3).
  */
 const adminCreateOnly = { read: adminOrManagerField, create: adminOrManagerField, update: () => false }
+
+/** Склад можна змінити, поки замовлення не відвантажене й не оплачене (В22); інакше його тримають хуки. */
+const adminOrManagerWarehouse = { read: adminOrManagerField, create: adminOrManagerField, update: adminOrManagerField }
 
 /** Лише admin, manager або власник замовлення: `paidBani`, `paymentState`. */
 const adminOrOwnerRead: FieldAccess = ({ req: { user }, doc }) => {
@@ -255,7 +258,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
         const warehouse = settings.defaultAdminWarehouse
         return (typeof warehouse === 'object' ? warehouse?.id : warehouse) ?? undefined
       },
-      access: adminCreateOnly,
+      access: adminOrManagerWarehouse,
       admin: { position: 'sidebar' },
     },
     {

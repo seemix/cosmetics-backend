@@ -476,6 +476,29 @@ describe('В20: замовлення до відвантаження', () => {
     expect(cancelled.status).toBe('cancelled')
   })
 
+  it('склад за замовчуванням з налаштувань; до відвантаження його можна змінити, відвантаження списує з нового (В22)', async () => {
+    const doc = await payload.create({ collection: 'warehouses', data: { name: `${tag} second`, code: `${tag}-second` } })
+    warehouses.push(String(doc.id))
+    const second = String(doc.id)
+    await stockUp(payload, product, second, 5, 5000)
+
+    const order = await createAdminOrder()
+    expect(idOf(order.warehouse)).toBe(adminWarehouse)
+
+    const moved = await payload.update({ collection: 'orders', id: order.id, user: admin, data: { warehouse: second } as never, depth: 0 })
+    expect(idOf(moved.warehouse)).toBe(second)
+
+    const before = await qtyAt(payload, product, adminWarehouse)
+    await payload.update({ collection: 'orders', id: order.id, user: admin, data: { status: 'shipped' } as never, depth: 0 })
+    expect(await qtyAt(payload, product, second)).toBe(4)
+    expect(await qtyAt(payload, product, adminWarehouse)).toBe(before)
+
+    const error = await payload
+      .update({ collection: 'orders', id: order.id, user: admin, data: { warehouse: adminWarehouse } as never })
+      .catch((reason: unknown) => reason)
+    expect((error as Error).message).toMatch(/posted order cannot be edited/)
+  })
+
   it('зміна позицій і відвантаження в одному збереженні списує нові позиції', async () => {
     const order = await createAdminOrder()
     const before = await qtyAt(payload, product, adminWarehouse)

@@ -15,8 +15,8 @@ const relationID = (value: unknown): string | number | undefined => {
 /**
  * Облікові поля замовлення (дизайн, розд. 2.5, 4.3).
  * Create: `source` за контекстом, склад (для сайту завжди з налаштувань, значення з тіла ігнорується),
- * автор, знімок `manager` і `accounting.revenueBani`. Update: `source`, `warehouse`, `createdBy` не змінюються;
- * `manager` і `revenueBani` перераховуються лише в замовленні, що чекає проведення (В20).
+ * автор, знімок `manager` і `accounting.revenueBani`. Update: `source`, `createdBy` не змінюються;
+ * `warehouse`, `manager` і `revenueBani` змінюються лише в замовленні, що чекає проведення й не оплачене (В20, В22).
  * Має йти після `populatePricesAndTotal`, бо виручка береться з готового `total`.
  */
 export const assignAccountingFields: CollectionBeforeChangeHook = async ({
@@ -30,7 +30,9 @@ export const assignAccountingFields: CollectionBeforeChangeHook = async ({
   if (operation === 'update') {
     if (originalDoc) {
       data.source = originalDoc.source
-      data.warehouse = relationID(originalDoc.warehouse)
+      // Склад змінюється лише до відвантаження й оплати (В22); порожнє значення його не стирає.
+      const warehouse = relationID(data.warehouse)
+      data.warehouse = isOrderEditable(originalDoc) && warehouse !== undefined ? warehouse : relationID(originalDoc.warehouse)
       data.createdBy = relationID(originalDoc.createdBy)
       data.manager = relationID(originalDoc.manager)
 

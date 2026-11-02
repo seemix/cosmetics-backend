@@ -470,6 +470,12 @@ describe('M1: матриця прав (розд. 11)', () => {
       const ignoredTotal = await managerUpdate(order.id, { total: 1 })
       expect(ignoredTotal.total).toBe(order.total)
 
+      // Склад manager теж змінює до відвантаження (В22).
+      const other = await payload.create({ collection: 'warehouses', data: { name: `${tag} other`, code: `${tag}-other` } })
+      warehouses.push(String(other.id))
+      expect(idOf((await managerUpdate(order.id, { warehouse: String(other.id) })).warehouse)).toBe(String(other.id))
+      expect(idOf((await managerUpdate(order.id, { warehouse: shop })).warehouse)).toBe(shop)
+
       const updated = await managerUpdate(order.id, {
         items: [{ product: publishedProduct, quantity: 3, price: 1 }],
         customer: String(otherCustomer.id),

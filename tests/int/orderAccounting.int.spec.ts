@@ -112,20 +112,32 @@ describe('S2.2/S2.6: облікові поля замовлення', () => {
     expect(idOf(order.warehouse)).toBe(webWarehouse)
   })
 
-  it('склад, джерело й автор не змінюються після створення', async () => {
+  it('джерело й автор не змінюються після створення', async () => {
     const order = await createByAdmin()
     const updated = await payload.update({
       collection: 'orders',
       id: order.id,
       user: admin,
-      data: { warehouse: webWarehouse, source: 'web', createdBy: null, status: 'shipped' } as never,
+      data: { source: 'web', createdBy: null, status: 'shipped' } as never,
       depth: 0,
     })
 
     expect(updated.status).toBe('shipped')
     expect(updated.source).toBe('admin')
-    expect(idOf(updated.warehouse)).toBe(adminWarehouse)
     expect(idOf(updated.createdBy)).toBe(String(admin.id))
+  })
+
+  it('склад історичного замовлення (облік вимкнено) не змінюється (В22)', async () => {
+    const { stockControlEnabled } = await payload.findGlobal({ slug: 'accounting-settings', depth: 0 })
+    await payload.updateGlobal({ slug: 'accounting-settings', data: { stockControlEnabled: false } as never })
+    const order = await createByAdmin().finally(() =>
+      payload.updateGlobal({ slug: 'accounting-settings', data: { stockControlEnabled: stockControlEnabled ?? false } as never }),
+    )
+
+    await expect(
+      payload.update({ collection: 'orders', id: order.id, user: admin, data: { warehouse: webWarehouse } as never }),
+    ).rejects.toThrow(/warehouse are frozen/)
+    expect(idOf((await payload.findByID({ collection: 'orders', id: order.id, depth: 0 })).warehouse)).toBe(adminWarehouse)
   })
 
   it('замовлення сайту без полів адреси відхиляється, з адмінки дозволено', async () => {

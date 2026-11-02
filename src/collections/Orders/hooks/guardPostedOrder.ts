@@ -6,7 +6,7 @@ import { cents, isOrderEditable, isOrderPosted, relationID, sameItems } from '@/
 /**
  * Сума продажу змінюється лише в замовленні, що чекає проведення й не оплачене (В20).
  * Проведене, оплачене, скасоване чи історичне замовлення не змінює позиції, суму, знижку,
- * клієнта й менеджера (дизайн, розд. 9.2, F6, S2.1). Відвантажене не повертається з `shipped`:
+ * клієнта, склад (В22) і менеджера (дизайн, розд. 9.2, F6, S2.1). Відвантажене не повертається з `shipped`:
  * зняти проведення можна лише скасуванням.
  * На update перевіряються лише поля, що прийшли в `data`: адмінка надсилає весь документ,
  * тому однакові значення пропускаються, а змінені відхиляються.
@@ -33,6 +33,7 @@ export const guardPostedOrder: CollectionBeforeChangeHook = ({ data, originalDoc
     ('total' in data && data.total !== undefined && cents(data.total) !== cents(originalDoc.total)) ||
     ('discount' in data && cents(data.discount) !== cents(originalDoc.discount)) ||
     ('customer' in data && relationID(data.customer) !== relationID(originalDoc.customer)) ||
+    ('warehouse' in data && relationID(data.warehouse) !== null && relationID(data.warehouse) !== relationID(originalDoc.warehouse)) ||
     ('manager' in data && relationID(data.manager) !== relationID(originalDoc.manager))
 
   if (changed) {
