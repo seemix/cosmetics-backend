@@ -1,10 +1,22 @@
-import type { GlobalConfig } from 'payload'
+import type { GlobalBeforeChangeHook, GlobalConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { hiddenUnlessAdmin } from '@/access/isAdmin'
 import { description, label, localized } from '@/i18n'
 
 const activeWarehouse = { isActive: { equals: true } }
+
+/**
+ * Дата початку обліку ставиться сама при першому вмиканні контролю залишків (runbook, крок 6):
+ * в адмінці поле лише для читання. Вже задану дату й явне значення з Local API хук не змінює.
+ */
+const stampAccountingStart: GlobalBeforeChangeHook = ({ data, originalDoc }) => {
+  const enabling = data.stockControlEnabled === true && originalDoc?.stockControlEnabled !== true
+  if (enabling && !originalDoc?.accountingStartAt && !data.accountingStartAt) {
+    data.accountingStartAt = new Date().toISOString()
+  }
+  return data
+}
 
 export const AccountingSettings: GlobalConfig = {
   slug: 'accounting-settings',
@@ -17,6 +29,7 @@ export const AccountingSettings: GlobalConfig = {
     hidden: hiddenUnlessAdmin,
     group: localized('custom:group:stock'),
   },
+  hooks: { beforeChange: [stampAccountingStart] },
   fields: [
     {
       name: 'stockControlEnabled',
