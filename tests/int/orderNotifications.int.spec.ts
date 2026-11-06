@@ -73,6 +73,52 @@ describe('сповіщення про замовлення: зовнішні с�
     }
   })
 
+  it('пише в лог причину відмови Telegram', async () => {
+    vi.stubEnv('TELEGRAM_BOT_TOKEN', 'test-token')
+    vi.stubEnv('TELEGRAM_CHAT_ID', 'test-chat')
+    const telegramError = new axios.AxiosError('Request failed with status code 400')
+    telegramError.response = {
+      data: { ok: false, description: "Bad Request: can't parse entities" },
+    } as never
+    const post = vi.spyOn(axios, 'post').mockRejectedValue(telegramError)
+
+    try {
+      const { status } = await callCreateOrder(payload, { body: await orderBody() })
+
+      expect(status).toBe(201)
+      expect(payload.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("can't parse entities"),
+      )
+    } finally {
+      post.mockRestore()
+    }
+  })
+
+  it('екранує HTML у даних замовлення для Telegram', async () => {
+    vi.stubEnv('TELEGRAM_BOT_TOKEN', 'test-token')
+    vi.stubEnv('TELEGRAM_CHAT_ID', 'test-chat')
+    const post = vi.spyOn(axios, 'post').mockResolvedValue({ data: { result: { message_id: 7 } } })
+
+    try {
+      const body = await orderBody()
+      const { status } = await callCreateOrder(payload, {
+        body: {
+          ...body,
+          shippingAddress: { ...shippingAddress, address: 'Str. A & B <bloc 2>' },
+          comment: 'до <14:00> & після',
+        },
+      })
+
+      expect(status).toBe(201)
+      const text = (post.mock.calls[0][1] as { text: string }).text
+      expect(text).toContain('Str. A &amp; B &lt;bloc 2&gt;')
+      expect(text).toContain('до &lt;14:00&gt; &amp; після')
+      expect(text).toContain('<b>🛒 Новый заказ')
+    } finally {
+      post.mockRestore()
+    }
+  })
+
   it('після коміту зберігає id повідомлення Telegram у замовленні', async () => {
     vi.stubEnv('TELEGRAM_BOT_TOKEN', 'test-token')
     vi.stubEnv('TELEGRAM_CHAT_ID', 'test-chat')

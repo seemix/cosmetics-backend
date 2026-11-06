@@ -1,3 +1,4 @@
+import axios from 'axios'
 import type { CollectionAfterChangeHook } from 'payload'
 
 import { emailHeader } from '@/email-templates/email-header'
@@ -89,7 +90,7 @@ const notify = async ({ doc, req, operation }: HookArgs) => {
         })
 
       } catch (e: any) {
-        const errorDesc = e.response?.data?.description || e.message || ''
+        const errorDesc = describeError(e)
         if (!errorDesc.includes('message is not modified')) {
           req.payload.logger.error(`Telegram update error: ${errorDesc}`)
         }
@@ -97,6 +98,15 @@ const notify = async ({ doc, req, operation }: HookArgs) => {
     }
 
   } catch (error) {
-    req.payload.logger.error(`Notification hook error: ${error}`)
+    req.payload.logger.error(`Notification hook error: ${describeError(error)}`)
   }
+}
+
+/** Причина відмови Telegram лежить у `response.data.description` (напр. "can't parse entities"). */
+const describeError = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const description = (error.response?.data as { description?: string } | undefined)?.description
+    return description ? `${error.message}: ${description}` : error.message
+  }
+  return String(error)
 }
