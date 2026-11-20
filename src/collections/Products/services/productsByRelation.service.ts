@@ -131,7 +131,7 @@ export async function getProductsByRelation(
   const productsRes = await req.payload.find({
     collection: 'products',
     locale: req.locale,
-    sort: sortGenerator(req.query.sort as string),
+    sort: sortGenerator(req.query.sort as string, req.user as { wholesale?: boolean | null } | null),
     draft: false,
     limit: 0,
     depth: 2,

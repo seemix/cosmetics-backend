@@ -1,17 +1,18 @@
-export const sortGenerator = (sortParam: string) => {
-  let sort: string | undefined
+/**
+ * Сортування за ціною йде за тим полем, яке бачить покупець (див. calculateProductPrice):
+ * роздріб — `retailPrice`, оптовик — `wholesalePrice`.
+ */
+export const sortGenerator = (sortParam: string, user?: { wholesale?: boolean | null } | null) => {
+  const priceField = user?.wholesale === true ? 'wholesalePrice' : 'retailPrice'
 
   switch (sortParam) {
     case 'price-asc':
-      sort = 'wholesalePrice'
-      break
+      return priceField
     case 'price-desc':
-      sort = '-wholesalePrice'
-      break
+      return `-${priceField}`
     default:
-      sort = '-updatedAt'
+      return '-updatedAt'
   }
-  return sort
 }
 
 export const pageGenerator = (pageParam: string) => {

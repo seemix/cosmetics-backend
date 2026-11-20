@@ -54,7 +54,7 @@ export const searchProducts: Endpoint = {
     const result = await req.payload.find({
       collection: 'products',
       locale: req.locale,
-      sort: sortGenerator(sort as string),
+      sort: sortGenerator(sort as string, req.user as { wholesale?: boolean | null } | null),
       draft: false,
       page: Number(page),
       limit: Number(limit),
