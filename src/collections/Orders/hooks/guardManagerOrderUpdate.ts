@@ -34,8 +34,12 @@ const normalize = (value: unknown): unknown => {
 
 const same = (next: unknown, prev: unknown) => JSON.stringify(normalize(next)) === JSON.stringify(normalize(prev))
 
+/** Переходи статусу, дозволені менеджеру (В23), у вигляді `від→до`. Решту робить admin. */
+const MANAGER_TRANSITIONS: ReadonlySet<string> = new Set(['pending→shipped', 'backorder→pending', 'pending→backorder'])
+
 /**
- * Менеджер змінює статус замовлення лише переходом `pending → shipped` (розд. 11, В9).
+ * Менеджер змінює статус замовлення лише переходами `pending → shipped`, `backorder → pending`
+ * і `pending → backorder` (розд. 11, В9, В23), зокрема в тому самому збереженні, що й правки.
  * Поля він може змінити лише в замовленні, що чекає відвантаження й не оплачене (В21):
  * ціни, суму й виручку тоді перераховують хуки, а поля без права на запис (ціна позиції, склад,
  * облікові) Payload уже прибрав з `data` (field access). В іншому замовленні будь-яка зміна поля
@@ -56,7 +60,7 @@ export const guardManagerOrderUpdate: CollectionBeforeChangeHook = ({ data, orig
   }
 
   const status = data.status ?? originalDoc.status
-  if (status !== originalDoc.status && !(originalDoc.status === 'pending' && status === 'shipped')) reject()
+  if (status !== originalDoc.status && !MANAGER_TRANSITIONS.has(`${originalDoc.status}→${status}`)) reject()
 
   return data
 }

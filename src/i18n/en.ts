@@ -91,7 +91,7 @@ export const en = {
       postedOrderLocked: 'A posted order cannot be edited: items, total, discount, customer and warehouse are frozen',
       backorderNotShippable: 'A backorder cannot be shipped: first move it to Pending to reserve the items',
       cancelledOrderFinal: 'A cancelled order cannot change its status',
-      managerOrderTransition: 'A manager can edit only an unshipped unpaid order and change the status only from Pending to Shipped',
+      managerOrderTransition: 'A manager can edit only an unshipped unpaid order and change the status only from Pending to Shipped, from Backorder to Pending or from Pending to Backorder',
       managerCannotPublish: 'A manager can only save product drafts; an administrator publishes them',
       paidOrderCancel: 'The order has payments: refund the customer before cancelling',
       postedOrderNotDeletable: 'An order with deducted stock cannot be deleted, cancel it instead',

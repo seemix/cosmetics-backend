@@ -177,7 +177,7 @@
   резерв не знімає.
   ```
 
-- [ ] **R6. Переходи статусів і права manager.**
+- [x] **R6. Переходи статусів і права manager.**
   Складність: S. Модель: **Opus 5.5**.
   Файли: `src/collections/Orders/hooks/guardManagerOrderUpdate.ts`, `src/collections/Orders/hooks/guardPostedOrder.ts`,
   `src/services/orders/orderState.ts`, i18n, тести `orderManager`, `guardPostedOrder`.

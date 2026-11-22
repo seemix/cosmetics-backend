@@ -281,6 +281,91 @@ describe('M3: знімок менеджера в замовленні (розд.
     })
   })
 
+  describe('переходи статусів (В23)', () => {
+    type Status = 'pending' | 'paid' | 'backorder' | 'shipped' | 'cancelled'
+
+    const orderIn = async (status: Status) => {
+      const order = await payload.create({
+        collection: 'orders',
+        data: { items: [{ product: productId, quantity: 1, price: 0 }], total: 0, warehouse: warehouseId, status } as never,
+        depth: 0,
+      })
+      orders.push(String(order.id))
+      expect(order.status).toBe(status)
+      return order
+    }
+
+    const updateAs = (user: AuthUser, id: string | number, patch: Record<string, unknown>) =>
+      payload.update({ collection: 'orders', id, user, overrideAccess: false, data: patch as never, depth: 0 })
+
+    const statusOf = async (id: string | number) =>
+      (await payload.findByID({ collection: 'orders', id, depth: 0, overrideAccess: true })).status
+
+    it.each<[Status, Status]>([
+      ['pending', 'shipped'],
+      ['backorder', 'pending'],
+      ['pending', 'backorder'],
+    ])('manager: %s → %s проходить', async (from, to) => {
+      const order = await orderIn(from)
+      const updated = await updateAs(managerOne, order.id, { status: to })
+      expect(updated.status).toBe(to)
+    })
+
+    it.each<[Status, Status]>([
+      ['pending', 'paid'],
+      ['pending', 'cancelled'],
+      ['backorder', 'shipped'],
+      ['backorder', 'paid'],
+      ['backorder', 'cancelled'],
+      ['paid', 'backorder'],
+      ['paid', 'pending'],
+      ['paid', 'shipped'],
+      ['shipped', 'pending'],
+    ])('manager: %s → %s відхиляється (403)', async (from, to) => {
+      const order = await orderIn(from)
+      await expect(updateAs(managerOne, order.id, { status: to })).rejects.toMatchObject({ status: 403 })
+      expect(await statusOf(order.id)).toBe(from)
+    })
+
+    it.each<[Status, Status]>([
+      ['pending', 'paid'],
+      ['pending', 'backorder'],
+      ['pending', 'cancelled'],
+      ['backorder', 'pending'],
+      ['backorder', 'paid'],
+      ['backorder', 'cancelled'],
+      ['paid', 'backorder'],
+      ['paid', 'shipped'],
+    ])('admin: %s → %s проходить', async (from, to) => {
+      const order = await orderIn(from)
+      const updated = await updateAs(admin, order.id, { status: to })
+      expect(updated.status).toBe(to)
+    })
+
+    it('admin: backorder → shipped відхиляється (409)', async () => {
+      const order = await orderIn('backorder')
+      await expect(updateAs(admin, order.id, { status: 'shipped' })).rejects.toMatchObject({ status: 409 })
+      expect(await statusOf(order.id)).toBe('backorder')
+    })
+
+    it('manager редагує позиції backorder-замовлення й переводить його в pending у тому самому збереженні', async () => {
+      const order = await orderIn('backorder')
+
+      const edited = await updateAs(managerOne, order.id, { items: [{ product: productId, quantity: 3, price: 0 }] })
+      expect(edited.status).toBe('backorder')
+      expect(edited.items?.map((item) => item.quantity)).toEqual([3])
+
+      const reserved = await updateAs(managerOne, order.id, {
+        status: 'pending',
+        items: [{ product: productId, quantity: 2, price: 0 }],
+      })
+      expect(reserved.status).toBe('pending')
+      expect(reserved.items?.map((item) => item.quantity)).toEqual([2])
+      const stored = await payload.findByID({ collection: 'orders', id: order.id, depth: 0, overrideAccess: true })
+      expect(stored.accounting?.reservedItems?.map((row) => row.qty)).toEqual([2])
+    })
+  })
+
   describe('списання залишку', () => {
     it('менеджер відвантажує своє замовлення: списання залишку, поле manager не заважає', async () => {
       const before = await qtyAt(payload, productId, warehouseId)

@@ -38,7 +38,8 @@ export const hasReservation = (order: OrderStateLike): boolean =>
 
 /**
  * Позиції, суму, знижку й клієнта можна змінити: замовлення чекає проведення, не скасоване
- * й не оплачене (інакше сума могла б стати меншою за сплачене).
+ * й не оплачене (інакше сума могла б стати меншою за сплачене). Сюди входять `pending`
+ * і `backorder` (В23).
  */
 export const isOrderEditable = (order: OrderStateLike): boolean =>
   isOrderAwaitingPosting(order) && order?.status !== 'cancelled' && (Number(order?.paidBani) || 0) <= 0
