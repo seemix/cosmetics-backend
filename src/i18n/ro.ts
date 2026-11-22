@@ -599,6 +599,7 @@ export const ro: CustomTranslationsObject = {
       quickStatus: 'Status',
       quickDate: 'Data',
       quickAll: 'Toate',
+      quickCustom: 'Filtru propriu',
       date: {
         today: 'Azi',
         yesterday: 'Ieri',

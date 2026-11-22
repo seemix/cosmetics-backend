@@ -601,6 +601,7 @@ export const en = {
       quickStatus: 'Status',
       quickDate: 'Date',
       quickAll: 'All',
+      quickCustom: 'Custom filter',
       date: {
         today: 'Today',
         yesterday: 'Yesterday',

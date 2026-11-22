@@ -599,6 +599,7 @@ export const ru: CustomTranslationsObject = {
       quickStatus: 'Статус',
       quickDate: 'Дата',
       quickAll: 'Все',
+      quickCustom: 'Свой фильтр',
       date: {
         today: 'Сегодня',
         yesterday: 'Вчера',

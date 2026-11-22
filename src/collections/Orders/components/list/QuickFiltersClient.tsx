@@ -18,32 +18,26 @@ import {
   statusConditions,
   type DatePreset,
   type DateRange,
+  type OrderStatus,
 } from './quickFilterWhere'
 
 import './ordersList.css'
 
 type Props = { ranges: Record<DatePreset, DateRange> }
 
-const Chip = ({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) => (
-  <button
-    type="button"
-    className={`orders-quick-filters__chip${active ? ' orders-quick-filters__chip--active' : ''}`}
-    aria-pressed={active}
-    onClick={onClick}
-  >
-    {children}
-  </button>
-)
+/** Значення select: '' — без фільтра, CUSTOM — умова поля задана звичайним фільтром і не збігається з пунктом. */
+const ALL = ''
+const CUSTOM = '__custom'
 
-/** Кнопки «Статус» і «Дата»: змінюють лише свої умови фільтра, інші умови й пошук лишаються. */
+/** Швидкі фільтри «Статус» і «Дата» в один ряд: змінюють лише свої умови, інші умови й пошук лишаються. */
 export const OrdersQuickFiltersClient = ({ ranges }: Props) => {
   const { query, refineListData } = useListQuery()
   const { t: translate } = useTranslation()
   const t = customT(translate)
   const where = query?.where as Where | undefined
 
-  const status = activeStatus(where)
-  const preset = activeDatePreset(where, ranges)
+  const status = activeStatus(where) ?? (hasFieldConditions(where, STATUS_FIELD) ? CUSTOM : ALL)
+  const preset = activeDatePreset(where, ranges) ?? (hasFieldConditions(where, DATE_FIELD) ? CUSTOM : ALL)
 
   const apply = (field: string, conditions: Where[]) => {
     void refineListData({ where: replaceFieldConditions(where, field, conditions), page: 1 })
@@ -51,28 +45,52 @@ export const OrdersQuickFiltersClient = ({ ranges }: Props) => {
 
   return (
     <div className="orders-quick-filters">
-      <div className="orders-quick-filters__row" role="group" aria-label={t('custom:ordersList:quickStatus')}>
+      <label className="orders-quick-filters__field">
         <span className="orders-quick-filters__label">{t('custom:ordersList:quickStatus')}</span>
-        <Chip active={!hasFieldConditions(where, STATUS_FIELD)} onClick={() => apply(STATUS_FIELD, [])}>
-          {t('custom:ordersList:quickAll')}
-        </Chip>
-        {ORDER_STATUSES.map((value) => (
-          <Chip key={value} active={status === value} onClick={() => apply(STATUS_FIELD, statusConditions(value))}>
-            {t(`custom:status:${value}`)}
-          </Chip>
-        ))}
-      </div>
-      <div className="orders-quick-filters__row" role="group" aria-label={t('custom:ordersList:quickDate')}>
+        <select
+          className="orders-quick-filters__select"
+          value={status}
+          onChange={(event) => {
+            const value = event.target.value
+            apply(STATUS_FIELD, value === ALL ? [] : statusConditions(value as OrderStatus))
+          }}
+        >
+          <option value={ALL}>{t('custom:ordersList:quickAll')}</option>
+          {ORDER_STATUSES.map((value) => (
+            <option key={value} value={value}>
+              {t(`custom:status:${value}`)}
+            </option>
+          ))}
+          {status === CUSTOM && (
+            <option value={CUSTOM} disabled>
+              {t('custom:ordersList:quickCustom')}
+            </option>
+          )}
+        </select>
+      </label>
+      <label className="orders-quick-filters__field">
         <span className="orders-quick-filters__label">{t('custom:ordersList:quickDate')}</span>
-        <Chip active={!hasFieldConditions(where, DATE_FIELD)} onClick={() => apply(DATE_FIELD, [])}>
-          {t('custom:ordersList:quickAll')}
-        </Chip>
-        {DATE_PRESETS.map((value) => (
-          <Chip key={value} active={preset === value} onClick={() => apply(DATE_FIELD, dateConditions(ranges[value]))}>
-            {t(`custom:ordersList:date:${value}`)}
-          </Chip>
-        ))}
-      </div>
+        <select
+          className="orders-quick-filters__select"
+          value={preset}
+          onChange={(event) => {
+            const value = event.target.value
+            apply(DATE_FIELD, value === ALL ? [] : dateConditions(ranges[value as DatePreset]))
+          }}
+        >
+          <option value={ALL}>{t('custom:ordersList:quickAll')}</option>
+          {DATE_PRESETS.map((value) => (
+            <option key={value} value={value}>
+              {t(`custom:ordersList:date:${value}`)}
+            </option>
+          ))}
+          {preset === CUSTOM && (
+            <option value={CUSTOM} disabled>
+              {t('custom:ordersList:quickCustom')}
+            </option>
+          )}
+        </select>
+      </label>
     </div>
   )
 }
