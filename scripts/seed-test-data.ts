@@ -14,9 +14,9 @@ import type { Payload } from 'payload'
 const IMG = 'https://admin.nextlevelshop.md/api/media/file/'
 
 const brands = [
-  { title: 'Xflex', logo: '94.jpg' },
-  { title: 'Uppercut Deluxe', logo: 'uppercut-logo.webp' },
-  { title: 'Luxina', logo: 'luxina-fixed.webp' },
+  { title: 'Xflex', slug: 'xflex', logo: '94.jpg' },
+  { title: 'Uppercut Deluxe', slug: 'uppercut-deluxe', logo: 'uppercut-logo.webp' },
+  { title: 'Luxina', slug: 'luxina', logo: 'luxina-fixed.webp' },
 ]
 
 const categories = [
@@ -133,7 +133,7 @@ export const seedTestData = async (payload: Payload) => {
   for (const brand of brands) {
     const id = await findOrCreate(payload, 'brands', brand.title, async () => {
       const logo = await uploadImage(payload, brand.logo, brand.title)
-      return payload.create({ collection: 'brands', data: { title: brand.title, ...(logo ? { logo } : {}) } })
+      return payload.create({ collection: 'brands', data: { title: brand.title, slug: brand.slug, ...(logo ? { logo } : {}) } })
     })
     brandIds.set(brand.title, id)
   }
