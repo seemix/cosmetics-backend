@@ -400,7 +400,8 @@ const CUSTOMER_FORBIDDEN = [
   'accounting', 'cogsBani', 'revenueBani', 'stockPostedAt', 'cancelledAt',
   'manager', 'createdBy', 'source', 'warehouse', 'roles', 'hash', 'salt',
 ]
-const MANAGER_FORBIDDEN = ['accounting', 'cogsBani', 'revenueBani', 'stockPostedAt', 'cancelledAt', 'roles', 'hash', 'salt']
+// Група accounting видима для manager лише з полями резерву (В23); собівартість, виручка й проведення закриті.
+const MANAGER_FORBIDDEN = ['cogsBani', 'revenueBani', 'stockPostedAt', 'cancelledAt', 'roles', 'hash', 'salt']
 
 const forbiddenKeysIn = (body: unknown, forbidden: string[]) => [...deepKeys(body)].filter((key) => forbidden.includes(key))
 
@@ -427,7 +428,7 @@ describe('C. поля: читання', () => {
     expect(forbiddenKeysIn(me.body, secrets)).toEqual([])
   })
 
-  it('manager: замовлення без accounting на будь-якій глибині, клієнти без roles', async () => {
+  it('manager: замовлення без собівартості й виручки на будь-якій глибині, клієнти без roles', async () => {
     for (const id of [f.orderOwn, f.orderOther, f.orderOfManager2]) {
       for (const depth of [0, 2, 3]) {
         const response = await ctx.http('GET', `/orders/${id}?depth=${depth}`, 'manager')

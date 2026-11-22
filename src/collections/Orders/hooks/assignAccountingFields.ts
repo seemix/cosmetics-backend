@@ -12,6 +12,21 @@ const relationID = (value: unknown): string | number | undefined => {
   return value as string | number
 }
 
+/** Поля резерву (В23) пише лише система: значення з тіла запиту ігноруються. */
+const RESERVATION_KEYS = ['reservedItems', 'reservedAt', 'shortages'] as const
+
+const withReservationFrom = (
+  accounting: Record<string, unknown> | null | undefined,
+  source: Record<string, unknown> | null | undefined,
+): Record<string, unknown> => {
+  const next: Record<string, unknown> = { ...accounting }
+  for (const key of RESERVATION_KEYS) {
+    if (source && key in source) next[key] = source[key]
+    else delete next[key]
+  }
+  return next
+}
+
 /**
  * Облікові поля замовлення (дизайн, розд. 2.5, 4.3).
  * Create: `source` за контекстом, склад (для сайту завжди з налаштувань, значення з тіла ігнорується),
@@ -28,6 +43,10 @@ export const assignAccountingFields: CollectionBeforeChangeHook = async ({
   if (!data) return data
 
   if (operation === 'update') {
+    // Поки замовлення не змінюється хуком нижче, резерв береться з оригіналу, а не з тіла запиту.
+    if (data.accounting) {
+      data.accounting = withReservationFrom(data.accounting, originalDoc?.accounting)
+    }
     if (originalDoc) {
       data.source = originalDoc.source
       // Склад змінюється лише до відвантаження й оплати (В22); порожнє значення його не стирає.
@@ -77,7 +96,7 @@ export const assignAccountingFields: CollectionBeforeChangeHook = async ({
     })) ?? undefined
 
   data.accounting = {
-    ...data.accounting,
+    ...withReservationFrom(data.accounting, null),
     revenueBani: Math.round((Number(data.total) || 0) * 100),
   }
   data.paidBani = 0

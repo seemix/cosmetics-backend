@@ -32,6 +32,12 @@ import { collectionLabels, description, label, localized } from '@/i18n'
  */
 const adminCreateOnly = { read: adminOrManagerField, create: adminOrManagerField, update: () => false }
 
+/** Поля резерву (В23): бачать admin і manager, змінюють лише хуки (Local API без перевірки доступу). */
+const reservationFieldAccess = { read: adminOrManagerField, create: () => false, update: () => false }
+
+/** Облікові поля групи `accounting` без резерву: лише admin (собівартість, виручка). */
+const adminOnlyRead = { read: adminOnlyFieldAccess }
+
 /** Склад можна змінити, поки замовлення не відвантажене й не оплачене (В22); інакше його тримають хуки. */
 const adminOrManagerWarehouse = { read: adminOrManagerField, create: adminOrManagerField, update: adminOrManagerField }
 
@@ -183,6 +189,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       type: 'select',
       options: [
         { label: label('custom:status:pending'), value: 'pending' },
+        { label: label('custom:status:backorder'), value: 'backorder' },
         { label: label('custom:status:paid'), value: 'paid' },
         { label: label('custom:status:shipped'), value: 'shipped' },
         { label: label('custom:status:cancelled'), value: 'cancelled' },
@@ -302,14 +309,42 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       name: 'accounting',
       label: label('custom:field:accounting'),
       type: 'group',
-      access: { read: adminOnlyFieldAccess, create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
+      // Групу бачить і manager (знімок резерву, В23); решта полів лишається лише для admin.
+      access: { read: adminOrManagerField, create: adminOnlyFieldAccess, update: adminOnlyFieldAccess },
       admin: { readOnly: true },
       fields: [
-        { name: 'stockTracked', label: label('custom:field:stockTracked'), type: 'checkbox' },
-        { name: 'stockPostedAt', label: label('custom:field:stockPostedAt'), type: 'date', index: true },
-        moneyField({ name: 'cogsBani', label: label('custom:field:cogsBani') }),
-        moneyField({ name: 'revenueBani', label: label('custom:field:revenueBani') }),
-        { name: 'cancelledAt', label: label('custom:field:cancelledAt'), type: 'date' },
+        { name: 'stockTracked', label: label('custom:field:stockTracked'), type: 'checkbox', access: adminOnlyRead },
+        { name: 'stockPostedAt', label: label('custom:field:stockPostedAt'), type: 'date', index: true, access: adminOnlyRead },
+        moneyField({ name: 'cogsBani', label: label('custom:field:cogsBani'), access: adminOnlyRead }),
+        moneyField({ name: 'revenueBani', label: label('custom:field:revenueBani'), access: adminOnlyRead }),
+        { name: 'cancelledAt', label: label('custom:field:cancelledAt'), type: 'date', access: adminOnlyRead },
+        // Резерв товару (В23): пише лише система (хуки), через API поля не змінюються.
+        {
+          name: 'reservedItems',
+          label: label('custom:field:reservedItems'),
+          type: 'array',
+          access: reservationFieldAccess,
+          admin: { readOnly: true },
+          fields: [
+            { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
+            { name: 'warehouse', label: label('custom:term:warehouse'), type: 'relationship', relationTo: 'warehouses', required: true },
+            { name: 'qty', label: label('custom:term:quantity'), type: 'number', required: true },
+          ],
+        },
+        { name: 'reservedAt', label: label('custom:field:reservedAt'), type: 'date', access: reservationFieldAccess, admin: { readOnly: true } },
+        {
+          name: 'shortages',
+          label: label('custom:field:shortages'),
+          type: 'array',
+          access: reservationFieldAccess,
+          admin: { readOnly: true },
+          fields: [
+            { name: 'product', label: label('custom:term:product'), type: 'relationship', relationTo: 'products', required: true },
+            { name: 'warehouse', label: label('custom:term:warehouse'), type: 'relationship', relationTo: 'warehouses', required: true },
+            { name: 'requested', label: label('custom:field:requested'), type: 'number', required: true },
+            { name: 'available', label: label('custom:field:available'), type: 'number', required: true },
+          ],
+        },
       ],
     },
   ],

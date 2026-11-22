@@ -103,7 +103,7 @@
   звіт порожній.
   ```
 
-- [ ] **R3. Поля замовлення, статус backorder, налаштування строку.**
+- [x] **R3. Поля замовлення, статус backorder, налаштування строку.**
   Складність: S. Модель: **Sonnet 5.5**.
   Файли: `src/collections/Orders/index.ts`, `src/collections/Orders/types/custom-order.ts`,
   `src/globals/AccountingSettings.ts`, `src/i18n/{en,ru,ro}.ts`, `src/i18n/pluginEcommerce.ts` (якщо статуси там).

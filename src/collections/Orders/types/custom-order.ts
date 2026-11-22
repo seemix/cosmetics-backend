@@ -25,7 +25,7 @@ export type CustomOrder = {
   SRL?: string,
   promoCodeApplied?: string
   discount?: number
-  status: 'pending' | 'paid' | 'shipped' | 'cancelled'
+  status: 'pending' | 'backorder' | 'paid' | 'shipped' | 'cancelled'
   shippingAddress: ShippingAddress
   comment?: string
   createdAt?: string

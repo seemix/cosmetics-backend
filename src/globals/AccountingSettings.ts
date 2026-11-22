@@ -1,8 +1,11 @@
-import type { GlobalBeforeChangeHook, GlobalConfig } from 'payload'
+import type { GlobalBeforeChangeHook, GlobalConfig, NumberFieldValidation } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { hiddenUnlessAdmin } from '@/access/isAdmin'
+import { number } from 'payload/shared'
+
 import { description, label, localized } from '@/i18n'
+import { customT } from '@/i18n/labels'
 
 const activeWarehouse = { isActive: { equals: true } }
 
@@ -73,6 +76,17 @@ export const AccountingSettings: GlobalConfig = {
         date: { pickerAppearance: 'dayAndTime' },
         description: description('custom:desc:lockedUntil'),
       },
+    },
+    {
+      name: 'reservationDays',
+      label: label('custom:field:reservationDays'),
+      type: 'number',
+      min: 1,
+      validate: ((value, options) =>
+        typeof value === 'number' && !Number.isInteger(value)
+          ? customT(options.req.t)('custom:validation:wholeNumber')
+          : number(value, options)) as NumberFieldValidation,
+      admin: { description: description('custom:desc:reservationDays') },
     },
     {
       name: 'assignOrderToCreatorIfNoManager',

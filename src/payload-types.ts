@@ -224,7 +224,7 @@ export interface Order {
       }[]
     | null;
   total: number;
-  status?: ('pending' | 'paid' | 'shipped' | 'cancelled') | null;
+  status?: ('pending' | 'backorder' | 'paid' | 'shipped' | 'cancelled') | null;
   paymentType?: ('cash' | 'transfer') | null;
   SRL?: string | null;
   shippingAddress?: {
@@ -249,6 +249,24 @@ export interface Order {
     cogsBani?: number | null;
     revenueBani?: number | null;
     cancelledAt?: string | null;
+    reservedItems?:
+      | {
+          product: string | Product;
+          warehouse: string | Warehouse;
+          qty: number;
+          id?: string | null;
+        }[]
+      | null;
+    reservedAt?: string | null;
+    shortages?:
+      | {
+          product: string | Product;
+          warehouse: string | Warehouse;
+          requested: number;
+          available: number;
+          id?: string | null;
+        }[]
+      | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -1357,6 +1375,24 @@ export interface OrdersSelect<T extends boolean = true> {
         cogsBani?: T;
         revenueBani?: T;
         cancelledAt?: T;
+        reservedItems?:
+          | T
+          | {
+              product?: T;
+              warehouse?: T;
+              qty?: T;
+              id?: T;
+            };
+        reservedAt?: T;
+        shortages?:
+          | T
+          | {
+              product?: T;
+              warehouse?: T;
+              requested?: T;
+              available?: T;
+              id?: T;
+            };
       };
   updatedAt?: T;
   createdAt?: T;
@@ -2109,6 +2145,7 @@ export interface AccountingSetting {
   defaultWebWarehouse: string | Warehouse;
   defaultAdminWarehouse?: (string | null) | Warehouse;
   lockedUntil?: string | null;
+  reservationDays?: number | null;
   assignOrderToCreatorIfNoManager?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2123,6 +2160,7 @@ export interface AccountingSettingsSelect<T extends boolean = true> {
   defaultWebWarehouse?: T;
   defaultAdminWarehouse?: T;
   lockedUntil?: T;
+  reservationDays?: T;
   assignOrderToCreatorIfNoManager?: T;
   updatedAt?: T;
   createdAt?: T;

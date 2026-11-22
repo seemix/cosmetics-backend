@@ -100,6 +100,12 @@ const rest = async (path: string, user?: AuthUser) => {
   return { status: response.status, body: (await response.json()) as any }
 }
 
+/** Manager бачить у accounting лише поля резерву (В23): без собівартості, виручки й проведення. */
+const expectReservationOnly = (accounting: unknown) => {
+  const keys = Object.keys((accounting as Record<string, unknown> | undefined) ?? {})
+  expect(keys.filter((key) => !['reservedItems', 'reservedAt', 'shortages', 'id'].includes(key))).toEqual([])
+}
+
 describe('M1: матриця прав (розд. 11)', () => {
   beforeAll(async () => {
     payload = await getPayload({ config: await config })
@@ -378,7 +384,7 @@ describe('M1: матриця прав (розд. 11)', () => {
       }, ADMIN_MANAGER)
     })
 
-    it('read: admin і manager усі, customer свої, гість нічого; accounting лише admin', async () => {
+    it('read: admin і manager усі, customer свої, гість нічого; accounting для manager лише резерв', async () => {
       const own = await adminOrder(String(users.customer.id))
       const foreign = await adminOrder(String(otherCustomer.id), 'shipped')
 
@@ -389,7 +395,7 @@ describe('M1: матриця прав (розд. 11)', () => {
         expect(doc.paymentState).toBe('unpaid')
         expect(doc.warehouse).toBeDefined()
         if (role === 'admin') expect(doc.accounting?.stockPostedAt).toBeTruthy()
-        else expect(doc).not.toHaveProperty('accounting')
+        else expectReservationOnly(doc.accounting)
       }
 
       const asCustomer = await payload.find({
@@ -513,7 +519,7 @@ describe('M1: матриця прав (розд. 11)', () => {
 
       await managerUpdate(order.id, { status: 'shipped' })
       expect(await qtyAt(payload, publishedProduct, shop)).toBe(before - 2)
-      expect(order).not.toHaveProperty('accounting')
+      expectReservationOnly(order.accounting)
       expect(order.source).toBe('admin')
       expect(idOf(order.createdBy)).toBe(String(users.manager.id))
       expect(idOf(order.warehouse)).toBe(shop)
@@ -598,7 +604,7 @@ describe('M1: матриця прав (розд. 11)', () => {
 
       const asManager = await rest(`/orders/${foreign.id}?depth=0`, users.manager)
       expect(asManager.status).toBe(200)
-      expect(asManager.body).not.toHaveProperty('accounting')
+      expectReservationOnly(asManager.body.accounting)
       expect(asManager.body.paymentState).toBe('unpaid')
 
       const asCustomer = await rest(`/orders/${foreign.id}?depth=0`, users.customer)
