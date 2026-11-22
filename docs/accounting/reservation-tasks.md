@@ -246,7 +246,7 @@
   Тест на cosmetics_test: суміш замовлень із достатнім і недостатнім залишком.
   ```
 
-- [ ] **R10. Документація.**
+- [x] **R10. Документація.**
   Складність: XS. Модель: **Sonnet 5.5**.
   Файли: `docs/decisions.md` (статус В23 → виконано), `docs/accounting/frontend-stock-notes.md`,
   `docs/accounting/runbook.md`.
