@@ -593,6 +593,16 @@ export const ro: CustomTranslationsObject = {
       acceptPaymentHint: 'Creează o chitanță ciornă pentru suma rămasă, verificați-o și înregistrați-o',
       acceptPaymentFailed: 'Nu s-a putut crea plata',
     },
+    reservation: {
+      widgetTitle: 'Rezervări',
+      widgetExpired: 'Rezervări expirate',
+      widgetBackorder: 'La comandă',
+      widgetOversold: 'Poziții vândute în exces',
+      widgetNoControl: 'Perioada rezervării nu este setată: rezervările expirate nu sunt urmărite',
+      bannerExpired: 'Perioada rezervării a expirat pe {{date}}',
+      bannerBackorder: 'Stoc insuficient pentru această comandă:',
+      shortageLine: 'necesar {{requested}}, disponibil {{available}}',
+    },
     reports: {
       navLink: 'Rapoarte',
       title: 'Rapoarte',

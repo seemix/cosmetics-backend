@@ -206,7 +206,7 @@
   і available; manager не бачить собівартості, як і раніше.
   ```
 
-- [ ] **R8. Строк резерву: віджет, банер, фільтр.**
+- [x] **R8. Строк резерву: віджет, банер, фільтр.**
   Складність: M. Модель: **Sonnet 5.5**.
   Файли: новий `src/services/orders/reservationExpiry.ts`, новий ендпоінт
   `src/endpoints/reservationSummary.ts`, компоненти в `src/components/ReservationWidget/` і

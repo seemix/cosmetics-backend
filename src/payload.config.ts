@@ -127,8 +127,14 @@ export default buildConfig({
     },
     // Картки колекцій на головній з іконками, як у бічному меню (стандартний віджет `collections` без іконок).
     dashboard: {
-      widgets: [{ slug: 'collection-icons', ComponentPath: '@/components/CollectionIconCards#CollectionIconCards', minWidth: 'full' }],
-      defaultLayout: [{ widgetSlug: 'collection-icons', width: 'full' }],
+      widgets: [
+        { slug: 'reservations', ComponentPath: '@/components/ReservationWidget#ReservationWidget', minWidth: 'full' },
+        { slug: 'collection-icons', ComponentPath: '@/components/CollectionIconCards#CollectionIconCards', minWidth: 'full' },
+      ],
+      defaultLayout: [
+        { widgetSlug: 'reservations', width: 'full' },
+        { widgetSlug: 'collection-icons', width: 'full' },
+      ],
     },
     user: Users.slug,
   },

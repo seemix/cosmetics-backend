@@ -6,6 +6,7 @@ import { createOrder } from '@/collections/Orders/endpoints/createOrder'
 import { acceptPayment } from '@/collections/Orders/endpoints/acceptPayment'
 import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
+import { reservationSummary } from '@/endpoints/reservationSummary'
 import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
 import { assignAccountingFields } from '@/collections/Orders/hooks/assignAccountingFields'
 import { postOrderStock } from '@/collections/Orders/hooks/postOrderStock'
@@ -107,6 +108,15 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       admin: {
         components: {
           Field: '@/collections/Orders/components/AcceptPaymentButton#AcceptPaymentButton',
+        },
+      },
+    },
+    {
+      name: 'reservationBanner',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/collections/Orders/components/ReservationBanner#ReservationBanner',
         },
       },
     },
@@ -354,7 +364,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     },
   ],
   indexes: [{ fields: ['manager', 'createdAt'] }],
-  endpoints: [createOrder, getMyOrders, acceptPayment],
+  endpoints: [createOrder, getMyOrders, acceptPayment, reservationSummary],
   hooks: {
     beforeOperation: [guardSortFields],
     // Додаємо хук перед збереженням замовлення.

@@ -593,6 +593,16 @@ export const ru: CustomTranslationsObject = {
       acceptPaymentHint: 'Создаёт черновик поступления на остаток суммы, проверьте и проведите его',
       acceptPaymentFailed: 'Не удалось создать оплату',
     },
+    reservation: {
+      widgetTitle: 'Резервы',
+      widgetExpired: 'Просроченные резервы',
+      widgetBackorder: 'Под заказ',
+      widgetOversold: 'Перепроданные позиции',
+      widgetNoControl: 'Срок резерва не задан: просроченные резервы не отслеживаются',
+      bannerExpired: 'Срок резерва истёк {{date}}',
+      bannerBackorder: 'Не хватает товара для этого заказа:',
+      shortageLine: 'нужно {{requested}}, доступно {{available}}',
+    },
     reports: {
       navLink: 'Отчёты',
       title: 'Отчёты',

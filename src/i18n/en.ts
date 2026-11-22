@@ -595,6 +595,16 @@ export const en = {
       acceptPaymentHint: 'Creates a draft cash receipt for the remaining amount, review and post it',
       acceptPaymentFailed: 'Could not create the payment',
     },
+    reservation: {
+      widgetTitle: 'Reservations',
+      widgetExpired: 'Expired reservations',
+      widgetBackorder: 'Backorders',
+      widgetOversold: 'Oversold items',
+      widgetNoControl: 'Reservation period is not set: expired reservations are not tracked',
+      bannerExpired: 'Reservation period expired on {{date}}',
+      bannerBackorder: 'Not enough stock for this backorder:',
+      shortageLine: 'requested {{requested}}, available {{available}}',
+    },
     reports: {
       navLink: 'Reports',
       title: 'Reports',
