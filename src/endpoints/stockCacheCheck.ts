@@ -7,7 +7,8 @@ import { requireSession } from '@/services/stock/session'
 /**
  * Перевірка й перебудова кешу залишків з журналу `stock-moves` (docs/accounting/design.md, розд. 4.4).
  * Журнал джерело правди: `stock-balances` має дорівнювати Σ qtyDelta за {product, warehouse},
- * `product-costs` Σ qtyDelta і Σ valueDeltaBani за product. Запускати в неробочий час:
+ * `product-costs` Σ qtyDelta і Σ valueDeltaBani за product. `stock-balances.reserved` (В23) має
+ * дорівнювати Σ `accounting.reservedItems[].qty` замовлень у `pending` і `paid`. Запускати в неробочий час:
  * проведення, що йдуть паралельно, дають розбіжності, яких насправді немає.
  */
 
@@ -29,11 +30,25 @@ export type CostDiscrepancy = {
   actualValueBani: number | null
 }
 
-export type StockCacheDiscrepancy = BalanceDiscrepancy | CostDiscrepancy
+/** В23: резерв у кеші не збігається зі знімками резерву замовлень. */
+export type ReservedDiscrepancy = {
+  type: 'reserved'
+  product: string
+  warehouse: string
+  expectedReserved: number
+  /** `null`, якщо документа кешу немає; відсутнє поле `reserved` у документі = 0. */
+  actualReserved: number | null
+}
+
+export type StockCacheDiscrepancy = BalanceDiscrepancy | CostDiscrepancy | ReservedDiscrepancy
 
 type ObjectIdLike = { toString(): string }
 type BalanceRow = { _id: { product: ObjectIdLike; warehouse: ObjectIdLike }; qty: number }
 type CostRow = { _id: ObjectIdLike; qty: number; valueBani: number }
+type ReservedRow = { _id: { product: ObjectIdLike; warehouse: ObjectIdLike }; qty: number }
+
+/** Статуси, у яких замовлення тримає резерв (В23). */
+const RESERVING_STATUSES = ['pending', 'paid']
 
 type Session = Awaited<ReturnType<typeof requireSession>>
 
@@ -54,12 +69,31 @@ const aggregateJournal = async (req: PayloadRequest, session?: Session) => {
   return { balances: await byBalance, costs: await byProduct }
 }
 
+/**
+ * Σ резерву зі знімків замовлень за {product, warehouse}. Сира агрегація: поле
+ * `accounting.reservedItems` може ще не бути в схемі замовлень.
+ */
+const aggregateReservations = (req: PayloadRequest, session?: Session) =>
+  req.payload.db.collections.orders
+    .aggregate<ReservedRow>([
+      { $match: { status: { $in: RESERVING_STATUSES }, 'accounting.reservedItems.0': { $exists: true } } },
+      { $unwind: '$accounting.reservedItems' },
+      {
+        $group: {
+          _id: { product: '$accounting.reservedItems.product', warehouse: '$accounting.reservedItems.warehouse' },
+          qty: { $sum: { $ifNull: ['$accounting.reservedItems.qty', 0] } },
+        },
+      },
+    ])
+    .session(session ?? null)
+
 const idOf = (value: unknown) =>
   String(typeof value === 'object' && value !== null && 'id' in value ? (value as { id: unknown }).id : value)
 
 /** Порівнює кеш із журналом і повертає розбіжності (нічого не змінює). */
 export const checkStockCache = async (req: PayloadRequest, session?: Session): Promise<StockCacheDiscrepancy[]> => {
   const journal = await aggregateJournal(req, session)
+  const reservations = await aggregateReservations(req, session)
   const [balanceDocs, costDocs] = await Promise.all([
     req.payload.find({ collection: 'stock-balances', pagination: false, depth: 0, req }),
     req.payload.find({ collection: 'product-costs', pagination: false, depth: 0, req }),
@@ -82,6 +116,23 @@ export const checkStockCache = async (req: PayloadRequest, session?: Session): P
 
     const [product, warehouse] = key.split(':')
     discrepancies.push({ type: 'balance', product, warehouse, expectedQty, actualQty })
+  }
+
+  const expectedReserved = new Map(
+    reservations.map((row) => [`${row._id.product}:${row._id.warehouse}`, row.qty]),
+  )
+  const actualReserved = new Map(
+    balanceDocs.docs.map((doc) => [`${idOf(doc.product)}:${idOf(doc.warehouse)}`, doc.reserved ?? 0]),
+  )
+
+  for (const key of new Set([...expectedReserved.keys(), ...actualReserved.keys()])) {
+    const expected = expectedReserved.get(key) ?? 0
+    const actual = actualReserved.get(key) ?? null
+
+    if (actual === expected || (actual === null && expected === 0)) continue
+
+    const [product, warehouse] = key.split(':')
+    discrepancies.push({ type: 'reserved', product, warehouse, expectedReserved: expected, actualReserved: actual })
   }
 
   const expectedCosts = new Map(journal.costs.map((row) => [String(row._id), row]))
@@ -109,9 +160,37 @@ export const checkStockCache = async (req: PayloadRequest, session?: Session): P
   return discrepancies
 }
 
+/** Виправляє документ кешу залишків або створює відсутній (невказані `qty`/`reserved` = 0). */
+const upsertBalance = async (
+  req: PayloadRequest,
+  product: string,
+  warehouse: string,
+  patch: { qty?: number; reserved?: number },
+) => {
+  const existing = await req.payload.find({
+    collection: 'stock-balances',
+    where: { product: { equals: product }, warehouse: { equals: warehouse } },
+    limit: 1,
+    depth: 0,
+    req,
+  })
+
+  if (existing.docs[0]) {
+    await req.payload.update({ collection: 'stock-balances', id: existing.docs[0].id, data: patch, depth: 0, req })
+  } else {
+    await req.payload.create({
+      collection: 'stock-balances',
+      data: { product, warehouse, qty: 0, ...patch },
+      depth: 0,
+      req,
+    })
+  }
+}
+
 /**
  * Перебудовує кеш з журналу в одній транзакції: виправляє значення, створює відсутні документи
  * і обнуляє зайві. Повертає те, що було виправлено; `lastPurchaseUnitCostBani` не чіпає.
+ * `reserved` виставляється за знімками резерву замовлень (без резервів — 0).
  */
 export const fixStockCache = (req: PayloadRequest): Promise<StockCacheDiscrepancy[]> =>
   runInTransaction(req, async () => {
@@ -120,30 +199,13 @@ export const fixStockCache = (req: PayloadRequest): Promise<StockCacheDiscrepanc
 
     for (const item of discrepancies) {
       if (item.type === 'balance') {
-        const existing = await req.payload.find({
-          collection: 'stock-balances',
-          where: { product: { equals: item.product }, warehouse: { equals: item.warehouse } },
-          limit: 1,
-          depth: 0,
-          req,
-        })
+        await upsertBalance(req, item.product, item.warehouse, { qty: item.expectedQty })
+        continue
+      }
 
-        if (existing.docs[0]) {
-          await req.payload.update({
-            collection: 'stock-balances',
-            id: existing.docs[0].id,
-            data: { qty: item.expectedQty },
-            depth: 0,
-            req,
-          })
-        } else {
-          await req.payload.create({
-            collection: 'stock-balances',
-            data: { product: item.product, warehouse: item.warehouse, qty: item.expectedQty },
-            depth: 0,
-            req,
-          })
-        }
+      // Рядки 'reserved' ідуть після 'balance': документ міг щойно створити виправлений 'balance'.
+      if (item.type === 'reserved') {
+        await upsertBalance(req, item.product, item.warehouse, { reserved: item.expectedReserved })
         continue
       }
 

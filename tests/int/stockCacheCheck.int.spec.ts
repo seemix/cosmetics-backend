@@ -11,7 +11,7 @@ import {
 import config from '@/payload.config'
 
 import { TestData } from './helpers/fixtures'
-import { cleanupStock, costOf, qtyAt, sellFrom, stockUp } from './helpers/stock'
+import { cleanupStock, costOf, deleteDocumentsDirectly, qtyAt, sellFrom, stockUp } from './helpers/stock'
 
 let payload: Payload
 let data: TestData
@@ -150,6 +150,82 @@ describe('A13: перевірка й перебудова кешу залишк�
     const after = await payload.findByID({ collection: 'product-costs', id: cost.id })
     expect(after).toMatchObject({ qty: 0, valueBani: 0, lastPurchaseUnitCostBani: 123.5 })
     expect(await found()).toEqual([])
+  })
+
+  describe('R2 (В23): резерв у кеші й знімки замовлень', () => {
+    const orders: string[] = []
+
+    /** Сирий документ замовлення: `accounting.reservedItems` ще може не бути в схемі (R3). */
+    const orderWithReservation = async (status: string, items: Array<[string, string, number]>) => {
+      const model = payload.db.collections.orders
+      const objectId = (id: string) => new model.base.Types.ObjectId(id)
+      const result = await model.collection.insertOne({
+        status,
+        accounting: {
+          reservedItems: items.map(([product, warehouse, qty]) => ({
+            product: objectId(product),
+            warehouse: objectId(warehouse),
+            qty,
+          })),
+          reservedAt: new Date(),
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      orders.push(String(result.insertedId))
+    }
+
+    afterAll(async () => {
+      await deleteDocumentsDirectly(payload, 'orders', orders)
+    })
+
+    it('без резервів розбіжностей немає, відсутнє поле reserved = 0', async () => {
+      const product = await newProduct()
+      await stockUp(payload, product, mainId, 5, 500)
+      const balance = await cacheDoc('stock-balances', product, mainId)
+      const model = payload.db.collections['stock-balances']
+      await model.collection.updateOne({ _id: new model.base.Types.ObjectId(String(balance.id)) }, { $unset: { reserved: '' } })
+
+      expect(await found()).toEqual([])
+    })
+
+    it('check знаходить розбіжність резерву, fix виставляє reserved за знімками', async () => {
+      const [a, b, c] = [await newProduct(), await newProduct(), await newProduct()]
+      await stockUp(payload, a, mainId, 10, 1000)
+      await stockUp(payload, b, mainId, 6, 600)
+
+      // a: два замовлення тримають 2 + 3, у кеші 0.
+      await orderWithReservation('pending', [[a, mainId, 2]])
+      await orderWithReservation('paid', [
+        [a, mainId, 3],
+        [c, shopId, 1],
+      ])
+      // Знімки в інших статусах резерву не тримають.
+      await orderWithReservation('shipped', [[a, mainId, 4]])
+      await orderWithReservation('cancelled', [[b, mainId, 2]])
+      // b: у кеші 4 без жодного замовлення.
+      const balanceB = await cacheDoc('stock-balances', b, mainId)
+      await payload.update({ collection: 'stock-balances', id: balanceB.id, data: { reserved: 4 } })
+
+      const discrepancies = await found()
+      expect(discrepancies).toEqual(
+        expect.arrayContaining([
+          { type: 'reserved', product: a, warehouse: mainId, expectedReserved: 5, actualReserved: 0 },
+          { type: 'reserved', product: b, warehouse: mainId, expectedReserved: 0, actualReserved: 4 },
+          // c: документа кешу на складі shop немає.
+          { type: 'reserved', product: c, warehouse: shopId, expectedReserved: 1, actualReserved: null },
+        ]),
+      )
+      expect(discrepancies).toHaveLength(3)
+
+      const fixed = mine(await fixStockCache(await createLocalReq({}, payload)))
+      expect(fixed).toHaveLength(3)
+
+      expect(await found()).toEqual([])
+      expect(await cacheDoc('stock-balances', a, mainId)).toMatchObject({ qty: 10, reserved: 5 })
+      expect(await cacheDoc('stock-balances', b, mainId)).toMatchObject({ qty: 6, reserved: 0 })
+      expect(await cacheDoc('stock-balances', c, shopId)).toMatchObject({ qty: 0, reserved: 1 })
+    })
   })
 
   describe('ендпоінти: доступ лише admin', () => {
