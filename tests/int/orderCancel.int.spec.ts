@@ -249,4 +249,98 @@ describe('S2.5: скасування замовлення', () => {
       await settings({ stockControlEnabled: true })
     }
   })
+
+  describe('R5: скасування й видалення знімають резерв (В23)', () => {
+    /** Зарезервовано в кеші залишків на тестовому складі. */
+    const reservedAt = async (product: string) =>
+      (
+        await payload.find({
+          collection: 'stock-balances',
+          where: { product: { equals: product }, warehouse: { equals: warehouse } },
+          depth: 0,
+        })
+      ).docs[0]?.reserved ?? 0
+
+    const balancesOf = async (product: string) =>
+      (
+        await payload.find({ collection: 'stock-balances', where: { product: { equals: product } }, depth: 0, pagination: false })
+      ).docs.map(({ warehouse: wh, qty, reserved }) => ({ warehouse: idOf(wh), qty, reserved }))
+
+    /** Замовлення з адмінки до відвантаження: `pending` з резервом або `backorder` при нестачі. */
+    const pendingOrder = async (product: string, quantity: number): Promise<Order> => {
+      const order = await payload.create({
+        collection: 'orders',
+        user: admin,
+        data: { items: [{ product, quantity, price: 0 }], total: 0 } as never,
+        depth: 0,
+      })
+      orders.push(String(order.id))
+      return order
+    }
+
+    it('скасування pending повертає доступне, і нове замовлення його резервує', async () => {
+      const product = await newProduct()
+      await stockUp(payload, product, warehouse, 2, 2000)
+
+      const order = await pendingOrder(product, 2)
+      expect(order.status).toBe('pending')
+      expect(await reservedAt(product)).toBe(2)
+
+      const cancelled = await setStatus(order, 'cancelled')
+      expect(cancelled.status).toBe('cancelled')
+      expect(cancelled.accounting?.reservedItems ?? []).toEqual([])
+      expect(cancelled.accounting?.reservedAt ?? null).toBeNull()
+      expect(await reservedAt(product)).toBe(0)
+      expect(await qtyAt(payload, product, warehouse)).toBe(2)
+      expect(await movesOfDoc(payload, 'orders', order.id)).toHaveLength(0)
+
+      const next = await pendingOrder(product, 2)
+      expect(next.status).toBe('pending')
+      expect(await reservedAt(product)).toBe(2)
+    })
+
+    it('скасування backorder не змінює stock-balances', async () => {
+      const product = await newProduct()
+      await stockUp(payload, product, warehouse, 1, 1000)
+
+      const order = await pendingOrder(product, 3)
+      expect(order.status).toBe('backorder')
+      const before = await balancesOf(product)
+
+      const cancelled = await setStatus(order, 'cancelled')
+      expect(cancelled.status).toBe('cancelled')
+      expect(await balancesOf(product)).toEqual(before)
+      expect(await costOf(payload, product)).toEqual({ qty: 1, valueBani: 1000 })
+    })
+
+    it('видалення pending знімає резерв', async () => {
+      const product = await newProduct()
+      await stockUp(payload, product, warehouse, 2, 2000)
+
+      const order = await pendingOrder(product, 1)
+      expect(await reservedAt(product)).toBe(1)
+
+      await payload.delete({ collection: 'orders', id: order.id, user: admin })
+      expect(await payload.count({ collection: 'orders', where: { id: { equals: order.id } } })).toEqual({ totalDocs: 0 })
+      expect(await reservedAt(product)).toBe(0)
+      expect(await qtyAt(payload, product, warehouse)).toBe(2)
+    })
+
+    it('відхилене скасування (оплачене гостьове) резерв не знімає', async () => {
+      const product = await newProduct()
+      await stockUp(payload, product, warehouse, 2, 2000)
+
+      const order = await pendingOrder(product, 1)
+      await payload.update({ collection: 'orders', id: order.id, user: admin, data: { paidBani: 100 }, depth: 0 })
+
+      const error = await rejection(setStatus(order, 'cancelled'))
+      expect(error).toBeInstanceOf(APIError)
+      expect((error as APIError).status).toBe(409)
+
+      const still = await payload.findByID({ collection: 'orders', id: order.id, depth: 0 })
+      expect(still.status).toBe('pending')
+      expect(still.accounting?.reservedItems).toHaveLength(1)
+      expect(await reservedAt(product)).toBe(1)
+    })
+  })
 })

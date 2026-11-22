@@ -4,6 +4,8 @@ import { customT } from '@/i18n'
 import { isOrderHistorical } from '@/services/orders/orderState'
 import { revert } from '@/services/stock/stockLedger.service'
 
+import { releaseReservationOf } from './releaseOrderReservation'
+
 const isCancelTransition = (status: unknown, previousStatus: unknown) =>
   status === 'cancelled' && previousStatus !== 'cancelled'
 
@@ -12,7 +14,7 @@ const isCancelTransition = (status: unknown, previousStatus: unknown) =>
  * Історичне замовлення лише змінює статус.
  * Проведене або те, що чекає проведення: оплата гостьового замовлення блокує (спершу повернення клієнту),
  * оплата замовлення клієнта повертається на його аванс (`settleCustomerBalance`).
- * Непроведене далі лише змінює статус. Проведене: закритий період блокує; інакше `cancelledAt = now`.
+ * Непроведене далі лише змінює статус і знімає резерв (`releaseCancelledReservation`). Проведене: закритий період блокує; інакше `cancelledAt = now`.
  * Хто скасовує: `orders.update` дозволено лише admin (В5); скасувати можна й `shipped`.
  */
 export const prepareOrderCancel: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
@@ -34,6 +36,22 @@ export const prepareOrderCancel: CollectionBeforeChangeHook = async ({ data, ori
 
   data.accounting = { ...originalDoc.accounting, ...data.accounting, cancelledAt: new Date().toISOString() }
 
+  return data
+}
+
+/**
+ * Скасування непроведеного замовлення знімає знімок резерву (В23) у транзакції `req`
+ * і очищає `reservedItems`, `reservedAt`. `backorder` резерву не має: склад не змінюється.
+ * Має йти після `assignAccountingFields` і `postOrderStock` (вони беруть резерв з оригіналу)
+ * і після `prepareOrderCancel`: відхилене скасування резерв не знімає. Помилка `release` відкочує скасування.
+ */
+export const releaseCancelledReservation: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+  if (operation !== 'update' || !data || !originalDoc) return data
+  if (!isCancelTransition(data.status, originalDoc.status)) return data
+
+  if (await releaseReservationOf(req, originalDoc)) {
+    data.accounting = { ...originalDoc.accounting, ...data.accounting, reservedItems: [], reservedAt: null }
+  }
   return data
 }
 

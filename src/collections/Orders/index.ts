@@ -10,8 +10,13 @@ import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrde
 import { assignAccountingFields } from '@/collections/Orders/hooks/assignAccountingFields'
 import { postOrderStock } from '@/collections/Orders/hooks/postOrderStock'
 import { writeOrderStockMoves } from '@/collections/Orders/hooks/writeOrderStockMoves'
-import { cancelOrderStock, prepareOrderCancel } from '@/collections/Orders/hooks/cancelOrderStock'
+import {
+  cancelOrderStock,
+  prepareOrderCancel,
+  releaseCancelledReservation,
+} from '@/collections/Orders/hooks/cancelOrderStock'
 import { forbidDeletePosted } from '@/collections/Orders/hooks/forbidDeletePosted'
+import { releaseOrderReservation } from '@/collections/Orders/hooks/releaseOrderReservation'
 import { settleCustomerBalance } from '@/collections/Orders/hooks/settleCustomerBalance'
 import { guardManagerOrderUpdate } from '@/collections/Orders/hooks/guardManagerOrderUpdate'
 import { guardPostedOrder } from '@/collections/Orders/hooks/guardPostedOrder'
@@ -362,8 +367,9 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       populatePricesAndTotal,
       assignAccountingFields,
       postOrderStock,
+      releaseCancelledReservation,
     ],
     afterChange: [writeOrderStockMoves, cancelOrderStock, settleCustomerBalance, sendNewOrderNotification],
-    beforeDelete: [forbidDeletePosted],
+    beforeDelete: [forbidDeletePosted, releaseOrderReservation],
   },
 })

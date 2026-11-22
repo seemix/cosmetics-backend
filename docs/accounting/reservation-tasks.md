@@ -160,7 +160,7 @@
   Скасування й видалення — у R5, права manager — у R6.
   ```
 
-- [ ] **R5. Скасування й видалення знімають резерв.**
+- [x] **R5. Скасування й видалення знімають резерв.**
   Складність: S. Модель: **Opus 5.5**.
   Файли: `src/collections/Orders/hooks/cancelOrderStock.ts`, `src/collections/Orders/hooks/forbidDeletePosted.ts`
   (або новий `releaseOrderReservation.ts` у `beforeDelete`), тести `orderCancel`.
