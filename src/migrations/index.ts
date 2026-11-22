@@ -5,6 +5,7 @@ import * as migration_20261027_100000_backfill_customer_moves from './20261027_1
 import * as migration_20261027_110000_customer_balance_debts from './20261027_110000_customer_balance_debts';
 import * as migration_20261028_100000_opening_stock_warehouse from './20261028_100000_opening_stock_warehouse';
 import * as migration_20261122_100000_reserve_pending_orders from './20261122_100000_reserve_pending_orders';
+import * as migration_20261122_200000_backfill_order_numbers from './20261122_200000_backfill_order_numbers';
 
 export const migrations = [
   {
@@ -41,5 +42,10 @@ export const migrations = [
     up: migration_20261122_100000_reserve_pending_orders.up,
     down: migration_20261122_100000_reserve_pending_orders.down,
     name: '20261122_100000_reserve_pending_orders'
+  },
+  {
+    up: migration_20261122_200000_backfill_order_numbers.up,
+    down: migration_20261122_200000_backfill_order_numbers.down,
+    name: '20261122_200000_backfill_order_numbers'
   },
 ];
