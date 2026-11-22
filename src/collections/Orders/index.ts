@@ -79,7 +79,8 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     delete: adminOnly,
   },
   admin: {
-    useAsTitle: 'createdAt',
+    // Заголовок документа й поле пошуку списку; у полях вибору замовлення теж показується номер.
+    useAsTitle: 'orderNumber',
     // Колонки для нових користувачів; збережені налаштування колонок у профілі мають пріоритет.
     defaultColumns: ['orderNumber', 'createdAt', 'customer', 'total', 'status', 'items'],
     group: localized('custom:group:ecommerce'),
