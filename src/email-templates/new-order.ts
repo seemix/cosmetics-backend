@@ -23,6 +23,20 @@ export const generateOrderEmailHtml = (order: any, locale: 'ru' | 'ro') => {
     )
     .join('');
 
+  const discount = Number(order.discount) || 0
+  const discountRow =
+    order.promoCodeApplied && discount > 0
+      ? `
+            <tr>
+              <td colspan="3" style="padding: 15px 10px 0; text-align: right; font-size: 14px; color: #444;">
+                ${messages.discount[locale]} (${messages.promoCode[locale]}: <strong>${order.promoCodeApplied}</strong>)
+              </td>
+              <td style="padding: 15px 10px 0; text-align: right; font-size: 14px; color: #c0392b;">
+                &minus;${discount} MDL
+              </td>
+            </tr>`
+      : ''
+
   return `
     <tr>
       <td colspan="2" style="padding: 30px 15px;">
@@ -45,7 +59,7 @@ export const generateOrderEmailHtml = (order: any, locale: 'ru' | 'ro') => {
           <tbody>
             ${itemRows}
           </tbody>
-          <tfoot>
+          <tfoot>${discountRow}
             <tr>
               <td colspan="3" style="padding: 15px 10px; text-align: right; font-size: 16px; font-weight: bold;">
                 ${messages.totalPrice[locale]}

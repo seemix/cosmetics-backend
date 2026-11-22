@@ -43,6 +43,14 @@ export const messages = {
     ru: 'Сумма',
     ro: 'Sumă',
   },
+  discount: {
+    ru: 'Скидка',
+    ro: 'Reducere',
+  },
+  promoCode: {
+    ru: 'промокод',
+    ro: 'cod promoțional',
+  },
   totalPrice: {
     ru: 'Общая сумма',
     ro: 'Valoare totală',
