@@ -191,7 +191,7 @@
   Тести: матриця переходів для manager і admin; manager редагує позиції backorder-замовлення.
   ```
 
-- [ ] **R7. Сайт і залишки: доступна кількість.**
+- [x] **R7. Сайт і залишки: доступна кількість.**
   Складність: S. Модель: **Sonnet 5.5**.
   Файли: `src/collections/Products/services/productsByRelation.service.ts` (`loadInStock`),
   `src/endpoints/getProductStock.ts`, `src/services/reports/stock.service.ts`, тести `productInStock`, `productStock`.

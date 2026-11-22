@@ -363,7 +363,7 @@ describe('M1: матриця прав (розд. 11)', () => {
       expect(asManager.status).toBe(200)
       expect(asManager.body.totalQty).toBe(asAdmin.body.totalQty)
       expect(asManager.body.warehouses).toEqual(asAdmin.body.warehouses)
-      expect(Object.keys(asManager.body).sort()).toEqual(['productId', 'totalQty', 'warehouses'])
+      expect(Object.keys(asManager.body).sort()).toEqual(['productId', 'totalAvailable', 'totalQty', 'totalReserved', 'warehouses'])
 
       expect((await call(users.customer)).status).toBe(403)
       expect((await call(undefined)).status).toBe(401)

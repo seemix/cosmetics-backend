@@ -15,7 +15,7 @@ type Filter = {
   brand?: false
 }
 
-/** Id товарів із залишком > 0 на складі сайту; `null`, якщо облік складу ще не ввімкнено. Один запит на сторінку. */
+/** Id товарів з доступним залишком (qty − reserved) > 0 на складі сайту; `null`, якщо облік складу ще не ввімкнено. Один запит на сторінку. */
 export async function loadInStock(req: PayloadRequest, products: Array<{ id: number | string }>) {
   const settings = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
   const warehouse = settings.defaultWebWarehouse
@@ -30,11 +30,16 @@ export async function loadInStock(req: PayloadRequest, products: Array<{ id: num
     },
     pagination: false,
     depth: 0,
-    select: { product: true },
+    select: { product: true, qty: true, reserved: true },
     req,
   })
 
-  return new Set(balances.docs.map((balance) => String(balance.product)))
+  // where не вміє різницю полів: доступність (В23) перевіряємо в коді, вибірка обмежена сторінкою товарів.
+  return new Set(
+    balances.docs
+      .filter((balance) => balance.qty - (balance.reserved ?? 0) > 0)
+      .map((balance) => String(balance.product)),
+  )
 }
 
 // 1. Експортуємо transformProduct

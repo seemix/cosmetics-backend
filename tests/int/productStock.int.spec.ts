@@ -5,7 +5,9 @@ import { getProductStock } from '@/endpoints/getProductStock'
 import config from '@/payload.config'
 
 import { TestData } from './helpers/fixtures'
-import { cleanupStock, stockUp } from './helpers/stock'
+import { reserve } from '@/services/stock/stockLedger.service'
+
+import { cleanupStock, inTransaction, stockUp } from './helpers/stock'
 
 let payload: Payload
 let data: TestData
@@ -113,10 +115,11 @@ describe('A14: залишок у картці товару', () => {
       expect(status).toBe(200)
       expect(body.productId).toBe(product)
       expect(body.warehouses).toEqual([
-        { id: mainId, name: `${tag} Main`, code: `${tag}-main`, qty: 12 },
-        { id: shopId, name: `${tag} Shop`, code: `${tag}-shop`, qty: 2 },
+        { id: mainId, name: `${tag} Main`, code: `${tag}-main`, qty: 12, reserved: 0, available: 12 },
+        { id: shopId, name: `${tag} Shop`, code: `${tag}-shop`, qty: 2, reserved: 0, available: 2 },
       ])
       expect(body.totalQty).toBe(14)
+      expect(body).toMatchObject({ totalReserved: 0, totalAvailable: 14 })
       expect(body.valueBani).toBe(173735)
       expect(body.avgCostBani).toBeCloseTo(173735 / 14, 6)
       expect(body.lastPurchaseUnitCostBani).toBeNull()
@@ -132,10 +135,43 @@ describe('A14: залишок у картці товару', () => {
         productId: product,
         warehouses: [],
         totalQty: 0,
+        totalReserved: 0,
+        totalAvailable: 0,
         valueBani: 0,
         avgCostBani: 0,
         lastPurchaseUnitCostBani: null,
       })
+    })
+
+    it('резерв: по складах qty, reserved, available і підсумки', async () => {
+      const product = await newProduct()
+      await stockUp(payload, product, mainId, 10, 1000)
+      await stockUp(payload, product, shopId, 4, 400)
+      await inTransaction(payload, (req) => reserve(req, [{ product, warehouse: mainId, qty: 6 }]))
+      await inTransaction(payload, (req) => reserve(req, [{ product, warehouse: shopId, qty: 4 }]))
+
+      const { body } = await callEndpoint(product, ['admin'])
+
+      expect(body.warehouses).toEqual([
+        { id: mainId, name: `${tag} Main`, code: `${tag}-main`, qty: 10, reserved: 6, available: 4 },
+        { id: shopId, name: `${tag} Shop`, code: `${tag}-shop`, qty: 4, reserved: 4, available: 0 },
+      ])
+      expect(body).toMatchObject({ totalQty: 14, totalReserved: 10, totalAvailable: 4 })
+    })
+
+    it('manager: кількості й резерв без собівартості', async () => {
+      const product = await newProduct()
+      await stockUp(payload, product, mainId, 5, 500)
+      await inTransaction(payload, (req) => reserve(req, [{ product, warehouse: mainId, qty: 2 }]))
+
+      const req = await createLocalReq({ user: { id: 'm', roles: ['manager'], collection: 'users' } as never }, payload)
+      req.routeParams = { id: product }
+      const response = await getProductStock.handler(req)
+      const body = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(body).toMatchObject({ totalQty: 5, totalReserved: 2, totalAvailable: 3 })
+      expect(JSON.stringify(body)).not.toMatch(/valueBani|avgCostBani|lastPurchaseUnitCostBani/)
     })
 
     it('невалідний id 400, невідомий товар 404', async () => {

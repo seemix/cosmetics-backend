@@ -6,7 +6,9 @@ import { searchProducts } from '@/collections/Products/endpoints/searchProducts'
 import config from '@/payload.config'
 
 import { TestData } from './helpers/fixtures'
-import { cleanupStock, stockUp } from './helpers/stock'
+import { release, reserve } from '@/services/stock/stockLedger.service'
+
+import { cleanupStock, inTransaction, stockUp } from './helpers/stock'
 
 let payload: Payload
 let data: TestData
@@ -91,6 +93,23 @@ describe('S2.7: inStock у відповідях товарів', () => {
     expect((await single(available)).inStock).toBe(true)
     expect((await single(empty)).inStock).toBe(false)
     expect((await single(elsewhere)).inStock).toBe(false)
+  })
+
+  it('увесь залишок у резерві ⇒ false; частково зарезервований ⇒ true; після зняття резерву ⇒ true', async () => {
+    const product = await newProduct()
+    await stockUp(payload, product, webWarehouse, 3, 3000)
+    const lines = [{ product, warehouse: webWarehouse, qty: 3 }]
+
+    await inTransaction(payload, (req) => reserve(req, [{ product, warehouse: webWarehouse, qty: 2 }]))
+    expect((await single(product)).inStock).toBe(true)
+
+    await inTransaction(payload, (req) => reserve(req, [{ product, warehouse: webWarehouse, qty: 1 }]))
+    expect((await single(product)).inStock).toBe(false)
+
+    await inTransaction(payload, (req) => release(req, lines))
+    expect((await single(product)).inStock).toBe(true)
+    // Назад у резерв: товар не впливає на підрахунок у тесті пошуку.
+    await inTransaction(payload, (req) => reserve(req, lines))
   })
 
   it('пошук: один запит stock-balances на сторінку, прапорець у кожному товарі', async () => {

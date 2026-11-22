@@ -454,7 +454,7 @@ describe('C. поля: читання', () => {
     }
     const stock = await ctx.http('GET', `/stock/product/${f.pub}`, 'manager')
     expect(stock.status).toBe(200)
-    expect(Object.keys(stock.body).sort()).toEqual(['productId', 'totalQty', 'warehouses'])
+    expect(Object.keys(stock.body).sort()).toEqual(['productId', 'totalAvailable', 'totalQty', 'totalReserved', 'warehouses'])
     const admin = await ctx.http('GET', `/stock/product/${f.pub}`, 'admin')
     expect(Object.keys(admin.body)).toEqual(expect.arrayContaining(['valueBani', 'avgCostBani']))
   })

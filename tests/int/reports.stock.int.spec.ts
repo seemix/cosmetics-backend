@@ -5,7 +5,9 @@ import { stockReport } from '@/endpoints/reports/stock'
 import config from '@/payload.config'
 
 import { callReport, nonIntegerBani, ReportScenario } from './helpers/reports'
-import { costOf, sellFrom, stockUp } from './helpers/stock'
+import { issue, release, reserve } from '@/services/stock/stockLedger.service'
+
+import { costOf, inTransaction, sellFrom, stockUp } from './helpers/stock'
 
 let payload: Payload
 let s: ReportScenario
@@ -17,8 +19,11 @@ const tag = `RSTK${Date.now()}`
 
 type Row = {
   product: { id: string; title: string; article: string }
-  qtyByWarehouse: Array<{ warehouse: string; code: string; qty: number; valueBani: number }>
+  qtyByWarehouse: Array<{ warehouse: string; code: string; qty: number; reserved: number; valueBani: number }>
   totalQty: number
+  totalReserved: number
+  totalAvailable: number
+  oversold: boolean
   valueBani: number
   avgCostBani: number
 }
@@ -107,11 +112,12 @@ describe('R1: звіт залишків', () => {
     for (const body of [first, second]) {
       expect(body.totals).toEqual({
         totalQty: rows.reduce((sum, row) => sum + row.totalQty, 0),
+        totalReserved: 0,
         totalValueBani: rows.reduce((sum, row) => sum + row.valueBani, 0),
         count: 4,
       })
     }
-    expect(first.totals).toEqual({ totalQty: 18, totalValueBani: 100 + 1000 + 5003 + 777, count: 4 })
+    expect(first.totals).toEqual({ totalQty: 18, totalReserved: 0, totalValueBani: 100 + 1000 + 5003 + 777, count: 4 })
     expect(await stock({ limit: 3 })).toEqual(first)
   })
 
@@ -121,8 +127,8 @@ describe('R1: звіт залишків', () => {
 
     expect(titles(rows)).toEqual(['A', 'D'])
     expect(rows[0]).toMatchObject({ totalQty: 2, valueBani: 67, avgCostBani: 34 })
-    expect(rows[0].qtyByWarehouse).toEqual([{ warehouse: shop, code: `${tag}-shop`, qty: 2, valueBani: 67 }])
-    expect(body.totals).toEqual({ totalQty: 7, totalValueBani: 67 + 5003, count: 2 })
+    expect(rows[0].qtyByWarehouse).toEqual([{ warehouse: shop, code: `${tag}-shop`, qty: 2, reserved: 0, valueBani: 67 }])
+    expect(body.totals).toEqual({ totalQty: 7, totalReserved: 0, totalValueBani: 67 + 5003, count: 2 })
 
     const onMain = await stock({ warehouse: main })
     expect(titles(onMain.items)).toEqual(['A', 'B', 'E (50%) [x]*.+?'])
@@ -151,6 +157,29 @@ describe('R1: звіт залишків', () => {
 
     expect(titles(body.items)).toEqual(['A', 'B', 'C', 'D', 'E (50%) [x]*.+?'])
     expect(c).toMatchObject({ totalQty: 0, valueBani: 0, avgCostBani: 0, qtyByWarehouse: [] })
+  })
+
+  it('резерв: колонки «Зарезервовано» і «Доступно», ознака перепродажу при reserved > qty', async () => {
+    const lines = [{ product: ids.e, warehouse: main, qty: 3 }]
+    const rowE = async () => ((await stock({ q: `${tag} E` })).items as Row[])[0]
+
+    await inTransaction(payload, (req) => reserve(req, lines))
+    expect(await rowE()).toMatchObject({ totalQty: 7, totalReserved: 3, totalAvailable: 4, oversold: false })
+    expect((await stock()).totals.totalReserved).toBe(3)
+
+    // Списання з інвентаризації нижче резерву: qty 1 < reserved 3.
+    await inTransaction(payload, (req) =>
+      issue(req, {
+        doc: { collection: 'test-docs', id: 'fixture' },
+        moveType: 'inventory',
+        lines: [{ product: ids.e, warehouse: main, qty: 6 }],
+        allowBelowReserved: true,
+      }),
+    )
+    expect(await rowE()).toMatchObject({ totalQty: 1, totalReserved: 3, totalAvailable: 0, oversold: true })
+
+    await inTransaction(payload, (req) => release(req, lines))
+    expect(await rowE()).toMatchObject({ totalReserved: 0, totalAvailable: 1, oversold: false })
   })
 
   it('пошук за назвою й артикулом: спецсимволи літеральні, регулярка з рядка не виконується', async () => {

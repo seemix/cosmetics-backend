@@ -5,9 +5,20 @@ import { checkRole } from '@/access/utilities'
 
 export type ProductStock = {
   productId: string
-  warehouses: Array<{ id: string; name: string; code: string; qty: number }>
+  warehouses: Array<{
+    id: string
+    name: string
+    code: string
+    qty: number
+    /** Резерв під замовлення (В23). */
+    reserved: number
+    /** qty − reserved, не менше 0. */
+    available: number
+  }>
   /** Σ залишків по складах. */
   totalQty: number
+  totalReserved: number
+  totalAvailable: number
   /** Вартість усього залишку (бані) і середня за штуку (бані, дробове), з `product-costs`. */
   valueBani: number
   avgCostBani: number
@@ -15,7 +26,7 @@ export type ProductStock = {
 }
 
 /** Відповідь для manager (В11): лише кількість, без вартості й середньої. */
-export type ProductStockQty = Pick<ProductStock, 'productId' | 'warehouses' | 'totalQty'>
+export type ProductStockQty = Pick<ProductStock, 'productId' | 'warehouses' | 'totalQty' | 'totalReserved' | 'totalAvailable'>
 
 const OBJECT_ID = /^[0-9a-fA-F]{24}$/
 
@@ -50,7 +61,7 @@ export const getProductStock: Endpoint = {
         where: { product: { equals: id } },
         pagination: false,
         depth: 1,
-        select: { warehouse: true, qty: true },
+        select: { warehouse: true, qty: true, reserved: true },
         populate: { warehouses: { name: true, code: true, sortOrder: true } },
         req,
       }),
@@ -72,6 +83,8 @@ export const getProductStock: Endpoint = {
           name: warehouse?.name ?? '',
           code: warehouse?.code ?? '',
           qty: balance.qty,
+          reserved: balance.reserved ?? 0,
+          available: Math.max(0, balance.qty - (balance.reserved ?? 0)),
           sortOrder: warehouse?.sortOrder ?? 0,
         }
       })
@@ -82,6 +95,8 @@ export const getProductStock: Endpoint = {
       productId: id,
       warehouses,
       totalQty: warehouses.reduce((sum, warehouse) => sum + warehouse.qty, 0),
+      totalReserved: warehouses.reduce((sum, warehouse) => sum + warehouse.reserved, 0),
+      totalAvailable: warehouses.reduce((sum, warehouse) => sum + warehouse.available, 0),
     }
     if (!isAdmin(req.user)) return Response.json(quantities)
 

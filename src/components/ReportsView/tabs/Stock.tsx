@@ -36,6 +36,17 @@ export const StockTab = ({ data, onPage }: { data: StockReport; onPage: (page: n
       },
     })),
     { header: t('custom:term:quantity'), numeric: true, cell: (row) => <Count value={row.totalQty} /> },
+    { header: t('custom:reports:colReserved'), numeric: true, cell: (row) => <Count value={row.totalReserved} /> },
+    {
+      header: t('custom:reports:colAvailable'),
+      numeric: true,
+      cell: (row) => (
+        <>
+          <Count value={row.totalAvailable} />
+          {row.oversold && <small className="reports__muted reports__block">{t('custom:reports:oversold')}</small>}
+        </>
+      ),
+    },
     { header: t('custom:reports:colValue'), numeric: true, cell: (row) => <Money bani={row.valueBani} /> },
     { header: t('custom:reports:colAvgCost'), numeric: true, cell: (row) => <Money bani={Math.round(row.avgCostBani)} /> },
   ]
@@ -51,6 +62,8 @@ export const StockTab = ({ data, onPage }: { data: StockReport; onPage: (page: n
           t('custom:reports:totalAllPages', { count: String(data.totals.count) }),
           ...ordered.map(() => ''),
           <Count key="qty" value={data.totals.totalQty} />,
+          <Count key="reserved" value={data.totals.totalReserved} />,
+          '',
           <Money key="value" bani={data.totals.totalValueBani} strong />,
           '',
         ]}

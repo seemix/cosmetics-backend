@@ -31,8 +31,20 @@ export type StockFilters = { warehouse?: string; q?: string; onlyPositive: boole
 
 export type StockRow = {
   product: { id: string; title: string | null; article: string | null }
-  qtyByWarehouse: Array<{ warehouse: string; code: string | null; qty: number; valueBani: number }>
+  qtyByWarehouse: Array<{
+    warehouse: string
+    code: string | null
+    qty: number
+    /** Резерв під замовлення (В23); відсутнє поле в кеші = 0. */
+    reserved: number
+    valueBani: number
+  }>
   totalQty: number
+  totalReserved: number
+  /** Σ (qty − reserved) по складах, кожен склад не менше 0. */
+  totalAvailable: number
+  /** Ознака перепродажу: на якомусь складі reserved > qty. */
+  oversold: boolean
   valueBani: number
   /** `valueBani / totalQty`, округлено до бана; лише для показу. */
   avgCostBani: number
@@ -40,7 +52,7 @@ export type StockRow = {
 
 export type StockReport = ReturnType<typeof reportHeader> & {
   items: StockRow[]
-  totals: { totalQty: number; totalValueBani: number; count: number }
+  totals: { totalQty: number; totalReserved: number; totalValueBani: number; count: number }
   pagination: ReturnType<typeof pagination>
 }
 
@@ -48,22 +60,25 @@ type CursorRow = {
   product: ObjectIdLike
   valueBani?: number
   productDoc: { title?: string; article?: string }
-  balances: Array<{ warehouse: ObjectIdLike; qty: number }>
+  balances: Array<{ warehouse: ObjectIdLike; qty: number; reserved?: number }>
 }
 
 /** Кількість по складах товару (кілька документів одного складу, напр. варіанти, сумуються); порядок за id складу. */
 const byWarehouse = (balances: CursorRow['balances']) => {
-  const map = new Map<string, number>()
+  const map = new Map<string, { qty: number; reserved: number }>()
   for (const balance of balances) {
     const id = String(balance.warehouse)
-    map.set(id, (map.get(id) ?? 0) + (balance.qty ?? 0))
+    const current = map.get(id) ?? { qty: 0, reserved: 0 }
+    map.set(id, { qty: current.qty + (balance.qty ?? 0), reserved: current.reserved + (balance.reserved ?? 0) })
   }
 
-  return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([warehouse, qty]) => ({ warehouse, qty }))
+  return [...map.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([warehouse, value]) => ({ warehouse, ...value }))
 }
 
 /** Розподіл вартості товару по складах; без складів (неузгоджений кеш) нічого розподіляти. */
-const allocate = (valueBani: number, warehouses: Array<{ warehouse: string; qty: number }>) => {
+const allocate = (valueBani: number, warehouses: Array<{ warehouse: string; qty: number; reserved: number }>) => {
   if (warehouses.length === 0) return []
   const shares = allocateLargestRemainder(valueBani, warehouses.map((item) => item.qty))
 
@@ -100,7 +115,7 @@ export const getStockReport = async (
         from: collectionName(req, 'stock-balances'),
         localField: 'product',
         foreignField: 'product',
-        pipeline: [{ $project: { warehouse: 1, qty: 1 } }],
+        pipeline: [{ $project: { warehouse: 1, qty: 1, reserved: { $ifNull: ['$reserved', 0] } } }],
         as: 'balances',
       },
     },
@@ -140,14 +155,17 @@ export const getStockReport = async (
     .cursor({ batchSize: 200 })
 
   const skip = (paging.page - 1) * paging.limit
-  const pageRows: Array<Omit<StockRow, 'qtyByWarehouse'> & { qtyByWarehouse: Array<{ warehouse: string; qty: number; valueBani: number }> }> = []
-  const totals = { totalQty: 0, totalValueBani: 0, count: 0 }
+  const pageRows: Array<Omit<StockRow, 'qtyByWarehouse'> & { qtyByWarehouse: Array<{ warehouse: string; qty: number; reserved: number; valueBani: number }> }> = []
+  const totals = { totalQty: 0, totalReserved: 0, totalValueBani: 0, count: 0 }
 
   for await (const row of cursor) {
     const all = allocate(row.valueBani ?? 0, byWarehouse(row.balances))
     // Склади з нульовою кількістю не показуються (їх частка вартості теж 0).
     const shown = all.filter((item) => (warehouse ? item.warehouse === warehouse : item.qty !== 0))
     const totalQty = shown.reduce((sum, item) => sum + item.qty, 0)
+    const totalReserved = shown.reduce((sum, item) => sum + item.reserved, 0)
+    const totalAvailable = shown.reduce((sum, item) => sum + Math.max(0, item.qty - item.reserved), 0)
+    const oversold = shown.some((item) => item.reserved > item.qty)
     // Без фільтра складу вартість рядка — уся вартість товару (навіть якщо кеш складів неузгоджений).
     const valueBani = warehouse ? shown.reduce((sum, item) => sum + item.valueBani, 0) : (row.valueBani ?? 0)
 
@@ -156,6 +174,9 @@ export const getStockReport = async (
         product: { id: String(row.product), title: row.productDoc.title ?? null, article: row.productDoc.article ?? null },
         qtyByWarehouse: shown,
         totalQty,
+        totalReserved,
+        totalAvailable,
+        oversold,
         valueBani,
         avgCostBani: average(valueBani, totalQty),
       })
@@ -163,6 +184,7 @@ export const getStockReport = async (
 
     totals.count += 1
     totals.totalQty += totalQty
+    totals.totalReserved += totalReserved
     totals.totalValueBani += valueBani
   }
 
@@ -182,6 +204,7 @@ export const getStockReport = async (
         warehouse: item.warehouse,
         code: warehouses.get(item.warehouse)?.code ?? null,
         qty: item.qty,
+        reserved: item.reserved,
         valueBani: item.valueBani,
       })),
     })),
