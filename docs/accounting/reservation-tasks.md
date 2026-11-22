@@ -61,7 +61,7 @@
   Код не змінюй.
   ```
 
-- [ ] **R1. Резерв у кеші залишків і сервісі складу.**
+- [x] **R1. Резерв у кеші залишків і сервісі складу.**
   Складність: M. Модель: **Opus 5.5**.
   Файли: `src/collections/Stock/StockBalances.ts`, `src/services/stock/stockLedger.service.ts`,
   `src/services/stock/errors.ts`, `src/collections/StockAdjustments/index.ts` (лише виклик), i18n, тести.

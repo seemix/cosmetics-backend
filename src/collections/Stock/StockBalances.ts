@@ -14,7 +14,7 @@ export const StockBalances: CollectionConfig = {
   access: { ...codeOnlyAccess, read: adminOrManager },
   admin: {
     hidden: hiddenUnlessAdminOrManager,
-    defaultColumns: ['product', 'warehouse', 'qty', 'updatedAt'],
+    defaultColumns: ['product', 'warehouse', 'qty', 'reserved', 'updatedAt'],
     group: localized('custom:group:stock'),
   },
   indexes: [{ fields: ['product', 'variant', 'warehouse'], unique: true }],
@@ -29,5 +29,16 @@ export const StockBalances: CollectionConfig = {
     },
     { name: 'warehouse', label: label('custom:term:warehouse'), type: 'relationship', relationTo: 'warehouses', required: true },
     { name: 'qty', label: label('custom:term:quantity'), type: 'number', required: true, min: 0, validate: validateInteger },
+    // В23: зарезервовано замовленнями до відвантаження; доступно = qty − reserved.
+    // У старих документах поля немає: сирі запити трактують його як 0 ($ifNull).
+    {
+      name: 'reserved',
+      label: label('custom:field:reservedQty'),
+      type: 'number',
+      min: 0,
+      defaultValue: 0,
+      validate: validateInteger,
+      admin: { readOnly: true, description: description('custom:desc:reservedQty') },
+    },
   ],
 }

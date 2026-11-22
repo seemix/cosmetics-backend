@@ -807,6 +807,7 @@ export interface StockBalance {
   variant?: (string | null) | Variant;
   warehouse: string | Warehouse;
   qty: number;
+  reserved?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1454,6 +1455,7 @@ export interface StockBalancesSelect<T extends boolean = true> {
   variant?: T;
   warehouse?: T;
   qty?: T;
+  reserved?: T;
   updatedAt?: T;
   createdAt?: T;
 }

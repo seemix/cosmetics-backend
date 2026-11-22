@@ -170,6 +170,7 @@ export const ro: CustomTranslationsObject = {
     field: {
       title: 'Titlu',
       slug: 'Slug',
+      reservedQty: 'Rezervat',
       logo: 'Logo',
       bigImage: 'Imagine mare',
       description: 'Descriere',
@@ -469,6 +470,7 @@ export const ro: CustomTranslationsObject = {
       avgCostFormula: 'valueBani / qty, fracționar, doar pentru afișare',
       forReference: 'Pentru referință',
       reservedEmpty: 'Rezervat, întotdeauna gol',
+      reservedQty: 'Reținut pentru comenzile până la expediere; disponibil = cantitate − rezervat',
       qtyDelta: '+ intrare, − ieșire',
       valueDelta: 'La cost mediu; 0 pentru transferuri',
       unitCostFractional: 'Valoare fracționară, pentru referință',

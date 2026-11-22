@@ -45,7 +45,7 @@ export type TransferLine = { product: string; qty: number }
 
 type ObjectId = ReturnType<typeof toObjectId>
 
-type BalanceDoc = { _id: ObjectId; qty: number }
+type BalanceDoc = { _id: ObjectId; qty: number; reserved?: number }
 type CostDoc = { _id: ObjectId; qty: number; valueBani: number }
 
 type Context = {
@@ -90,36 +90,118 @@ const byProductAndWarehouse = <T extends { product: string; warehouse: string }>
 // -0 після округлення від'ємних нулів не потрібне ні в кеші, ні в журналі.
 const roundBani = (value: number) => Math.round(value) || 0
 
+type StockLine = { product: string; warehouse: string; qty: number }
+
+/** Зарезервовано (В23); у документах до появи поля його немає, це 0. */
+const RESERVED = { $ifNull: ['$reserved', 0] }
+/** Доступно = qty − reserved. */
+const AVAILABLE = { $subtract: ['$qty', RESERVED] }
+
+/** Доступна кількість документа кешу, не менше 0 (при перепродажі reserved > qty). */
+const availableOf = (doc: BalanceDoc | null) => Math.max(0, (doc?.qty ?? 0) - (doc?.reserved ?? 0))
+
+/** Однакові товар і склад сумуються; порядок як у `byProductAndWarehouse`. */
+const sumByProductAndWarehouse = (lines: StockLine[]): StockLine[] => {
+  const totals = new Map<string, StockLine>()
+
+  for (const line of lines) {
+    assertPositiveInteger(line.qty)
+    const key = `${line.product}:${line.warehouse}`
+    const total = totals.get(key) ?? { product: line.product, warehouse: line.warehouse, qty: 0 }
+    total.qty += line.qty
+    totals.set(key, total)
+  }
+
+  return byProductAndWarehouse([...totals.values()])
+}
+
 const increaseBalance = async (ctx: Context, product: string, warehouse: string, qty: number) => {
   await balances(ctx.req).updateOne(
     balanceKey(ctx, product, warehouse),
-    { $inc: { qty }, $set: { updatedAt: ctx.date }, $setOnInsert: { createdAt: ctx.date } },
+    { $inc: { qty }, $set: { updatedAt: ctx.date }, $setOnInsert: { reserved: 0, createdAt: ctx.date } },
     { upsert: true, session: ctx.session },
   )
 }
 
 /**
+ * Перевірка списання: `available` — не чіпати зарезервоване (qty − reserved ≥ n),
+ * `physical` — лише фізичний залишок (qty ≥ n), для списання з інвентаризації (В23).
+ */
+type DecreaseMode = 'available' | 'physical'
+
+/**
  * Умовне списання з усіх рядків. Нестачі збираються по всіх рядках і кидаються однією помилкою,
  * щоб клієнт бачив повний список; частково списане відкотить транзакція.
  */
-const decreaseBalances = async (ctx: Context, lines: Array<{ product: string; warehouse: string; qty: number }>) => {
+const decreaseBalances = async (ctx: Context, lines: StockLine[], mode: DecreaseMode = 'available') => {
   const shortages: StockShortage[] = []
 
   for (const { product, warehouse, qty } of lines) {
     const key = balanceKey(ctx, product, warehouse)
+    const condition = mode === 'physical' ? { qty: { $gte: qty } } : { $expr: { $gte: [AVAILABLE, qty] } }
     const result = await balances(ctx.req).updateOne(
-      { ...key, qty: { $gte: qty } },
+      { ...key, ...condition },
       { $inc: { qty: -qty }, $set: { updatedAt: ctx.date } },
       { session: ctx.session },
     )
 
     if (result.modifiedCount === 0) {
       const current = await balances(ctx.req).findOne<BalanceDoc>(key, { session: ctx.session })
-      shortages.push({ product, warehouse, requested: qty, available: current?.qty ?? 0 })
+      const available = mode === 'physical' ? (current?.qty ?? 0) : availableOf(current)
+      shortages.push({ product, warehouse, requested: qty, available })
     }
   }
 
   if (shortages.length > 0) throw new InsufficientStockError(shortages)
+}
+
+/**
+ * Резерв (В23): `reserved` зростає на кількість рядка, якщо вистачає доступного (qty − reserved).
+ * Рядки зводяться за товаром і складом. Нестачі збираються по всіх рядках і кидаються одним
+ * `InsufficientStockError`; частково зарезервоване відкотить транзакція. Журнал і собівартість не змінюються.
+ */
+export const reserve = async (req: PayloadRequest, lines: StockLine[]): Promise<void> => {
+  const ctx = await openContext(req)
+  const shortages: StockShortage[] = []
+
+  for (const { product, warehouse, qty } of sumByProductAndWarehouse(lines)) {
+    const key = balanceKey(ctx, product, warehouse)
+    const result = await balances(req).updateOne(
+      { ...key, $expr: { $gte: [AVAILABLE, qty] } },
+      { $inc: { reserved: qty }, $set: { updatedAt: ctx.date } },
+      { session: ctx.session },
+    )
+
+    if (result.modifiedCount === 0) {
+      const current = await balances(req).findOne<BalanceDoc>(key, { session: ctx.session })
+      shortages.push({ product, warehouse, requested: qty, available: availableOf(current) })
+    }
+  }
+
+  if (shortages.length > 0) throw new InsufficientStockError(shortages)
+}
+
+/**
+ * Зняття резерву (В23): `reserved` зменшується на кількість рядка. Якщо зарезервовано менше,
+ * кеш розійшовся зі знімками замовлень: кидається помилка (транзакція відкотиться), без тихої корекції.
+ */
+export const release = async (req: PayloadRequest, lines: StockLine[]): Promise<void> => {
+  const ctx = await openContext(req)
+  const outOfSync: string[] = []
+
+  for (const { product, warehouse, qty } of sumByProductAndWarehouse(lines)) {
+    const result = await balances(req).updateOne(
+      { ...balanceKey(ctx, product, warehouse), $expr: { $gte: [RESERVED, qty] } },
+      { $inc: { reserved: -qty }, $set: { updatedAt: ctx.date } },
+      { session: ctx.session },
+    )
+
+    if (result.modifiedCount === 0) outOfSync.push(`${product}@${warehouse} −${qty}`)
+  }
+
+  if (outOfSync.length > 0) {
+    throw new Error(`stock-balances.reserved is out of sync with order reservations: ${outOfSync.join(', ')}`)
+  }
 }
 
 /**
@@ -256,29 +338,31 @@ export const receive = async (
  */
 export const issue = async (
   req: PayloadRequest,
-  { doc, ...args }: BaseArgs & { moveType: MoveType; lines: IssueLine[] },
-): Promise<StockMove[]> => writeMoves(req, doc, await issueWithoutMoves(req, args))
+  {
+    doc,
+    allowBelowReserved = false,
+    ...args
+  }: BaseArgs & {
+    moveType: MoveType
+    lines: IssueLine[]
+    /** Лише списання з інвентаризації (В23): можна нижче резерву, але не нижче 0. */
+    allowBelowReserved?: boolean
+  },
+): Promise<StockMove[]> =>
+  writeMoves(req, doc, await computeIssue(req, args, allowBelowReserved ? 'physical' : 'available'))
 
 /**
- * Перевірка наявності без списання й резерву: залишку вистачає на всі рядки (однакові товар і склад
- * сумуються), інакше `InsufficientStockError` з повним списком нестач. Читання в сесії транзакції `req`.
+ * Перевірка наявності без списання й резерву: доступного (qty − reserved) вистачає на всі рядки
+ * (однакові товар і склад сумуються), інакше `InsufficientStockError` з повним списком нестач.
+ * Читання в сесії транзакції `req`.
  */
-export const assertAvailable = async (req: PayloadRequest, lines: Array<{ product: string; warehouse: string; qty: number }>) => {
+export const assertAvailable = async (req: PayloadRequest, lines: StockLine[]) => {
   const ctx = await openContext(req)
-  const totals = new Map<string, { product: string; warehouse: string; qty: number }>()
-
-  for (const line of byProductAndWarehouse(lines)) {
-    assertPositiveInteger(line.qty)
-    const key = `${line.product}:${line.warehouse}`
-    const total = totals.get(key) ?? { product: line.product, warehouse: line.warehouse, qty: 0 }
-    total.qty += line.qty
-    totals.set(key, total)
-  }
 
   const shortages: StockShortage[] = []
-  for (const { product, warehouse, qty } of totals.values()) {
+  for (const { product, warehouse, qty } of sumByProductAndWarehouse(lines)) {
     const current = await balances(req).findOne<BalanceDoc>(balanceKey(ctx, product, warehouse), { session: ctx.session })
-    const available = current?.qty ?? 0
+    const available = availableOf(current)
     if (available < qty) shortages.push({ product, warehouse, requested: qty, available })
   }
 
@@ -288,10 +372,17 @@ export const assertAvailable = async (req: PayloadRequest, lines: Array<{ produc
 /**
  * Те саме, що `issue`, але без запису журналу: повертає обчислені рухи. Для документа, id якого
  * ще немає (замовлення в `beforeChange`); рухи записує `writeMoves` у тій самій транзакції.
+ * Зарезервоване не списує.
  */
-export const issueWithoutMoves = async (
+export const issueWithoutMoves = (
+  req: PayloadRequest,
+  args: Omit<BaseArgs, 'doc'> & { moveType: MoveType; lines: IssueLine[] },
+): Promise<PendingStockMove[]> => computeIssue(req, args, 'available')
+
+const computeIssue = async (
   req: PayloadRequest,
   { date, moveType, lines }: Omit<BaseArgs, 'doc'> & { moveType: MoveType; lines: IssueLine[] },
+  mode: DecreaseMode,
 ): Promise<PendingStockMove[]> => {
   const ctx = await openContext(req, date)
   const sorted = byProductAndWarehouse(lines)
@@ -301,7 +392,7 @@ export const issueWithoutMoves = async (
     if (line.valueBani !== undefined) assertBani(line.valueBani)
   }
 
-  await decreaseBalances(ctx, sorted)
+  await decreaseBalances(ctx, sorted, mode)
 
   const moves: PendingStockMove[] = []
   for (const line of sorted) {

@@ -4,6 +4,7 @@ export type StockShortage = {
   product: string
   warehouse: string
   requested: number
+  /** Доступно = qty − reserved (В23), не менше 0; для списання з інвентаризації — фізичний qty. */
   available: number
 }
 

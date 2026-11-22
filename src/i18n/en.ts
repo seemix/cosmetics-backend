@@ -172,6 +172,7 @@ export const en = {
     field: {
       title: 'Title',
       slug: 'Slug',
+      reservedQty: 'Reserved',
       logo: 'Logo',
       bigImage: 'Large image',
       description: 'Description',
@@ -471,6 +472,7 @@ export const en = {
       avgCostFormula: 'valueBani / qty, fractional, display only',
       forReference: 'For reference',
       reservedEmpty: 'Reserved, always empty',
+      reservedQty: 'Held for orders awaiting shipment; available = quantity − reserved',
       qtyDelta: '+ receipt, − issue',
       valueDelta: 'At average cost; 0 for transfers',
       unitCostFractional: 'Fractional value, for reference',

@@ -122,6 +122,8 @@ const postAdjustment = async (args: DocumentTransitionArgs) => {
         date,
         moveType: 'inventory',
         lines: shortages.map((row) => ({ product: row.product, warehouse, qty: -row.diffQty })),
+        // В23: фактична нестача списується й нижче резерву (не нижче 0), це перепродаж.
+        allowBelowReserved: true,
       })
     : []
   const received = surpluses.length

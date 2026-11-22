@@ -170,6 +170,7 @@ export const ru: CustomTranslationsObject = {
     field: {
       title: 'Название',
       slug: 'Слаг',
+      reservedQty: 'Зарезервировано',
       logo: 'Логотип',
       bigImage: 'Большое изображение',
       description: 'Описание',
@@ -469,6 +470,7 @@ export const ru: CustomTranslationsObject = {
       avgCostFormula: 'valueBani / qty, дробное, только для показа',
       forReference: 'Для справки',
       reservedEmpty: 'Зарезервировано, всегда пусто',
+      reservedQty: 'Удерживается для заказов до отгрузки; доступно = количество − резерв',
       qtyDelta: '+ приход, − расход',
       valueDelta: 'По средней себестоимости; 0 для перемещений',
       unitCostFractional: 'Дробное значение, для справки',
