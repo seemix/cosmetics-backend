@@ -2,11 +2,11 @@ import type { CollectionAfterChangeHook } from 'payload'
 
 import { type PendingStockMove, writeMoves } from '@/services/stock/stockLedger.service'
 
-import { ORDER_STOCK_MOVES_CONTEXT_KEY } from './deductOrderStock'
+import { ORDER_STOCK_MOVES_CONTEXT_KEY } from './postOrderStock'
 
 /**
  * Журнал продажу для проведеного замовлення (дизайн, розд. 9.2): рухи `sale`, які порахував
- * `deductOrderStock` при створенні чи відвантаженні, записуються з `docId = doc.id` у тій самій
+ * `postOrderStock` при створенні чи відвантаженні, записуються з `docId = doc.id` у тій самій
  * транзакції. Помилка тут відкочує й замовлення. Має йти першим в `afterChange`, до сповіщень.
  */
 export const writeOrderStockMoves: CollectionAfterChangeHook = async ({ doc, req }) => {

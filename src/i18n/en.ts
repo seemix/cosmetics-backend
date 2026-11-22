@@ -89,6 +89,7 @@ export const en = {
       emailChangeForbidden: 'Changing the email address is not available; contact support',
       orderWarehouseRequired: 'Stock control is on, but the order has no warehouse: set the default warehouse in the accounting settings',
       postedOrderLocked: 'A posted order cannot be edited: items, total, discount, customer and warehouse are frozen',
+      backorderNotShippable: 'A backorder cannot be shipped: first move it to Pending to reserve the items',
       cancelledOrderFinal: 'A cancelled order cannot change its status',
       managerOrderTransition: 'A manager can edit only an unshipped unpaid order and change the status only from Pending to Shipped',
       managerCannotPublish: 'A manager can only save product drafts; an administrator publishes them',

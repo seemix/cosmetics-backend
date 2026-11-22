@@ -8,7 +8,7 @@ import { setOrderNumber } from '@/collections/Orders/hooks/setOrderNumber'
 import { getMyOrders } from '@/collections/Orders/endpoints/getMyOrders'
 import { sendNewOrderNotification } from '@/collections/Orders/hooks/sendNewOrderNotification'
 import { assignAccountingFields } from '@/collections/Orders/hooks/assignAccountingFields'
-import { deductOrderStock } from '@/collections/Orders/hooks/deductOrderStock'
+import { postOrderStock } from '@/collections/Orders/hooks/postOrderStock'
 import { writeOrderStockMoves } from '@/collections/Orders/hooks/writeOrderStockMoves'
 import { cancelOrderStock, prepareOrderCancel } from '@/collections/Orders/hooks/cancelOrderStock'
 import { forbidDeletePosted } from '@/collections/Orders/hooks/forbidDeletePosted'
@@ -361,7 +361,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       prepareOrderCancel,
       populatePricesAndTotal,
       assignAccountingFields,
-      deductOrderStock,
+      postOrderStock,
     ],
     afterChange: [writeOrderStockMoves, cancelOrderStock, settleCustomerBalance, sendNewOrderNotification],
     beforeDelete: [forbidDeletePosted],

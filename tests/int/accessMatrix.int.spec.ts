@@ -479,6 +479,8 @@ describe('M1: матриця прав (розд. 11)', () => {
       // Склад manager теж змінює до відвантаження (В22).
       const other = await payload.create({ collection: 'warehouses', data: { name: `${tag} other`, code: `${tag}-other` } })
       warehouses.push(String(other.id))
+      // Зміна складу переносить резерв (В23): товар має бути й на новому складі.
+      await stockUp(payload, publishedProduct, String(other.id), 5, 5000)
       expect(idOf((await managerUpdate(order.id, { warehouse: String(other.id) })).warehouse)).toBe(String(other.id))
       expect(idOf((await managerUpdate(order.id, { warehouse: shop })).warehouse)).toBe(shop)
 

@@ -87,6 +87,7 @@ export const ro: CustomTranslationsObject = {
       emailChangeForbidden: 'Schimbarea adresei de email nu este disponibilă; contactați suportul',
       orderWarehouseRequired: 'Evidența stocului este activă, dar comanda nu are depozit: setați depozitul implicit în setările contabile',
       postedOrderLocked: 'Comanda operată nu poate fi editată: pozițiile, suma, reducerea, clientul și depozitul sunt fixate',
+      backorderNotShippable: 'O comandă „La comandă” nu poate fi expediată: mai întâi treceți-o în „În așteptare” pentru a rezerva produsele',
       cancelledOrderFinal: 'Statusul unei comenzi anulate nu poate fi schimbat',
       managerOrderTransition: 'Managerul poate edita doar o comandă neexpediată și neplătită și poate trece starea doar din „În așteptare” în „Expediată”',
       managerCannotPublish: 'Managerul poate salva doar ciorne ale produsului; le publică administratorul',

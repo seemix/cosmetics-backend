@@ -122,7 +122,7 @@
   Тест: тіло REST-запиту з reservedItems/shortages/reservedAt ігнорується при create і update.
   ```
 
-- [ ] **R4. Резерв при створенні, зміні та відвантаженні; автоматичний backorder.**
+- [x] **R4. Резерв при створенні, зміні та відвантаженні; автоматичний backorder.**
   Складність: L. Модель: **Opus 5.5**.
   Файли: `src/collections/Orders/hooks/deductOrderStock.ts` (перейменувати на `postOrderStock.ts`),
   `src/collections/Orders/index.ts`, `src/services/orders/orderState.ts`,

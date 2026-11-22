@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import config from '@/payload.config'
 import { InsufficientStockError } from '@/services/stock/errors'
+import { issue } from '@/services/stock/stockLedger.service'
 
 import { TestData } from './helpers/fixtures'
 import { callCreateOrder, loadOrder, shippingAddress, silenceSideEffects } from './helpers/orderCall'
@@ -11,6 +12,7 @@ import {
   costOf,
   createAdmin,
   deleteDocumentsDirectly,
+  inTransaction,
   movesOfDoc,
   qtyAt,
   stockUp,
@@ -43,6 +45,16 @@ const newProduct = async (retailPrice = 100) => {
 
 const ordersWith = async (product: string) =>
   (await payload.count({ collection: 'orders', where: { 'items.product': { equals: product } } })).totalDocs
+
+/** Зарезервовано в кеші залишків (В23). */
+const reservedAt = async (product: string, warehouse: string) =>
+  (
+    await payload.find({
+      collection: 'stock-balances',
+      where: { product: { equals: product }, warehouse: { equals: warehouse } },
+      depth: 0,
+    })
+  ).docs[0]?.reserved ?? 0
 
 /** Виклики `payload.create` саме для замовлень (рухи журналу теж ідуть через `create`). */
 const orderCreates = (spy: { mock: { calls: unknown[][] } }) =>
@@ -209,19 +221,21 @@ describe('S2.3/S2.4, В20: списання при відвантаженні з
     expect(payload.sendEmail).not.toHaveBeenCalled()
   })
 
-  it('нестача при відвантаженні: помилка з назвами мовою адмінки, замовлення лишається pending, кеш незмінний', async () => {
+  it('нестача при відвантаженні (перепродаж після інвентаризації): помилка з назвами мовою адмінки, замовлення лишається pending з резервом', async () => {
     const product = await newProduct()
     await stockUp(payload, product, webWarehouse, 2, 2000)
 
     const { status, body } = await createWeb([{ product, quantity: 2 }])
     expect(status).toBe(201)
-    const other = await payload.create({
-      collection: 'orders',
-      user: admin,
-      data: { items: [{ product, quantity: 1, price: 0 }], total: 0, status: 'shipped', warehouse: webWarehouse } as never,
-      depth: 0,
-    })
-    orders.push(String(other.id))
+    // Списання з інвентаризації дозволене нижче резерву (В23): reserved 2 > qty 1.
+    await inTransaction(payload, (req) =>
+      issue(req, {
+        doc: { collection: 'test-docs', id: 'oversell' },
+        moveType: 'inventory',
+        lines: [{ product, warehouse: webWarehouse, qty: 1 }],
+        allowBelowReserved: true,
+      }),
+    )
 
     const error = await ship(body.order.id).catch((reason: unknown) => reason)
     expect(error).toBeInstanceOf(InsufficientStockError)
@@ -231,6 +245,7 @@ describe('S2.3/S2.4, В20: списання при відвантаженні з
     expect(order.status).toBe('pending')
     expect(order.accounting?.stockPostedAt ?? null).toBeNull()
     expect(await qtyAt(payload, product, webWarehouse)).toBe(1)
+    expect(await reservedAt(product, webWarehouse)).toBe(2)
     expect(await movesOfDoc(payload, 'orders', order.id)).toHaveLength(0)
   })
 
@@ -329,22 +344,32 @@ describe('S2.3/S2.4, В20: списання при відвантаженні з
     expect(await qtyAt(payload, product, adminWarehouse)).toBe(2)
   })
 
-  it('два замовлення останньої одиниці приймаються, відвантажується лише перше', async () => {
+  it('два замовлення сайту на весь залишок: перше резервує, друге отримує 409 (В23)', async () => {
     const product = await newProduct()
-    await stockUp(payload, product, webWarehouse, 1, 1000)
+    await stockUp(payload, product, webWarehouse, 2, 2000)
 
     const responses = await Promise.all([
-      createWeb([{ product, quantity: 1 }]),
-      createWeb([{ product, quantity: 1 }]),
+      createWeb([{ product, quantity: 2 }]),
+      createWeb([{ product, quantity: 2 }]),
     ])
-    expect(responses.map((response) => response.status)).toEqual([201, 201])
-    expect(await qtyAt(payload, product, webWarehouse)).toBe(1)
+    expect(responses.map((response) => response.status).sort()).toEqual([201, 409])
+    expect(await ordersWith(product)).toBe(1)
+    expect(await qtyAt(payload, product, webWarehouse)).toBe(2)
+    expect(await reservedAt(product, webWarehouse)).toBe(2)
 
-    const [first, second] = responses.map((response) => response.body.order.id)
-    await ship(first)
-    expect(await ship(second).catch((reason: unknown) => reason)).toBeInstanceOf(InsufficientStockError)
-    expect((await loadOrder(payload, data, second)).status).toBe('pending')
+    const created = responses.find((response) => response.status === 201)!
+    const pending = await loadOrder(payload, data, created.body.order.id)
+    expect(pending.status).toBe('pending')
+    expect(pending.accounting?.reservedItems?.map((row) => ({ product: idOf(row.product), warehouse: idOf(row.warehouse), qty: row.qty }))).toEqual([
+      { product, warehouse: webWarehouse, qty: 2 },
+    ])
+    expect(pending.accounting?.reservedAt).toBeTruthy()
+
+    await ship(pending.id)
+    const shipped = await loadOrder(payload, data, pending.id)
+    expect(shipped.accounting?.reservedItems ?? []).toEqual([])
     expect(await qtyAt(payload, product, webWarehouse)).toBe(0)
+    expect(await reservedAt(product, webWarehouse)).toBe(0)
     expect(await costOf(payload, product)).toEqual({ qty: 0, valueBani: 0 })
   })
 
@@ -424,6 +449,8 @@ describe('В20: замовлення до відвантаження', () => {
 
   it('позиції, знижку й клієнта можна змінити: ціни, сума й виручка перераховуються', async () => {
     const other = await newProduct(250)
+    // Нові позиції резервуються (В23): товар має бути на складі.
+    await stockUp(payload, other, adminWarehouse, 1, 1000)
     const order = await createAdminOrder()
     expect(order.total).toBe(100)
 
@@ -515,5 +542,229 @@ describe('В20: замовлення до відвантаження', () => {
     expect(shipped.accounting?.revenueBani).toBe(30000)
     expect(shipped.accounting?.stockPostedAt).toBeTruthy()
     expect(await qtyAt(payload, product, adminWarehouse)).toBe(before - 3)
+  })
+})
+
+describe('В23: резерв замовлень до відвантаження', () => {
+  let warehouse: string
+  let second: string
+
+  const rows = (value: unknown) =>
+    (Array.isArray(value) ? (value as Array<Record<string, unknown>>) : []).map(({ id: _id, ...row }) => ({
+      ...row,
+      product: idOf(row.product),
+      warehouse: idOf(row.warehouse),
+    }))
+
+  const createAdminOrder = async (
+    items: Array<{ product: string; quantity: number }>,
+    extra: Record<string, unknown> = {},
+  ) => {
+    const order = await payload.create({
+      collection: 'orders',
+      user: admin,
+      data: { items: items.map((item) => ({ ...item, price: 0 })), total: 0, ...extra } as never,
+      depth: 0,
+    })
+    orders.push(String(order.id))
+    return order
+  }
+
+  const update = (id: string | number, patch: Record<string, unknown>) =>
+    payload.update({ collection: 'orders', id, user: admin, data: patch as never, depth: 0 })
+
+  const rejected = (promise: Promise<unknown>) =>
+    promise.then(
+      () => null,
+      (reason: unknown) => reason as Error & { status?: number },
+    )
+
+  const byProduct = <T extends { product: string }>(list: T[]) =>
+    [...list].sort((a, b) => a.product.localeCompare(b.product))
+
+  beforeAll(async () => {
+    payload = await getPayload({ config: await config })
+    data = new TestData(payload)
+    silenceSideEffects(payload)
+    admin = await createAdmin(payload, data)
+    brand = String((await data.brand()).id)
+    for (const code of ['res', 'res2']) {
+      const doc = await payload.create({ collection: 'warehouses', data: { name: `${tag} ${code}`, code: `${tag}-${code}` } })
+      warehouses.push(String(doc.id))
+    }
+    ;[warehouse, second] = warehouses.slice(-2)
+
+    const before = await payload.findGlobal({ slug: 'accounting-settings', depth: 0 })
+    previousSettings = {
+      stockControlEnabled: before.stockControlEnabled ?? false,
+      defaultAdminWarehouse: before.defaultAdminWarehouse ? idOf(before.defaultAdminWarehouse) : null,
+    }
+    await payload.updateGlobal({
+      slug: 'accounting-settings',
+      data: { stockControlEnabled: true, defaultAdminWarehouse: warehouse } as never,
+    })
+  })
+
+  afterAll(async () => {
+    await setStockControl(previousSettings.stockControlEnabled === true)
+    await payload.updateGlobal({ slug: 'accounting-settings', data: previousSettings as never }).catch(() => {})
+    await deleteDocumentsDirectly(payload, 'orders', orders)
+    await cleanupStock(payload, products, warehouses)
+    await data.cleanup()
+    vi.restoreAllMocks()
+  })
+
+  it('з адмінки при нестачі стає backorder з повним переліком нестач і без резерву', async () => {
+    const enough = await newProduct()
+    const scarce = await newProduct()
+    const missing = await newProduct()
+    await stockUp(payload, enough, warehouse, 5, 5000)
+    await stockUp(payload, scarce, warehouse, 1, 1000)
+
+    const order = await createAdminOrder([
+      { product: enough, quantity: 2 },
+      { product: scarce, quantity: 3 },
+      { product: missing, quantity: 1 },
+    ])
+
+    expect(order.status).toBe('backorder')
+    expect(rows(order.accounting?.reservedItems)).toEqual([])
+    expect(order.accounting?.reservedAt ?? null).toBeNull()
+    expect(byProduct(rows(order.accounting?.shortages))).toEqual(
+      byProduct([
+        { product: scarce, warehouse, requested: 3, available: 1 },
+        { product: missing, warehouse, requested: 1, available: 0 },
+      ]),
+    )
+    expect(await reservedAt(enough, warehouse)).toBe(0)
+    expect(await reservedAt(scarce, warehouse)).toBe(0)
+  })
+
+  it('створення одразу в backorder рахує нестачі без резерву', async () => {
+    const product = await newProduct()
+    await stockUp(payload, product, warehouse, 1, 1000)
+
+    const order = await createAdminOrder([{ product, quantity: 2 }], { status: 'backorder' })
+    expect(order.status).toBe('backorder')
+    expect(rows(order.accounting?.shortages)).toEqual([{ product, warehouse, requested: 2, available: 1 }])
+    expect(await reservedAt(product, warehouse)).toBe(0)
+  })
+
+  it('backorder → pending: при нестачі 409 з переліком і без змін, після приходу резервує все', async () => {
+    const product = await newProduct()
+    await stockUp(payload, product, warehouse, 1, 1000)
+    const order = await createAdminOrder([{ product, quantity: 3 }])
+    expect(order.status).toBe('backorder')
+
+    const error = await rejected(update(order.id, { status: 'pending' }))
+    expect(error).toBeInstanceOf(InsufficientStockError)
+    expect(error?.status).toBe(409)
+    expect(error?.message).toMatch(new RegExp(`${tag} res.*3.*1`))
+    const still = await loadOrder(payload, data, order.id)
+    expect(still.status).toBe('backorder')
+    expect(rows(still.accounting?.shortages)).toEqual([{ product, warehouse, requested: 3, available: 1 }])
+    expect(await reservedAt(product, warehouse)).toBe(0)
+
+    await stockUp(payload, product, warehouse, 2, 2000)
+    const pending = await update(order.id, { status: 'pending' })
+    expect(pending.status).toBe('pending')
+    expect(rows(pending.accounting?.reservedItems)).toEqual([{ product, warehouse, qty: 3 }])
+    expect(pending.accounting?.reservedAt).toBeTruthy()
+    expect(rows(pending.accounting?.shortages)).toEqual([])
+    expect(await reservedAt(product, warehouse)).toBe(3)
+    expect(await qtyAt(payload, product, warehouse)).toBe(3)
+  })
+
+  it('pending → backorder знімає резерв і перераховує нестачі', async () => {
+    const product = await newProduct()
+    await stockUp(payload, product, warehouse, 2, 2000)
+    const order = await createAdminOrder([{ product, quantity: 2 }])
+    expect(order.status).toBe('pending')
+    expect(await reservedAt(product, warehouse)).toBe(2)
+
+    const backorder = await update(order.id, { status: 'backorder' })
+    expect(rows(backorder.accounting?.reservedItems)).toEqual([])
+    expect(backorder.accounting?.reservedAt ?? null).toBeNull()
+    expect(rows(backorder.accounting?.shortages)).toEqual([])
+    expect(await reservedAt(product, warehouse)).toBe(0)
+
+    // Зміна позицій backorder перераховує нестачі, резерву немає.
+    const bigger = await update(order.id, { items: [{ product, quantity: 5, price: 0 }] })
+    expect(rows(bigger.accounting?.shortages)).toEqual([{ product, warehouse, requested: 5, available: 2 }])
+    expect(await reservedAt(product, warehouse)).toBe(0)
+  })
+
+  it('зміна кількості й складу переносить резерв, нестача відкочує зміну', async () => {
+    const product = await newProduct()
+    await stockUp(payload, product, warehouse, 4, 4000)
+    await stockUp(payload, product, second, 2, 2000)
+    const order = await createAdminOrder([{ product, quantity: 1 }])
+    const reservedAtBefore = order.accounting?.reservedAt
+
+    const more = await update(order.id, { items: [{ product, quantity: 3, price: 0 }] })
+    expect(rows(more.accounting?.reservedItems)).toEqual([{ product, warehouse, qty: 3 }])
+    expect(new Date(more.accounting!.reservedAt!).toISOString()).toBe(new Date(reservedAtBefore!).toISOString())
+    expect(await reservedAt(product, warehouse)).toBe(3)
+
+    const moved = await update(order.id, { warehouse: second, items: [{ product, quantity: 2, price: 0 }] })
+    expect(rows(moved.accounting?.reservedItems)).toEqual([{ product, warehouse: second, qty: 2 }])
+    expect(await reservedAt(product, warehouse)).toBe(0)
+    expect(await reservedAt(product, second)).toBe(2)
+
+    const error = await rejected(update(order.id, { items: [{ product, quantity: 3, price: 0 }] }))
+    expect(error).toBeInstanceOf(InsufficientStockError)
+    expect(error?.message).toMatch(new RegExp(`${tag} res2.*3.*2`))
+    const unchanged = await loadOrder(payload, data, order.id)
+    expect(unchanged.status).toBe('pending')
+    expect(unchanged.items?.[0]?.quantity).toBe(2)
+    expect(rows(unchanged.accounting?.reservedItems)).toEqual([{ product, warehouse: second, qty: 2 }])
+    expect(await reservedAt(product, second)).toBe(2)
+  })
+
+  it('відвантаження знімає резерв і списує; чуже замовлення зарезервоване не відвантажує', async () => {
+    const product = await newProduct()
+    await stockUp(payload, product, warehouse, 3, 3000)
+    const order = await createAdminOrder([{ product, quantity: 2 }])
+    expect(await reservedAt(product, warehouse)).toBe(2)
+
+    const other = await rejected(createAdminOrder([{ product, quantity: 2 }], { status: 'shipped' }))
+    expect(other).toBeInstanceOf(InsufficientStockError)
+    expect(await qtyAt(payload, product, warehouse)).toBe(3)
+
+    const shipped = await ship(order.id)
+    expect(shipped.accounting?.stockPostedAt).toBeTruthy()
+    expect(rows(shipped.accounting?.reservedItems)).toEqual([])
+    expect(await qtyAt(payload, product, warehouse)).toBe(1)
+    expect(await reservedAt(product, warehouse)).toBe(0)
+    expect(await movesOfDoc(payload, 'orders', order.id)).toHaveLength(1)
+  })
+
+  it('backorder → shipped відхилено', async () => {
+    const product = await newProduct()
+    const order = await createAdminOrder([{ product, quantity: 1 }])
+    expect(order.status).toBe('backorder')
+
+    const error = await rejected(ship(order.id))
+    expect(error?.status).toBe(409)
+    expect(error?.message).toMatch(/backorder cannot be shipped/i)
+    expect((await loadOrder(payload, data, order.id)).status).toBe('backorder')
+  })
+
+  it('облік вимкнено: відвантаження все одно знімає знімок резерву, не списуючи', async () => {
+    const product = await newProduct()
+    await stockUp(payload, product, warehouse, 2, 2000)
+    const order = await createAdminOrder([{ product, quantity: 1 }])
+    expect(await reservedAt(product, warehouse)).toBe(1)
+
+    await setStockControl(false)
+    try {
+      const shipped = await ship(order.id)
+      expect(rows(shipped.accounting?.reservedItems)).toEqual([])
+      expect(shipped.accounting?.stockPostedAt ?? null).toBeNull()
+      expect(await reservedAt(product, warehouse)).toBe(0)
+      expect(await qtyAt(payload, product, warehouse)).toBe(2)
+    } finally {
+      await setStockControl(true)
+    }
   })
 })

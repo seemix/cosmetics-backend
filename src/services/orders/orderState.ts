@@ -7,7 +7,11 @@
 type OrderStateLike = {
   status?: string | null
   paidBani?: number | null
-  accounting?: { stockTracked?: boolean | null; stockPostedAt?: Date | string | null } | null
+  accounting?: {
+    stockTracked?: boolean | null
+    stockPostedAt?: Date | string | null
+    reservedItems?: unknown[] | null
+  } | null
 } | null | undefined
 
 /** Залишок списано: замовлення проведене. */
@@ -20,6 +24,17 @@ export const isOrderAwaitingPosting = (order: OrderStateLike): boolean =>
 /** Історичне: створене до вмикання обліку складу, ніколи не проводиться. */
 export const isOrderHistorical = (order: OrderStateLike): boolean =>
   !isOrderPosted(order) && order?.accounting?.stockTracked !== true
+
+/** Статуси, у яких облікове замовлення тримає резерв (В23). */
+const RESERVING_STATUSES = ['pending', 'paid']
+
+/** Облікове замовлення до відвантаження в `pending` чи `paid`: має тримати резерв товару (В23). */
+export const isOrderReserving = (order: OrderStateLike): boolean =>
+  isOrderAwaitingPosting(order) && RESERVING_STATUSES.includes(order?.status ?? '')
+
+/** У замовленні є знімок резерву `accounting.reservedItems` (В23): саме його знімає відвантаження чи зміна. */
+export const hasReservation = (order: OrderStateLike): boolean =>
+  Array.isArray(order?.accounting?.reservedItems) && order.accounting.reservedItems.length > 0
 
 /**
  * Позиції, суму, знижку й клієнта можна змінити: замовлення чекає проведення, не скасоване
