@@ -593,6 +593,10 @@ export const ro: CustomTranslationsObject = {
       acceptPaymentHint: 'Creează o chitanță ciornă pentru suma rămasă, verificați-o și înregistrați-o',
       acceptPaymentFailed: 'Nu s-a putut crea plata',
     },
+    ordersList: {
+      itemsSummary: 'Produse: {{count}}, {{units}} buc.',
+      unknownProduct: 'Produs șters',
+    },
     reservation: {
       widgetTitle: 'Rezervări',
       widgetExpired: 'Rezervări expirate',

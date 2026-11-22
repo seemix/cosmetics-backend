@@ -593,6 +593,10 @@ export const ru: CustomTranslationsObject = {
       acceptPaymentHint: 'Создаёт черновик поступления на остаток суммы, проверьте и проведите его',
       acceptPaymentFailed: 'Не удалось создать оплату',
     },
+    ordersList: {
+      itemsSummary: 'Товаров: {{count}}, {{units}} шт.',
+      unknownProduct: 'Удалённый товар',
+    },
     reservation: {
       widgetTitle: 'Резервы',
       widgetExpired: 'Просроченные резервы',

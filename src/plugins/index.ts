@@ -21,6 +21,7 @@ import {
   VariantsCollection,
   VariantTypesCollection,
 } from '@/collections/pluginCollections'
+import { dateDisplayFormat } from '@/plugins/dateDisplayFormat'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
@@ -129,4 +130,5 @@ export const plugins: Plugin[] = [
   }),
   sidebarFirst,
   disableGraphQL,
+  dateDisplayFormat,
 ]

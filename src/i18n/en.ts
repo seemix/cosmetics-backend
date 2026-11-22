@@ -595,6 +595,10 @@ export const en = {
       acceptPaymentHint: 'Creates a draft cash receipt for the remaining amount, review and post it',
       acceptPaymentFailed: 'Could not create the payment',
     },
+    ordersList: {
+      itemsSummary: '{{count}} items, {{units}} pcs',
+      unknownProduct: 'Deleted product',
+    },
     reservation: {
       widgetTitle: 'Reservations',
       widgetExpired: 'Expired reservations',

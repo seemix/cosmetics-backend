@@ -1,0 +1,44 @@
+/* Список замовлень: колонка товарів забирає вільну ширину, позиції розгортаються в клітинці. */
+.collection-list--orders .table td.cell-items {
+  width: 45%;
+}
+
+.orders-list-items summary {
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--theme-elevation-800);
+}
+
+.orders-list-items summary:hover {
+  color: var(--theme-text);
+}
+
+.orders-list-items[open] summary {
+  margin-bottom: calc(var(--base) / 4);
+}
+
+.orders-list-items table {
+  width: 100%;
+  min-width: 320px;
+  border-collapse: collapse;
+}
+
+.table .orders-list-items td {
+  min-width: 0;
+  padding: 2px 8px 2px 0;
+  border: 0;
+  background: none;
+  font-size: 0.9em;
+  vertical-align: top;
+}
+
+.orders-list-items__title {
+  white-space: normal;
+}
+
+.orders-list-items__num,
+.orders-list-total {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

@@ -80,6 +80,8 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   },
   admin: {
     useAsTitle: 'createdAt',
+    // Колонки для нових користувачів; збережені налаштування колонок у профілі мають пріоритет.
+    defaultColumns: ['orderNumber', 'createdAt', 'customer', 'total', 'status', 'items'],
     group: localized('custom:group:ecommerce'),
   },
   fields: [
@@ -137,12 +139,16 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       index: true,
       admin: {
         position: 'sidebar',
+        components: { Cell: '@/collections/Orders/components/list/CustomerNameCell#OrderCustomerNameCell' },
       },
     },
     {
       name: 'items',
       label: label('custom:field:items'),
       type: 'array',
+      admin: {
+        components: { Cell: '@/collections/Orders/components/list/ItemsCell#OrderItemsCell' },
+      },
       fields: [
         {
           name: 'product',
@@ -195,6 +201,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       required: true,
       admin: {
         position: 'sidebar',
+        components: { Cell: '@/collections/Orders/components/list/TotalCell#OrderTotalCell' },
         readOnly: true, // Загальну суму теж краще зробити readonly, оскільки вона рахується автоматично
       },
     },
@@ -210,7 +217,10 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
         { label: label('custom:status:cancelled'), value: 'cancelled' },
       ],
       defaultValue: 'pending',
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        components: { Cell: '@/collections/Orders/components/list/StatusCell#OrderStatusCell' },
+      },
     },
     {
       name: 'paymentType',

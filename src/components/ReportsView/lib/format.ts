@@ -8,13 +8,15 @@ export const localeFor = (language: string): string => LOCALES[language] ?? LOCA
 export const formatInt = (value: number, language: string): string =>
   new Intl.NumberFormat(localeFor(language)).format(value)
 
-/** ISO-момент → дата у поясі звітів. */
+/** ISO-момент → дата у поясі звітів, формат адмінки 22.11.2016 (однаковий для всіх мов). */
 export const formatDate = (iso: string | null | undefined, language: string, timeZone: string): string => {
   if (!iso) return '—'
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return '—'
 
-  return new Intl.DateTimeFormat(localeFor(language), { dateStyle: 'medium', timeZone }).format(date)
+  const [year, month, day] = date.toLocaleDateString('en-CA', { timeZone }).split('-')
+
+  return `${day}.${month}.${year}`
 }
 
 export type DebtKind = 'owedToUs' | 'weOwe'

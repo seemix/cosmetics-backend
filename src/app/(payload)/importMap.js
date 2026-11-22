@@ -1,6 +1,11 @@
 import { OrderManager as OrderManager_335956527a86746b9253d4f624bab000 } from '@/collections/Orders/components/OrderManager'
 import { AcceptPaymentButton as AcceptPaymentButton_5d3e082bcdb974da74b1d8d5dddba180 } from '@/collections/Orders/components/AcceptPaymentButton'
+import { ReservationBanner as ReservationBanner_7e8e17a89fcc34c14c196518c4db9cca } from '@/collections/Orders/components/ReservationBanner'
+import { OrderCustomerNameCell as OrderCustomerNameCell_371dc88377e09537870ae67f6741f4dc } from '@/collections/Orders/components/list/CustomerNameCell'
 import { PriceField as PriceField_26d3ff61e3685d035d1966db2d7f432e } from '@/collections/Orders/components/PriceField'
+import { OrderItemsCell as OrderItemsCell_107ecc37a0464fe9c17dfd05b4aa13eb } from '@/collections/Orders/components/list/ItemsCell'
+import { OrderTotalCell as OrderTotalCell_7177017e5facd2bd3c19a739aa5ba688 } from '@/collections/Orders/components/list/TotalCell'
+import { OrderStatusCell as OrderStatusCell_a1566a1cd28a27f66f0524cfa16c0f63 } from '@/collections/Orders/components/list/StatusCell'
 import { ShippingFromCustomer as ShippingFromCustomer_95b58c7d302148c741f7fc24ddb3f3ae } from '@/collections/Orders/components/ShippingFromCustomer'
 import { MoneyCell as MoneyCell_2a1fbccdf68fd9be845df4de166fa2b2 } from '@/components/MoneyField/Cell'
 import { MoneyField as MoneyField_323e4e658f0a50038070131cb758c455 } from '@/components/MoneyField/Field'
@@ -42,13 +47,19 @@ import { default as default_d1bedd1c8ef921b4392dcdd8e2c30daf } from '@/assets/Cu
 import { ReportsNavLink as ReportsNavLink_1dadd44ed884203072469c985f618525 } from '@/components/ReportsView/ReportsNavLink'
 import { BeforeLogin as BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
 import { ReportsPage as ReportsPage_aa003d33c6e06d4dbc3638f4ed98639f } from '@/components/ReportsView'
+import { ReservationWidget as ReservationWidget_cb45535bb182148f674f8ef190d3ca5e } from '@/components/ReservationWidget'
 import { CollectionIconCards as CollectionIconCards_ac29671d64f2750b056a386aa1536945 } from '@/components/CollectionIconCards'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 export const importMap = {
   "@/collections/Orders/components/OrderManager#OrderManager": OrderManager_335956527a86746b9253d4f624bab000,
   "@/collections/Orders/components/AcceptPaymentButton#AcceptPaymentButton": AcceptPaymentButton_5d3e082bcdb974da74b1d8d5dddba180,
+  "@/collections/Orders/components/ReservationBanner#ReservationBanner": ReservationBanner_7e8e17a89fcc34c14c196518c4db9cca,
+  "@/collections/Orders/components/list/CustomerNameCell#OrderCustomerNameCell": OrderCustomerNameCell_371dc88377e09537870ae67f6741f4dc,
   "@/collections/Orders/components/PriceField#PriceField": PriceField_26d3ff61e3685d035d1966db2d7f432e,
+  "@/collections/Orders/components/list/ItemsCell#OrderItemsCell": OrderItemsCell_107ecc37a0464fe9c17dfd05b4aa13eb,
+  "@/collections/Orders/components/list/TotalCell#OrderTotalCell": OrderTotalCell_7177017e5facd2bd3c19a739aa5ba688,
+  "@/collections/Orders/components/list/StatusCell#OrderStatusCell": OrderStatusCell_a1566a1cd28a27f66f0524cfa16c0f63,
   "@/collections/Orders/components/ShippingFromCustomer#ShippingFromCustomer": ShippingFromCustomer_95b58c7d302148c741f7fc24ddb3f3ae,
   "@/components/MoneyField/Cell#MoneyCell": MoneyCell_2a1fbccdf68fd9be845df4de166fa2b2,
   "@/components/MoneyField/Field#MoneyField": MoneyField_323e4e658f0a50038070131cb758c455,
@@ -90,6 +101,7 @@ export const importMap = {
   "@/components/ReportsView/ReportsNavLink#ReportsNavLink": ReportsNavLink_1dadd44ed884203072469c985f618525,
   "@/components/BeforeLogin#BeforeLogin": BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e,
   "@/components/ReportsView#ReportsPage": ReportsPage_aa003d33c6e06d4dbc3638f4ed98639f,
+  "@/components/ReservationWidget#ReservationWidget": ReservationWidget_cb45535bb182148f674f8ef190d3ca5e,
   "@/components/CollectionIconCards#CollectionIconCards": CollectionIconCards_ac29671d64f2750b056a386aa1536945,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
