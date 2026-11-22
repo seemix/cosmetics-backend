@@ -83,6 +83,8 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     useAsTitle: 'orderNumber',
     // Колонки для нових користувачів; збережені налаштування колонок у профілі мають пріоритет.
     defaultColumns: ['orderNumber', 'createdAt', 'customer', 'total', 'status', 'items'],
+    // Кнопки швидких фільтрів за статусом і датою над таблицею.
+    components: { beforeListTable: ['@/collections/Orders/components/list/QuickFilters#OrdersQuickFilters'] },
     group: localized('custom:group:ecommerce'),
   },
   fields: [

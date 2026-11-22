@@ -598,6 +598,16 @@ export const en = {
     ordersList: {
       itemsSummary: '{{count}} items, {{units}} pcs',
       unknownProduct: 'Deleted product',
+      quickStatus: 'Status',
+      quickDate: 'Date',
+      quickAll: 'All',
+      date: {
+        today: 'Today',
+        yesterday: 'Yesterday',
+        last7: 'Last 7 days',
+        last30: 'Last 30 days',
+        thisMonth: 'This month',
+      },
     },
     reservation: {
       widgetTitle: 'Reservations',

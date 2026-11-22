@@ -596,6 +596,16 @@ export const ru: CustomTranslationsObject = {
     ordersList: {
       itemsSummary: 'Товаров: {{count}}, {{units}} шт.',
       unknownProduct: 'Удалённый товар',
+      quickStatus: 'Статус',
+      quickDate: 'Дата',
+      quickAll: 'Все',
+      date: {
+        today: 'Сегодня',
+        yesterday: 'Вчера',
+        last7: '7 дней',
+        last30: '30 дней',
+        thisMonth: 'Этот месяц',
+      },
     },
     reservation: {
       widgetTitle: 'Резервы',

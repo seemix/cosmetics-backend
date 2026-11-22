@@ -9,6 +9,7 @@ import { OrderStatusCell as OrderStatusCell_a1566a1cd28a27f66f0524cfa16c0f63 } f
 import { ShippingFromCustomer as ShippingFromCustomer_95b58c7d302148c741f7fc24ddb3f3ae } from '@/collections/Orders/components/ShippingFromCustomer'
 import { MoneyCell as MoneyCell_2a1fbccdf68fd9be845df4de166fa2b2 } from '@/components/MoneyField/Cell'
 import { MoneyField as MoneyField_323e4e658f0a50038070131cb758c455 } from '@/components/MoneyField/Field'
+import { OrdersQuickFilters as OrdersQuickFilters_830ac3873652e4ec0297e740c6e1d471 } from '@/collections/Orders/components/list/QuickFilters'
 import { StatementDownload as StatementDownload_6f6dfcdfcaac8972a8622c3ee4ed2a7a } from '@/collections/Finance/components/StatementDownload'
 import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -63,6 +64,7 @@ export const importMap = {
   "@/collections/Orders/components/ShippingFromCustomer#ShippingFromCustomer": ShippingFromCustomer_95b58c7d302148c741f7fc24ddb3f3ae,
   "@/components/MoneyField/Cell#MoneyCell": MoneyCell_2a1fbccdf68fd9be845df4de166fa2b2,
   "@/components/MoneyField/Field#MoneyField": MoneyField_323e4e658f0a50038070131cb758c455,
+  "@/collections/Orders/components/list/QuickFilters#OrdersQuickFilters": OrdersQuickFilters_830ac3873652e4ec0297e740c6e1d471,
   "@/collections/Finance/components/StatementDownload#StatementDownload": StatementDownload_6f6dfcdfcaac8972a8622c3ee4ed2a7a,
   "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,

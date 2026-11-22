@@ -596,6 +596,16 @@ export const ro: CustomTranslationsObject = {
     ordersList: {
       itemsSummary: 'Produse: {{count}}, {{units}} buc.',
       unknownProduct: 'Produs șters',
+      quickStatus: 'Status',
+      quickDate: 'Data',
+      quickAll: 'Toate',
+      date: {
+        today: 'Azi',
+        yesterday: 'Ieri',
+        last7: 'Ultimele 7 zile',
+        last30: 'Ultimele 30 de zile',
+        thisMonth: 'Luna aceasta',
+      },
     },
     reservation: {
       widgetTitle: 'Rezervări',

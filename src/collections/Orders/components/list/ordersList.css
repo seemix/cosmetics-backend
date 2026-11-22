@@ -3,6 +3,83 @@
   width: 45%;
 }
 
+/* Вужчі горизонтальні відступи в таблиці замовлень. */
+.collection-list--orders .table th,
+.collection-list--orders .table td {
+  min-width: 0;
+  padding-inline: calc(var(--base) * 0.35);
+}
+
+.collection-list--orders .table th:first-child,
+.collection-list--orders .table td:first-child {
+  padding-inline-start: calc(var(--base) * 0.5);
+}
+
+/* Номер і дата займають рівно стільки, скільки їхні значення; шапка переноситься по словах. */
+.collection-list--orders .table td.cell-orderNumber,
+.collection-list--orders .table td.cell-createdAt,
+.collection-list--orders .table #heading-orderNumber,
+.collection-list--orders .table #heading-createdAt {
+  width: 1%;
+}
+
+.collection-list--orders .table td.cell-orderNumber,
+.collection-list--orders .table td.cell-createdAt {
+  white-space: nowrap;
+}
+
+.collection-list--orders .table th .sort-column__label {
+  white-space: normal;
+  overflow-wrap: normal;
+}
+
+/* Швидкі фільтри над таблицею. */
+.orders-quick-filters {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--base) / 3);
+  margin-bottom: calc(var(--base) * 0.75);
+}
+
+.orders-quick-filters__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--base) / 4);
+}
+
+.orders-quick-filters__label {
+  min-width: 4.5em;
+  color: var(--theme-elevation-500);
+}
+
+.orders-quick-filters__chip {
+  padding: 2px 10px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 999px;
+  background: var(--theme-elevation-0);
+  color: var(--theme-elevation-800);
+  font: inherit;
+  font-size: 0.9em;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.orders-quick-filters__chip:hover {
+  border-color: var(--theme-elevation-400);
+}
+
+.orders-quick-filters__chip:focus-visible {
+  outline: var(--accessibility-outline);
+  outline-offset: var(--accessibility-outline-offset);
+}
+
+.orders-quick-filters__chip--active {
+  border-color: var(--theme-elevation-800);
+  background: var(--theme-elevation-800);
+  color: var(--theme-elevation-0);
+}
+
 .orders-list-items summary {
   cursor: pointer;
   white-space: nowrap;
