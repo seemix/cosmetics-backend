@@ -597,6 +597,7 @@ export const ro: CustomTranslationsObject = {
     ordersList: {
       itemsSummary: 'Produse: {{count}}, {{units}} buc.',
       unknownProduct: 'Produs șters',
+      editOrder: 'Editează comanda',
       quickStatus: 'Status',
       quickDate: 'Data',
       quickAll: 'Toate',

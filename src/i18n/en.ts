@@ -599,6 +599,7 @@ export const en = {
     ordersList: {
       itemsSummary: '{{count}} items, {{units}} pcs',
       unknownProduct: 'Deleted product',
+      editOrder: 'Edit order',
       quickStatus: 'Status',
       quickDate: 'Date',
       quickAll: 'All',

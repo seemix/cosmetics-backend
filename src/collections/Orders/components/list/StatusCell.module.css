@@ -1,3 +1,27 @@
+.statusCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.editLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-elevation-500);
+  text-decoration: none;
+}
+
+.editLink:hover {
+  color: var(--theme-text);
+}
+
+.editLink:focus-visible {
+  outline: var(--accessibility-outline);
+  outline-offset: var(--accessibility-outline-offset);
+}
+
 .shippedPill {
   --pill-background-color: #dcfce7 !important;
   --pill-text-color: #166534 !important;

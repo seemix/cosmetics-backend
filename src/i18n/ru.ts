@@ -597,6 +597,7 @@ export const ru: CustomTranslationsObject = {
     ordersList: {
       itemsSummary: 'Товаров: {{count}}, {{units}} шт.',
       unknownProduct: 'Удалённый товар',
+      editOrder: 'Редактировать заказ',
       quickStatus: 'Статус',
       quickDate: 'Дата',
       quickAll: 'Все',
