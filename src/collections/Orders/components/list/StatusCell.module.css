@@ -7,7 +7,8 @@
   white-space: nowrap;
 }
 
-.editButton {
+.editButton,
+.pickButton {
   flex-shrink: 0;
 }
 
@@ -16,6 +17,24 @@
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+}
+
+/* На мобільних пристроях кнопки мають мати зручну для дотику площу. */
+@media (max-width: 768px) {
+  .actions {
+    gap: 8px;
+  }
+
+  .editButton,
+  .pickButton {
+    min-width: 44px;
+    min-height: 44px;
+    --btn-icon-size: calc(var(--base) * 1.4);
+    --btn-padding-block-start: calc(var(--base) * 0.35);
+    --btn-padding-block-end: calc(var(--base) * 0.35);
+    --btn-padding-inline-start: calc(var(--base) * 0.35);
+    --btn-padding-inline-end: calc(var(--base) * 0.35);
+  }
 }
 
 .shippedPill {

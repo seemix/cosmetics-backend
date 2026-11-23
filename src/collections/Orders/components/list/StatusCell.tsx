@@ -48,7 +48,13 @@ export const OrderStatusCell = ({ cellData, i18n, rowData }: DefaultServerCellCo
       </Pill>
       {orderId && (
         <span className={styles.actions}>
-          <PickOrderButton id={orderId} orderNumber={orderNumber} status={cellData} items={pickItems} />
+          <PickOrderButton
+            id={orderId}
+            orderNumber={orderNumber}
+            status={cellData}
+            items={pickItems}
+            className={styles.pickButton}
+          />
           <EditOrderLink id={orderId} className={styles.editButton} />
         </span>
       )}

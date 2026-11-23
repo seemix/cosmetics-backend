@@ -154,11 +154,13 @@ export const PickOrderButton = ({
   orderNumber,
   status,
   items,
+  className,
 }: {
   id: string
   orderNumber: string | null
   status: string
   items: PickItem[]
+  className?: string
 }) => {
   const { t } = useTranslation()
   const { openModal, closeModal } = useModal()
@@ -170,6 +172,7 @@ export const PickOrderButton = ({
       <Button
         buttonStyle="subtle"
         size="small"
+        className={className}
         icon={<Box aria-hidden="true" strokeWidth={1.25} className={styles.boxIcon} />}
         margin={false}
         disabled={status === 'shipped'}

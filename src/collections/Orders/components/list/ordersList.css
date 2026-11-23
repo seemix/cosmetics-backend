@@ -39,6 +39,13 @@
   min-width: 185px;
 }
 
+@media (max-width: 768px) {
+  .collection-list--orders .table td.cell-status,
+  .collection-list--orders .table #heading-status {
+    min-width: 220px;
+  }
+}
+
 /* Швидкі фільтри над таблицею. */
 .orders-quick-filters {
   display: flex;
