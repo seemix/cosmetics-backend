@@ -11,6 +11,13 @@
   flex-shrink: 0;
 }
 
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .shippedPill {
   --pill-background-color: #dcfce7 !important;
   --pill-text-color: #166534 !important;

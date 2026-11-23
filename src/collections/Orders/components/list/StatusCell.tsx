@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react'
 
 import { customT } from '@/i18n/labels'
 import { EditOrderLink } from './EditOrderLink'
+import { PickOrderButton, type PickItem } from './PickOrderButton'
 import styles from './StatusCell.module.css'
 
 type PillStyle = NonNullable<ComponentProps<typeof Pill>['pillStyle']>
@@ -25,13 +26,32 @@ export const OrderStatusCell = ({ cellData, i18n, rowData }: DefaultServerCellCo
   const isShipped = cellData === 'shipped'
   const className = isShipped ? styles.shippedPill : undefined
   const orderId = rowData?.id ? String(rowData.id) : null
+  const orderNumber = rowData?.orderNumber != null ? String(rowData.orderNumber) : null
+  const rawItems: { product?: unknown; quantity?: unknown }[] = Array.isArray(rowData?.items)
+    ? rowData.items
+    : []
+  const pickItems: PickItem[] = rawItems.map((item) => {
+    const product =
+      item?.product && typeof item.product === 'object'
+        ? (item.product as { id?: unknown }).id
+        : item?.product
+    return {
+      product: product != null ? String(product) || null : null,
+      quantity: typeof item?.quantity === 'number' ? item.quantity : null,
+    }
+  })
 
   return (
     <span className={styles.statusCell}>
       <Pill pillStyle={STATUS_STYLE[cellData]} size="small" className={className}>
         {customT(i18n.t)(`custom:status:${cellData as Status}`)}
       </Pill>
-      {orderId && <EditOrderLink id={orderId} className={styles.editButton} />}
+      {orderId && (
+        <span className={styles.actions}>
+          <PickOrderButton id={orderId} orderNumber={orderNumber} status={cellData} items={pickItems} />
+          <EditOrderLink id={orderId} className={styles.editButton} />
+        </span>
+      )}
     </span>
   )
 }

@@ -33,10 +33,10 @@
   overflow-wrap: normal;
 }
 
-/* Колонка статусу: мітка ліворуч, кнопка редагування — по правому краю клітинки. */
+/* Колонка статусу: мітка ліворуч, кнопки збірки й редагування — по правому краю клітинки. */
 .collection-list--orders .table td.cell-status,
 .collection-list--orders .table #heading-status {
-  min-width: 150px;
+  min-width: 185px;
 }
 
 /* Швидкі фільтри над таблицею. */
