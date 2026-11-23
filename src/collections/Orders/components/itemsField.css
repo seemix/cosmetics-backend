@@ -1,0 +1,35 @@
+/* Підпис рядка товарів у формі замовлення. */
+.orders-item-row-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.orders-item-row-label__title {
+  color: var(--theme-elevation-500);
+  font-size: 0.8em;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Розгорнутий рядок: назва лишається в згорнутому підписі, у формі не дублюється. */
+.order-items-field .array-field__row:not(.collapsible--collapsed) .orders-item-row-label__title {
+  display: none;
+}
+
+/* Мінімальні відступи розгорнутого рядка товарів. */
+.order-items-field .collapsible__content {
+  padding: 4px 8px 8px;
+}
+
+.order-items-field .array-field__fields {
+  --spacing-field: 4px;
+}
+
+.order-items-field .array-field__draggable-rows,
+.order-items-field.array-field {
+  gap: 4px;
+}

@@ -190,7 +190,11 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       label: label('custom:field:items'),
       type: 'array',
       admin: {
-        components: { Cell: '@/collections/Orders/components/list/ItemsCell#OrderItemsCell' },
+        className: 'order-items-field',
+        components: {
+          Cell: '@/collections/Orders/components/list/ItemsCell#OrderItemsCell',
+          RowLabel: '@/collections/Orders/components/ItemsRowLabel#OrderItemRowLabel',
+        },
       },
       fields: [
         {

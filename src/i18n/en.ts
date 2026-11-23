@@ -591,6 +591,7 @@ export const en = {
     },
     orderForm: {
       priceError: 'Error getting price, check API',
+      itemRow: 'Item {{number}}',
       acceptPayment: 'Accept payment',
       acceptPaymentHint: 'Creates a draft cash receipt for the remaining amount, review and post it',
       acceptPaymentFailed: 'Could not create the payment',

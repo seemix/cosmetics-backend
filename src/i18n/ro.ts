@@ -589,6 +589,7 @@ export const ro: CustomTranslationsObject = {
     },
     orderForm: {
       priceError: 'Eroare la obținerea prețului, verificați API',
+      itemRow: 'Articol {{number}}',
       acceptPayment: 'Acceptă plata',
       acceptPaymentHint: 'Creează o chitanță ciornă pentru suma rămasă, verificați-o și înregistrați-o',
       acceptPaymentFailed: 'Nu s-a putut crea plata',
