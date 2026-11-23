@@ -172,7 +172,7 @@ export const PickOrderButton = ({
       <Button
         buttonStyle="subtle"
         size="small"
-        icon={<Box aria-hidden="true" />}
+        icon={<Box aria-hidden="true" strokeWidth={1.25} className={styles.boxIcon} />}
         margin={false}
         disabled={status === 'shipped'}
         aria-label={label}
