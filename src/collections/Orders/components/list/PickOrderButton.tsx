@@ -3,7 +3,7 @@
 import type { MouseEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { Box } from 'lucide-react'
-import { Button, Modal, useConfig, useModal, useTranslation } from '@payloadcms/ui'
+import { Button, CheckboxInput, Modal, useConfig, useModal, useTranslation } from '@payloadcms/ui'
 
 import { customT } from '@/i18n/labels'
 import styles from './PickOrderButton.module.css'
@@ -126,14 +126,12 @@ const PickingContent = ({
                   onClick={() => toggle(index)}
                 >
                   <td className={styles.checkCol}>
-                    <input
-                      type="checkbox"
+                    <span
                       className={styles.checkbox}
-                      checked={done}
-                      onChange={() => toggle(index)}
                       onClick={(event: MouseEvent) => event.stopPropagation()}
-                      aria-label={title}
-                    />
+                    >
+                      <CheckboxInput checked={done} onToggle={() => toggle(index)} />
+                    </span>
                   </td>
                   <td>{info?.article ? `${info.article} | ${title}` : title}</td>
                   <td className={styles.num}>× {item.quantity ?? 0}</td>

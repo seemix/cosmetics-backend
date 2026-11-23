@@ -109,11 +109,10 @@
   width: 1%;
 }
 
+/* Обгортка чекбокса — як select-row__checkbox у списку замовлень. */
 .checkbox {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  cursor: pointer;
+  display: block;
+  width: min-content;
 }
 
 .num {
