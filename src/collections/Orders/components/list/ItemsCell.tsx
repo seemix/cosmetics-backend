@@ -30,17 +30,21 @@ export const OrderItemsCell = async ({ cellData, i18n, payload }: DefaultServerC
   const ids = [...new Set(items.map((item) => idOf(item.product)).filter((id): id is string => Boolean(id)))]
 
   const titles = new Map<string, string>()
+  const articles = new Map<string, string>()
   if (ids.length > 0) {
     const { docs } = await payload.find({
       collection: 'products',
       where: { id: { in: ids } },
-      select: { title: true },
+      select: { title: true, article: true },
       depth: 0,
       limit: ids.length,
       pagination: false,
       ...(CONTENT_LOCALES.has(i18n.language) ? { locale: i18n.language as 'ru' | 'ro' } : {}),
     })
-    for (const doc of docs) titles.set(String(doc.id), String(doc.title ?? ''))
+    for (const doc of docs) {
+      titles.set(String(doc.id), String(doc.title ?? ''))
+      articles.set(String(doc.id), String(doc.article ?? ''))
+    }
   }
 
   const units = items.reduce((sum, item) => sum + (typeof item.quantity === 'number' ? item.quantity : 0), 0)
@@ -53,11 +57,14 @@ export const OrderItemsCell = async ({ cellData, i18n, payload }: DefaultServerC
           {items.map((item, index) => {
             const id = idOf(item.product)
             const title = (id && titles.get(id)) || t('custom:ordersList:unknownProduct')
+            const article = (id && articles.get(id)) || '—'
             const quantity = typeof item.quantity === 'number' ? item.quantity : 0
             const price = typeof item.price === 'number' ? item.price : null
             return (
               <tr key={`${id ?? 'item'}-${index}`}>
-                <td className="orders-list-items__title">{title}</td>
+                <td className="orders-list-items__title">
+                  {article} | {title}
+                </td>
                 <td className="orders-list-items__num">× {quantity}</td>
                 <td className="orders-list-items__num">{money(price)}</td>
                 <td className="orders-list-items__num">{price === null ? '—' : money(price * quantity)}</td>

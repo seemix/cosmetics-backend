@@ -154,26 +154,27 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       },
       fields: [
         {
-          name: 'product',
-          label: label('custom:term:product'),
-          type: 'relationship',
-          relationTo: 'products',
-          required: true,
-          admin: {
-            sortOptions: 'title',
-            allowCreate: false,
-          },
-        },
-        {
           type: 'row',
           fields: [
+            {
+              name: 'product',
+              label: label('custom:term:product'),
+              type: 'relationship',
+              relationTo: 'products',
+              required: true,
+              admin: {
+                sortOptions: 'title',
+                allowCreate: false,
+                width: '50%',
+              },
+            },
             {
               name: 'quantity',
               label: label('custom:term:quantity'),
               type: 'number',
               required: true,
               admin: {
-                width: '50%',
+                width: '25%',
               },
             },
             {
@@ -187,7 +188,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
                 components: {
                   Field: '@/collections/Orders/components/PriceField#PriceField',
                 },
-                width: '50%',
+                width: '25%',
                 // За бажанням можна увімкнути readOnly, щоб ціну не редагували вручну:
                 // readOnly: true,
               },
