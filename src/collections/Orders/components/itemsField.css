@@ -15,9 +15,10 @@
   text-overflow: ellipsis;
 }
 
-/* Розгорнутий рядок: назва лишається в згорнутому підписі, у формі не дублюється. */
-.order-items-field .array-field__row:not(.collapsible--collapsed) .orders-item-row-label__title {
-  display: none;
+.orders-item-row-label__title::before {
+  content: '·';
+  margin-inline-end: 6px;
+  color: var(--theme-elevation-300);
 }
 
 /* Мінімальні відступи розгорнутого рядка товарів. */

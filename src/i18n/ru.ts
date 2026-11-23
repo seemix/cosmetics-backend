@@ -589,7 +589,7 @@ export const ru: CustomTranslationsObject = {
     },
     orderForm: {
       priceError: 'Не удалось получить цену, проверьте API',
-      itemRow: 'Товар {{number}}',
+      itemRow: 'Item {{number}}',
       acceptPayment: 'Принять оплату',
       acceptPaymentHint: 'Создаёт черновик поступления на остаток суммы, проверьте и проведите его',
       acceptPaymentFailed: 'Не удалось создать оплату',
