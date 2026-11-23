@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 
 import { customT } from '@/i18n/labels'
 
+import './orderEditHeader.css'
+
 /** Кнопка «Прийняти оплату»: створює чернетку надходження по замовленню й відкриває її. */
 export const AcceptPaymentButton = () => {
   const { id } = useDocumentInfo()
