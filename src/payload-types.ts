@@ -212,9 +212,12 @@ export interface UserAuthOperations {
  */
 export interface Order {
   id: string;
+  customer?: (string | null) | User;
+  status?: ('pending' | 'backorder' | 'paid' | 'shipped' | 'cancelled') | null;
+  warehouse?: (string | null) | Warehouse;
+  total: number;
   orderNumber?: string | null;
   telegramMessageId?: string | null;
-  customer?: (string | null) | User;
   items?:
     | {
         product: string | Product;
@@ -223,8 +226,6 @@ export interface Order {
         id?: string | null;
       }[]
     | null;
-  total: number;
-  status?: ('pending' | 'backorder' | 'paid' | 'shipped' | 'cancelled') | null;
   paymentType?: ('cash' | 'transfer') | null;
   SRL?: string | null;
   shippingAddress?: {
@@ -238,7 +239,6 @@ export interface Order {
   promoCodeApplied?: string | null;
   discount?: number | null;
   source?: ('web' | 'admin') | null;
-  warehouse?: (string | null) | Warehouse;
   createdBy?: (string | null) | User;
   manager?: (string | null) | User;
   paidBani?: number | null;
@@ -1334,9 +1334,12 @@ export interface PayloadMigration {
  * via the `definition` "orders_select".
  */
 export interface OrdersSelect<T extends boolean = true> {
+  customer?: T;
+  status?: T;
+  warehouse?: T;
+  total?: T;
   orderNumber?: T;
   telegramMessageId?: T;
-  customer?: T;
   items?:
     | T
     | {
@@ -1345,8 +1348,6 @@ export interface OrdersSelect<T extends boolean = true> {
         price?: T;
         id?: T;
       };
-  total?: T;
-  status?: T;
   paymentType?: T;
   SRL?: T;
   shippingAddress?:
@@ -1362,7 +1363,6 @@ export interface OrdersSelect<T extends boolean = true> {
   promoCodeApplied?: T;
   discount?: T;
   source?: T;
-  warehouse?: T;
   createdBy?: T;
   manager?: T;
   paidBani?: T;

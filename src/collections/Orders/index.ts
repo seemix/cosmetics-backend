@@ -95,6 +95,60 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
   },
   fields: [
     {
+      name: 'customer',
+      label: label('custom:field:customer'),
+      type: 'relationship',
+      relationTo: 'users',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        components: { Cell: '@/collections/Orders/components/list/CustomerNameCell#OrderCustomerNameCell' },
+      },
+    },
+    {
+      name: 'status',
+      label: label('custom:term:status'),
+      type: 'select',
+      options: [
+        { label: label('custom:status:pending'), value: 'pending' },
+        { label: label('custom:status:backorder'), value: 'backorder' },
+        { label: label('custom:status:paid'), value: 'paid' },
+        { label: label('custom:status:shipped'), value: 'shipped' },
+        { label: label('custom:status:cancelled'), value: 'cancelled' },
+      ],
+      defaultValue: 'pending',
+      admin: {
+        position: 'sidebar',
+        components: { Cell: '@/collections/Orders/components/list/StatusCell#OrderStatusCell' },
+      },
+    },
+    {
+      name: 'warehouse',
+      label: label('custom:term:warehouse'),
+      type: 'relationship',
+      relationTo: 'warehouses',
+      index: true,
+      // У формі створення підставляємо склад з налаштувань обліку; хук `assignAccountingFields` робить те саме, якщо поле порожнє.
+      defaultValue: async ({ req }: { req: PayloadRequest }) => {
+        const settings = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
+        const warehouse = settings.defaultAdminWarehouse
+        return (typeof warehouse === 'object' ? warehouse?.id : warehouse) ?? undefined
+      },
+      access: adminOrManagerWarehouse,
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'total',
+      label: label('custom:term:total'),
+      type: 'number',
+      required: true,
+      admin: {
+        position: 'sidebar',
+        components: { Cell: '@/collections/Orders/components/list/TotalCell#OrderTotalCell' },
+        readOnly: true, // Загальну суму теж краще зробити readonly, оскільки вона рахується автоматично
+      },
+    },
+    {
       name: 'orderNumber',
       label: label('custom:field:orderNumber'),
       type: 'text',
@@ -129,17 +183,6 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       admin: {
         readOnly: true,
         position: 'sidebar',
-      },
-    },
-    {
-      name: 'customer',
-      label: label('custom:field:customer'),
-      type: 'relationship',
-      relationTo: 'users',
-      index: true,
-      admin: {
-        position: 'sidebar',
-        components: { Cell: '@/collections/Orders/components/list/CustomerNameCell#OrderCustomerNameCell' },
       },
     },
     {
@@ -196,34 +239,6 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       ],
     },
     {
-      name: 'total',
-      label: label('custom:term:total'),
-      type: 'number',
-      required: true,
-      admin: {
-        position: 'sidebar',
-        components: { Cell: '@/collections/Orders/components/list/TotalCell#OrderTotalCell' },
-        readOnly: true, // Загальну суму теж краще зробити readonly, оскільки вона рахується автоматично
-      },
-    },
-    {
-      name: 'status',
-      label: label('custom:term:status'),
-      type: 'select',
-      options: [
-        { label: label('custom:status:pending'), value: 'pending' },
-        { label: label('custom:status:backorder'), value: 'backorder' },
-        { label: label('custom:status:paid'), value: 'paid' },
-        { label: label('custom:status:shipped'), value: 'shipped' },
-        { label: label('custom:status:cancelled'), value: 'cancelled' },
-      ],
-      defaultValue: 'pending',
-      admin: {
-        position: 'sidebar',
-        components: { Cell: '@/collections/Orders/components/list/StatusCell#OrderStatusCell' },
-      },
-    },
-    {
       name: 'paymentType',
       label: label('custom:field:paymentType'),
       type: 'select',
@@ -278,21 +293,6 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       ],
       access: adminCreateOnly,
       admin: { readOnly: true, position: 'sidebar' },
-    },
-    {
-      name: 'warehouse',
-      label: label('custom:term:warehouse'),
-      type: 'relationship',
-      relationTo: 'warehouses',
-      index: true,
-      // У формі створення підставляємо склад з налаштувань обліку; хук `assignAccountingFields` робить те саме, якщо поле порожнє.
-      defaultValue: async ({ req }: { req: PayloadRequest }) => {
-        const settings = await req.payload.findGlobal({ slug: 'accounting-settings', depth: 0, req })
-        const warehouse = settings.defaultAdminWarehouse
-        return (typeof warehouse === 'object' ? warehouse?.id : warehouse) ?? undefined
-      },
-      access: adminOrManagerWarehouse,
-      admin: { position: 'sidebar' },
     },
     {
       name: 'createdBy',
