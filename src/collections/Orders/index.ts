@@ -243,12 +243,24 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       ],
     },
     {
-      name: 'paymentType',
-      label: label('custom:field:paymentType'),
-      type: 'select',
-      options: [
-        { label: label('custom:option:paymentCash'), value: 'cash' },
-        { label: label('custom:option:paymentTransfer'), value: 'transfer' },
+      type: 'row',
+      fields: [
+        {
+          name: 'paymentType',
+          label: label('custom:field:paymentType'),
+          type: 'select',
+          options: [
+            { label: label('custom:option:paymentCash'), value: 'cash' },
+            { label: label('custom:option:paymentTransfer'), value: 'transfer' },
+          ],
+          admin: { width: '50%' },
+        },
+        {
+          name: 'discount',
+          label: label('custom:field:discount'),
+          type: 'number',
+          admin: { width: '50%' },
+        },
       ],
     },
     {
@@ -286,7 +298,6 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       // Промокод застосовує лише сайт: у формі створення з адмінки поле не потрібне.
       admin: { condition: (data) => data?.source === 'web' },
     },
-    { name: 'discount', label: label('custom:field:discount'), type: 'number' },
     {
       name: 'source',
       label: label('custom:field:source'),

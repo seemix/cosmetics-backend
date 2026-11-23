@@ -227,6 +227,7 @@ export interface Order {
       }[]
     | null;
   paymentType?: ('cash' | 'transfer') | null;
+  discount?: number | null;
   SRL?: string | null;
   shippingAddress?: {
     name?: string | null;
@@ -237,7 +238,6 @@ export interface Order {
   };
   comment?: string | null;
   promoCodeApplied?: string | null;
-  discount?: number | null;
   source?: ('web' | 'admin') | null;
   createdBy?: (string | null) | User;
   manager?: (string | null) | User;
@@ -1349,6 +1349,7 @@ export interface OrdersSelect<T extends boolean = true> {
         id?: T;
       };
   paymentType?: T;
+  discount?: T;
   SRL?: T;
   shippingAddress?:
     | T
@@ -1361,7 +1362,6 @@ export interface OrdersSelect<T extends boolean = true> {
       };
   comment?: T;
   promoCodeApplied?: T;
-  discount?: T;
   source?: T;
   createdBy?: T;
   manager?: T;
