@@ -46,18 +46,15 @@ export const AcceptPaymentButton = () => {
   }
 
   return (
-    <div style={{ marginBottom: 'var(--base)' }}>
+    <span title={customT(t)('custom:orderForm:acceptPaymentHint')}>
       <Button buttonStyle="primary" disabled={busy} onClick={handleClick} size="medium">
         {customT(t)('custom:orderForm:acceptPayment')}
       </Button>
-      <p style={{ margin: '4px 0 0', color: 'var(--theme-elevation-500)' }}>
-        {customT(t)('custom:orderForm:acceptPaymentHint')}
-      </p>
       {error && (
-        <p role="alert" style={{ margin: '4px 0 0', color: 'var(--theme-error-500)' }}>
+        <span role="alert" style={{ color: 'var(--theme-error-500)' }}>
           {error}
-        </p>
+        </span>
       )}
-    </div>
+    </span>
   )
 }

@@ -84,7 +84,13 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
     // Колонки для нових користувачів; збережені налаштування колонок у профілі мають пріоритет.
     defaultColumns: ['orderNumber', 'createdAt', 'customer', 'total', 'status', 'items'],
     // Кнопки швидких фільтрів за статусом і датою над таблицею.
-    components: { beforeListTable: ['@/collections/Orders/components/list/QuickFilters#OrdersQuickFilters'] },
+    components: {
+      beforeListTable: ['@/collections/Orders/components/list/QuickFilters#OrdersQuickFilters'],
+      // Прийом оплати — у панелі керування документом, безпосередньо перед «Зберегти».
+      edit: {
+        beforeDocumentControls: ['@/collections/Orders/components/AcceptPaymentButton#AcceptPaymentButton'],
+      },
+    },
     group: localized('custom:group:ecommerce'),
   },
   fields: [
@@ -104,15 +110,6 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       admin: {
         components: {
           Field: '@/collections/Orders/components/OrderManager#OrderManager',
-        },
-      },
-    },
-    {
-      name: 'acceptPayment',
-      type: 'ui',
-      admin: {
-        components: {
-          Field: '@/collections/Orders/components/AcceptPaymentButton#AcceptPaymentButton',
         },
       },
     },
