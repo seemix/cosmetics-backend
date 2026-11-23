@@ -53,3 +53,27 @@ button:active {
   border-radius: 0;
   border: 1px solid black;
 }
+
+/* Reduce padding in admin right panel (document content area) */
+.payload-admin [data-payload-admin] {
+  /* Target the main document/form container */
+  --payload-admin-horizontal-padding: 1rem;
+}
+
+/* Reduce padding for the document form wrapper */
+.payload__document {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Target the form wrapper in the right panel */
+.payload-admin form.form {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Target any form field containers */
+.form-field-wrapper {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}

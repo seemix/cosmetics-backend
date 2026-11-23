@@ -165,7 +165,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
               admin: {
                 sortOptions: 'title',
                 allowCreate: false,
-                width: '50%',
+                width: '70%',
               },
             },
             {
@@ -174,7 +174,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
               type: 'number',
               required: true,
               admin: {
-                width: '25%',
+                width: '15%',
               },
             },
             {
@@ -188,7 +188,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
                 components: {
                   Field: '@/collections/Orders/components/PriceField#PriceField',
                 },
-                width: '25%',
+                width: '15%',
                 // За бажанням можна увімкнути readOnly, щоб ціну не редагували вручну:
                 // readOnly: true,
               },

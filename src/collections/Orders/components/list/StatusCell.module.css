@@ -1,0 +1,13 @@
+.shippedPill {
+  --pill-background-color: #dcfce7 !important;
+  --pill-text-color: #166534 !important;
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+/* Fallback for inline styles */
+.shippedPill :global(button),
+.shippedPill :global(span) {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
