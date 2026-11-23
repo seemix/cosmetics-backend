@@ -1,12 +1,11 @@
 'use client'
 
-import { Pencil } from 'lucide-react'
-import Link from 'next/link'
-import { useConfig, useTranslation } from '@payloadcms/ui'
+import type { MouseEvent } from 'react'
+import { Button, useConfig, useTranslation } from '@payloadcms/ui'
 
 import { customT } from '@/i18n/labels'
 
-/** Іконка біля статусу в списку замовлень: відкриває редагування цього замовлення. */
+/** Кнопка біля статусу в списку замовлень: відкриває редагування цього замовлення. */
 export const EditOrderLink = ({ id, className }: { id: string; className?: string }) => {
   const { config } = useConfig()
   const { t } = useTranslation()
@@ -15,14 +14,17 @@ export const EditOrderLink = ({ id, className }: { id: string; className?: strin
   const adminRoute = config.routes.admin.replace(/\/+$/, '')
 
   return (
-    <Link
-      href={`${adminRoute}/collections/orders/${encodeURIComponent(id)}`}
+    <Button
+      el="link"
+      to={`${adminRoute}/collections/orders/${encodeURIComponent(id)}`}
       className={className}
-      title={label}
+      buttonStyle="subtle"
+      size="small"
+      icon={['edit']}
+      margin={false}
       aria-label={label}
-      onClick={(event) => event.stopPropagation()}
-    >
-      <Pencil size={14} aria-hidden="true" />
-    </Link>
+      tooltip={label}
+      extraButtonProps={{ onClick: (event: MouseEvent) => event.stopPropagation() }}
+    />
   )
 }

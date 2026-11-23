@@ -31,7 +31,7 @@ export const OrderStatusCell = ({ cellData, i18n, rowData }: DefaultServerCellCo
       <Pill pillStyle={STATUS_STYLE[cellData]} size="small" className={className}>
         {customT(i18n.t)(`custom:status:${cellData as Status}`)}
       </Pill>
-      {orderId && <EditOrderLink id={orderId} className={styles.editLink} />}
+      {orderId && <EditOrderLink id={orderId} className={styles.editButton} />}
     </span>
   )
 }
