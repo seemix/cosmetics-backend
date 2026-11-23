@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, useAuth, useConfig, useDocumentInfo, useTranslation } from '@payloadcms/ui'
+import { Button, Tooltip, useAuth, useConfig, useDocumentInfo, useTranslation } from '@payloadcms/ui'
+import { Info } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { customT } from '@/i18n/labels'
@@ -15,6 +16,7 @@ export const AcceptPaymentButton = () => {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hintVisible, setHintVisible] = useState(false)
 
   const roles = (user as { roles?: string[] } | null)?.roles
   if (!id || !(roles?.includes('admin') || roles?.includes('manager'))) return null
@@ -45,8 +47,24 @@ export const AcceptPaymentButton = () => {
     }
   }
 
+  const hint = customT(t)('custom:orderForm:acceptPaymentHint')
+
   return (
-    <span title={customT(t)('custom:orderForm:acceptPaymentHint')}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+      <span
+        aria-label={hint}
+        onBlur={() => setHintVisible(false)}
+        onFocus={() => setHintVisible(true)}
+        onMouseEnter={() => setHintVisible(true)}
+        onMouseLeave={() => setHintVisible(false)}
+        style={{ color: 'var(--theme-elevation-500)', cursor: 'help', display: 'inline-flex', position: 'relative' }}
+        tabIndex={0}
+      >
+        <Info aria-hidden="true" size={16} />
+        <Tooltip alignCaret="left" delay={0} show={hintVisible}>
+          <span>{hint}</span>
+        </Tooltip>
+      </span>
       <Button buttonStyle="primary" disabled={busy} onClick={handleClick} size="medium">
         {customT(t)('custom:orderForm:acceptPayment')}
       </Button>
