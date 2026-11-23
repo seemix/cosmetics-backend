@@ -3,6 +3,8 @@ import type { DefaultServerCellComponentProps } from 'payload'
 import { customT } from '@/i18n/labels'
 import { toBani, formatMDL } from '@/utilities/money'
 
+import { ItemsAccordion } from './ItemsAccordion'
+
 import './ordersList.css'
 
 type Item = { product?: unknown; quantity?: number | null; price?: number | null }
@@ -50,8 +52,7 @@ export const OrderItemsCell = async ({ cellData, i18n, payload }: DefaultServerC
   const units = items.reduce((sum, item) => sum + (typeof item.quantity === 'number' ? item.quantity : 0), 0)
 
   return (
-    <details className="orders-list-items">
-      <summary>{t('custom:ordersList:itemsSummary', { count: items.length, units })}</summary>
+    <ItemsAccordion summary={t('custom:ordersList:itemsSummary', { count: items.length, units })}>
       <table>
         <tbody>
           {items.map((item, index) => {
@@ -73,6 +74,6 @@ export const OrderItemsCell = async ({ cellData, i18n, payload }: DefaultServerC
           })}
         </tbody>
       </table>
-    </details>
+    </ItemsAccordion>
   )
 }

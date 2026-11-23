@@ -284,8 +284,13 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => (
       type: 'group',
       fields: [
         { name: 'name', label: label('custom:field:fullName'), type: 'text', validate: addressText },
-        { name: 'phone', label: label('custom:field:phone'), type: 'text', validate: addressText },
-        { name: 'email', label: label('custom:field:email'), type: 'email', validate: addressEmail },
+        {
+          type: 'row',
+          fields: [
+            { name: 'phone', label: label('custom:field:phone'), type: 'text', validate: addressText, admin: { width: '50%' } },
+            { name: 'email', label: label('custom:field:email'), type: 'email', validate: addressEmail, admin: { width: '50%' } },
+          ],
+        },
         { name: 'city', label: label('custom:field:city'), type: 'text', validate: addressText },
         { name: 'address', label: label('custom:field:address'), type: 'text', validate: addressText },
       ],

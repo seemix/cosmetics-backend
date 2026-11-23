@@ -79,18 +79,46 @@
   outline-offset: var(--accessibility-outline-offset);
 }
 
-.orders-list-items summary {
+.orders-list-items__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--base) / 4);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
   cursor: pointer;
   white-space: nowrap;
   color: var(--theme-elevation-800);
 }
 
-.orders-list-items summary:hover {
+.orders-list-items__toggle:hover {
   color: var(--theme-text);
 }
 
-.orders-list-items[open] summary {
-  margin-bottom: calc(var(--base) / 4);
+.orders-list-items__toggle:focus-visible {
+  outline: var(--accessibility-outline);
+  outline-offset: var(--accessibility-outline-offset);
+}
+
+.orders-list-items__chevron {
+  display: inline-flex;
+  width: calc(var(--base) * 0.6);
+  height: calc(var(--base) * 0.6);
+  color: var(--theme-elevation-500);
+}
+
+.orders-list-items__chevron svg {
+  transition: transform 0.2s ease;
+}
+
+.orders-list-items__chevron--open svg {
+  transform: rotate(180deg);
+}
+
+/* Відступ над переліком — на внутрішньому блоці, щоб анімація висоти рахувала його. */
+.orders-list-items__content > div {
+  padding-top: calc(var(--base) / 4);
 }
 
 .orders-list-items table {
