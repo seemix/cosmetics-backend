@@ -9,7 +9,13 @@
 
 .editButton,
 .pickButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  min-width: 32px;
+  min-height: 32px;
+  --btn-icon-size: calc(var(--base) * 1.05);
 }
 
 .actions {
